@@ -31,6 +31,13 @@ npm run typecheck
 Deployed to GitHub Pages on every push to `main` (see
 `.github/workflows/deploy.yml`).
 
+## Privacy note
+
+Thoughts you capture are processed on your device and, for AI organizing, by a
+small language model running on the developer's own server (Ollama). Nothing
+is stored server-side, nothing is shared with third parties, and the palace
+lives only in your browser (export it anytime with the Export button).
+
 ## License
 
 MIT for app code; bundled Inter font under the SIL OFL (see `public/fonts`).
