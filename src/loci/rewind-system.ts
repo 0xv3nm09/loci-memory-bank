@@ -1,5 +1,5 @@
-import { createSystem, SnapAnimation, type Entity } from '@iwsdk/core';
-import { Note, ConnectionLine, ClusterLabel } from './components.js';
+import { createSystem, type Entity } from '@iwsdk/core';
+import { Note, ConnectionLine, ClusterLabel, SnapAnimation } from './components.js';
 import { applyNoteBaseLook } from './note-factory.js';
 import { getLoci } from './globals.js';
 import { loadPalace, type SavedSnapshot } from './palace-store.js';
