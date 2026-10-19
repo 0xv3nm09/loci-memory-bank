@@ -60,8 +60,10 @@
     <div class="heading">Loci</div>
     <Divider></Divider>
     <div class="sub-heading">
-      What's on your mind? Dump your thoughts - press a seed card to spill a
-      set, then touch the glowing orb to watch them snap into place.
+      1. Capture - type, speak, or press a seed card.
+      2. Organize - touch the glowing orb and watch the snap.
+      3. Arrange - grab cards. Yours stay where you put them.
+      Return tomorrow: Recall keeps it fresh.
     </div>
   </div>
   <Button id="xr-button" class="button">

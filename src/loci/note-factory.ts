@@ -56,6 +56,7 @@ export function createLabel(
   fontSize: number,
   colorValue: number | string,
   maxWidth?: number,
+  fontWeight = 600,
 ): Mesh {
   const color =
     typeof colorValue === 'number' ? `#${colorValue.toString(16).padStart(6, '0')}` : colorValue;
@@ -63,6 +64,7 @@ export function createLabel(
     maxWidth: maxWidth ?? CARD_W * 0.86,
     maxLines: 4,
     color,
+    fontWeight,
   });
 }
 

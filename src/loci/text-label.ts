@@ -81,7 +81,14 @@ export interface TextLabelOptions {
   /** Text color (default near-white). */
   color?: string;
   align?: 'center' | 'left';
+  /** CSS font-weight (default 500; 600 for card labels, 700 for titles). */
+  fontWeight?: number;
+  /** Soft dark shadow under the glyphs for depth (default true). */
+  shadow?: boolean;
 }
+
+const fontSpec = (px: number, weight: number): string =>
+  `${weight} ${px}px InterLoci, sans-serif`;
 
 /**
  * Canvas-texture text: zero workers, zero async, renders everywhere —
@@ -94,12 +101,14 @@ export function createTextLabel(
 ): Mesh {
   const { maxWidth, maxLines = 4, color = '#eef1ff', align = 'center' } = options;
   const px = Math.max(12, Math.round(fontSize * PX_PER_METER));
+  const weight = options.fontWeight ?? 500;
+  const useShadow = options.shadow !== false;
   const maxWidthPx = Math.round(maxWidth * PX_PER_METER);
   const usablePx = maxWidthPx - 16;
 
   const measure = document.createElement('canvas');
   const mctx = measure.getContext('2d')!;
-  mctx.font = `${px}px InterLoci, sans-serif`;
+  mctx.font = fontSpec(px, weight);
   const lines = fitLines(mctx, text, usablePx, maxLines);
 
   // Shrink to fit: whatever the canvas font metrics say, the drawn text
@@ -117,9 +126,14 @@ export function createTextLabel(
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
   const ctx = canvas.getContext('2d')!;
-  ctx.font = `${drawPx}px InterLoci, sans-serif`;
+  ctx.font = fontSpec(drawPx, weight);
   ctx.fillStyle = color;
   ctx.textBaseline = 'middle';
+  if (useShadow) {
+    ctx.shadowColor = 'rgba(2, 4, 12, 0.6)';
+    ctx.shadowBlur = drawPx * 0.16;
+    ctx.shadowOffsetY = drawPx * 0.05;
+  }
   lines.forEach((line, index) => {
     const y = lineHeightPx * (index + 0.5);
     const x = align === 'center' ? canvasWidth / 2 : 8;

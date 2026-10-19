@@ -229,6 +229,9 @@ export class CaptureSystem extends createSystem({
     const voiceBtn = document.getElementById('voice-btn');
     const clearBtn = document.getElementById('clear-btn');
     const exportBtn = document.getElementById('export-btn');
+    const helpBtn = document.getElementById('help-btn');
+    const helpOverlay = document.getElementById('loci-help');
+    const helpClose = document.getElementById('help-close');
     if (hud == null || input == null) {
       return;
     }
@@ -337,6 +340,12 @@ export class CaptureSystem extends createSystem({
     const exportJson = (): void => {
       exportPalace();
     };
+    const helpToggle = (): void => {
+      if (helpOverlay != null) {
+        const shown = helpOverlay.style.display === 'flex';
+        helpOverlay.style.display = shown ? 'none' : 'flex';
+      }
+    };
 
     const addClick = (): void => add();
     const organizeClick = (): void => organize();
@@ -345,6 +354,8 @@ export class CaptureSystem extends createSystem({
     const rewindClick = (): void => rewind();
     const clearClick = (): void => clear();
     const exportClick = (): void => exportJson();
+    const helpClick = (): void => helpToggle();
+    const helpCloseClick = (): void => helpToggle();
     const keyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Enter') {
         add();
@@ -357,6 +368,8 @@ export class CaptureSystem extends createSystem({
     rewindBtn?.addEventListener('click', rewindClick);
     clearBtn?.addEventListener('click', clearClick);
     exportBtn?.addEventListener('click', exportClick);
+    helpBtn?.addEventListener('click', helpClick);
+    helpClose?.addEventListener('click', helpCloseClick);
     input.addEventListener('keydown', keyDown);
 
     this.cleanupFuncs.push(
@@ -367,6 +380,8 @@ export class CaptureSystem extends createSystem({
       () => rewindBtn?.removeEventListener('click', rewindClick),
       () => clearBtn?.removeEventListener('click', clearClick),
       () => exportBtn?.removeEventListener('click', exportClick),
+      () => helpBtn?.removeEventListener('click', helpClick),
+      () => helpClose?.removeEventListener('click', helpCloseClick),
       () => input.removeEventListener('keydown', keyDown),
       this.world.visibilityState.subscribe((state) => {
         const immersive = state !== VisibilityState.NonImmersive;
