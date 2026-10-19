@@ -55,7 +55,7 @@ export class OrganizeSystem extends createSystem({
 
   private organize(): void {
     const loci = getLoci(this.globals);
-    if (loci.recallActive || this.thinking) {
+    if (loci.recallActive || this.thinking || loci.rewindActive) {
       return;
     }
     const movable = Array.from(this.queries.notes.entities).filter(

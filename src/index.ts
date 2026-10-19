@@ -11,6 +11,7 @@ import { CaptureSystem } from './loci/capture-system.js';
 import { MouseDragSystem } from './loci/mouse-drag-system.js';
 import { OrganizeSystem } from './loci/organize-system.js';
 import { RecallSystem } from './loci/recall-system.js';
+import { RewindSystem } from './loci/rewind-system.js';
 import { GrabWatchSystem, SnapSystem } from './loci/snap-system.js';
 import { createLociGlobals } from './loci/globals.js';
 import { loadLociFont } from './loci/text-label.js';
@@ -32,5 +33,6 @@ World.create(
   world.registerSystem(AmbientSystem);
   world.registerSystem(MouseDragSystem);
   world.registerSystem(RecallSystem);
+  world.registerSystem(RewindSystem);
   world.registerSystem(PanelSystem);
 });

@@ -157,7 +157,7 @@ export class RecallSystem extends createSystem({
 
   private start(): void {
     const loci = getLoci(this.globals);
-    if (this.sessionActive || loci.recallActive) {
+    if (this.sessionActive || loci.recallActive || loci.rewindActive) {
       return;
     }
     this.questions = this.buildQuestions(loci);

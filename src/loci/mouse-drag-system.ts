@@ -26,6 +26,10 @@ export class MouseDragSystem extends createSystem({}) {
       if (event.button !== 0 || this.dragEntity != null) {
         return;
       }
+      const loci = getLoci(this.globals);
+      if (loci.rewindActive) {
+        return;
+      }
       if (this.world.visibilityState.peek() !== VisibilityState.NonImmersive) {
         return;
       }

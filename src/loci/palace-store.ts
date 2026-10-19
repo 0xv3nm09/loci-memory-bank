@@ -30,6 +30,13 @@ export interface RecallRecord {
 
 export type RecallState = Record<string, RecallRecord>;
 
+export interface SavedSnapshot {
+  at: string;
+  notes: SavedNote[];
+  edges: SavedEdge[];
+  clusterLabels?: SavedLabel[];
+}
+
 export interface SavedPalace {
   version: 1;
   savedAt: string;
@@ -38,6 +45,7 @@ export interface SavedPalace {
   edges: SavedEdge[];
   clusterLabels?: SavedLabel[];
   recall?: RecallState;
+  history?: SavedSnapshot[];
 }
 
 export function loadPalace(): SavedPalace | null {
@@ -114,6 +122,17 @@ export function writePalaceSave(loci: LociGlobals): void {
       clusterLabels: loci.lastLabels,
       recall: loci.recallState,
     };
+    // Rewind's raw material: every save appends a capped snapshot.
+    const history = [
+      ...(loadPalace()?.history ?? []),
+      {
+        at: payload.savedAt,
+        notes: payload.notes,
+        edges: payload.edges,
+        clusterLabels: payload.clusterLabels,
+      },
+    ].slice(-30);
+    payload.history = history;
     localStorage.setItem(KEY, JSON.stringify(payload));
   } catch {
     // Storage blocked or full — the palace still works, it just won't persist.
@@ -127,6 +146,10 @@ export function writePalaceSave(loci: LociGlobals): void {
  * took off.
  */
 export function schedulePalaceSave(loci: LociGlobals, minDelayMs = 0): void {
+  // Rewind moves notes constantly — never record a scrub as history.
+  if (loci.rewindActive) {
+    return;
+  }
   if (saveTimer !== null) {
     clearTimeout(saveTimer);
   }

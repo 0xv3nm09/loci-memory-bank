@@ -160,7 +160,8 @@ export class CaptureSystem extends createSystem({
   }
 
   private dumpSeed(key: string): void {
-    if (getLoci(this.globals).recallActive) {
+    const loci = getLoci(this.globals);
+    if (loci.recallActive || loci.rewindActive) {
       return;
     }
     const thoughts = SEED_SETS[key];
@@ -224,6 +225,7 @@ export class CaptureSystem extends createSystem({
     const organizeBtn = document.getElementById('organize-btn');
     const demoBtn = document.getElementById('demo-btn');
     const recallBtn = document.getElementById('recall-btn');
+    const rewindBtn = document.getElementById('rewind-btn');
     const voiceBtn = document.getElementById('voice-btn');
     const clearBtn = document.getElementById('clear-btn');
     const exportBtn = document.getElementById('export-btn');
@@ -245,6 +247,9 @@ export class CaptureSystem extends createSystem({
     };
     const recall = (): void => {
       getLoci(this.globals).requestRecall();
+    };
+    const rewind = (): void => {
+      getLoci(this.globals).requestRewindToggle();
     };
     const setupVoice = (): void => {
       if (voiceBtn == null) {
@@ -337,6 +342,7 @@ export class CaptureSystem extends createSystem({
     const organizeClick = (): void => organize();
     const demoClick = (): void => demo();
     const recallClick = (): void => recall();
+    const rewindClick = (): void => rewind();
     const clearClick = (): void => clear();
     const exportClick = (): void => exportJson();
     const keyDown = (event: KeyboardEvent): void => {
@@ -348,6 +354,7 @@ export class CaptureSystem extends createSystem({
     organizeBtn?.addEventListener('click', organizeClick);
     demoBtn?.addEventListener('click', demoClick);
     recallBtn?.addEventListener('click', recallClick);
+    rewindBtn?.addEventListener('click', rewindClick);
     clearBtn?.addEventListener('click', clearClick);
     exportBtn?.addEventListener('click', exportClick);
     input.addEventListener('keydown', keyDown);
@@ -357,6 +364,7 @@ export class CaptureSystem extends createSystem({
       () => organizeBtn?.removeEventListener('click', organizeClick),
       () => demoBtn?.removeEventListener('click', demoClick),
       () => recallBtn?.removeEventListener('click', recallClick),
+      () => rewindBtn?.removeEventListener('click', rewindClick),
       () => clearBtn?.removeEventListener('click', clearClick),
       () => exportBtn?.removeEventListener('click', exportClick),
       () => input.removeEventListener('keydown', keyDown),

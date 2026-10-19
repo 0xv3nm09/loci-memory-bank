@@ -79,6 +79,43 @@
         z-index: 10;
         pointer-events: none;
       }
+      #rewind-bar {
+        position: fixed;
+        left: 50%;
+        bottom: 82px;
+        transform: translateX(-50%);
+        display: none;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 18px;
+        background: rgba(10, 14, 28, 0.9);
+        border: 1px solid rgba(190, 170, 255, 0.4);
+        border-radius: 14px;
+        backdrop-filter: blur(8px);
+        z-index: 11;
+      }
+      #rewind-when {
+        font-size: 13px;
+        font-weight: 600;
+        color: #cabfff;
+        min-width: 90px;
+        text-align: center;
+      }
+      #rewind-slider {
+        width: 320px;
+        accent-color: #8f7bff;
+        cursor: pointer;
+      }
+      #rewind-now {
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #06131c;
+        background: linear-gradient(180deg, #cfc2ff, #8f7bff);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body style="margin: 0">
@@ -95,9 +132,15 @@
       <button id="add-btn">Add</button>
       <button id="organize-btn" class="secondary">Organize</button>
       <button id="recall-btn" class="secondary">Recall</button>
+      <button id="rewind-btn" class="secondary">Rewind</button>
       <button id="demo-btn" class="secondary">Demo dump</button>
       <button id="clear-btn" class="secondary">Clear</button>
       <button id="export-btn" class="secondary">Export</button>
+    </div>
+    <div id="rewind-bar" style="display: none">
+      <span id="rewind-when">now</span>
+      <input id="rewind-slider" type="range" min="0" max="1" value="1" step="1" />
+      <button id="rewind-now">Back to now</button>
     </div>
     <script type="module" src="/src/index.ts"></script>
   </body>
