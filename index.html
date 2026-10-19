@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <link rel="icon" href="data:," />
+    <title>Loci — spatial memory bank</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Inter', system-ui, sans-serif;
+      }
+      #loci-hud {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: rgba(10, 14, 28, 0.82);
+        border: 1px solid rgba(120, 160, 255, 0.25);
+        border-radius: 14px;
+        backdrop-filter: blur(8px);
+        z-index: 10;
+      }
+      #loci-hud input {
+        width: 320px;
+        padding: 9px 12px;
+        font-size: 14px;
+        color: #eef1ff;
+        background: rgba(20, 26, 48, 0.9);
+        border: 1px solid rgba(120, 160, 255, 0.3);
+        border-radius: 8px;
+        outline: none;
+      }
+      #loci-hud input:focus {
+        border-color: rgba(90, 220, 255, 0.7);
+      }
+      #loci-hud button {
+        padding: 9px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #06131c;
+        background: linear-gradient(180deg, #7ee7d2, #46c9ae);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      #loci-hud button.secondary {
+        color: #cfe2ff;
+        background: rgba(40, 52, 96, 0.9);
+        border: 1px solid rgba(120, 160, 255, 0.3);
+      }
+      #loci-hud button:hover {
+        filter: brightness(1.1);
+      }
+      #hud-status {
+        position: fixed;
+        left: 50%;
+        bottom: 82px;
+        transform: translateX(-50%);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: rgba(160, 178, 230, 0.85);
+        z-index: 10;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body style="margin: 0">
+    <div id="scene-container"></div>
+    <div id="hud-status"></div>
+    <div id="loci-hud">
+      <input
+        id="note-input"
+        placeholder="What's on your mind?"
+        maxlength="140"
+        autocomplete="off"
+      />
+      <button id="add-btn">Add</button>
+      <button id="organize-btn" class="secondary">Organize</button>
+      <button id="recall-btn" class="secondary">Recall</button>
+      <button id="demo-btn" class="secondary">Demo dump</button>
+      <button id="clear-btn" class="secondary">Clear</button>
+      <button id="export-btn" class="secondary">Export</button>
+    </div>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>
