@@ -80,7 +80,7 @@ export class RecallSystem extends createSystem({
   private endTimer = 0;
 
   init(): void {
-    createRecallOrb(this.world, new Vector3(0.68, 1.32, -0.6));
+    createRecallOrb(this.world, new Vector3(0.84, 1.02, -0.72));
     getLoci(this.globals).requestRecall = () => this.start();
     this.queries.orbPressed.subscribe('qualify', () => {
       if (this.sessionActive) {

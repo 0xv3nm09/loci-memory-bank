@@ -1,5 +1,6 @@
 import {
   AdditiveBlending,
+  BoxGeometry,
   BufferGeometry,
   Color,
   CylinderGeometry,
@@ -31,6 +32,7 @@ import {
   SuggestionBud,
 } from './components.js';
 import { createTextLabel } from './text-label.js';
+import { GLASS, accentForHue } from './palette.js';
 
 export const CARD_W = 0.17;
 export const CARD_H = 0.115;
@@ -78,18 +80,27 @@ export function createNote(
   group.name = `note-${id}`;
 
   const material = new MeshStandardMaterial({
-    color: 0xf2ecdd,
-    emissive: new Color(0x86766a),
-    emissiveIntensity: 0.18,
-    roughness: 0.6,
-    metalness: 0.04,
+    color: GLASS.body,
+    emissive: new Color(GLASS.rawRim),
+    emissiveIntensity: GLASS.rawRimIntensity,
+    roughness: 0.42,
+    metalness: 0.12,
   });
   const card = new Mesh(getCardGeometry(), material);
   card.name = 'card';
   group.add(card);
 
-  const label = createTextMesh(text, 0.0155, 0x241f18);
-  label.position.z = CARD_D / 2 + 0.002;
+  const accentBar = new Mesh(
+    new BoxGeometry(CARD_W * 0.62, 0.005, 0.002),
+    new MeshBasicMaterial({ color: GLASS.rawRim }),
+  );
+  accentBar.name = 'accent-bar';
+  accentBar.position.set(0, CARD_H / 2 - 0.011, CARD_D / 2 + 0.002);
+  accentBar.visible = false;
+  group.add(accentBar);
+
+  const label = createTextMesh(text, 0.0155, GLASS.ink);
+  label.position.z = CARD_D / 2 + 0.004;
   label.name = 'label';
   group.add(label);
 
@@ -113,11 +124,15 @@ export function setNoteTint(entity: Entity, hue: number, intensity: number): voi
     return;
   }
   const material = card.material as MeshStandardMaterial;
-  material.emissive.setHSL(hue, 0.62, 0.52);
+  // Cluster color lives in the glow and the accent bar — never the body.
+  const accent = accentForHue(hue);
+  material.emissive.set(accent);
   material.emissiveIntensity = intensity;
-  const surface = new Color(0xf2ecdd);
-  surface.lerp(new Color().setHSL(hue, 0.5, 0.8), 0.22);
-  material.color.copy(surface);
+  const bar = entity.object3D?.getObjectByName('accent-bar') as Mesh | undefined;
+  if (bar != null) {
+    bar.visible = true;
+    (bar.material as MeshBasicMaterial).color.set(accent);
+  }
 }
 
 /** Adjust only the glow strength — used by Recall's spotlight dimming. */
@@ -140,9 +155,13 @@ export function applyNoteBaseLook(entity: Entity): void {
   if (cluster >= 0) {
     setNoteTint(entity, entity.getValue(Note, 'hue') ?? 0.13, 0.45);
   } else {
-    material.emissive.set(0x86766a);
-    material.emissiveIntensity = 0.18;
-    material.color.set(0xf2ecdd);
+    material.emissive.set(GLASS.rawRim);
+    material.emissiveIntensity = GLASS.rawRimIntensity;
+    material.color.set(GLASS.body);
+    const bar = entity.object3D?.getObjectByName('accent-bar') as Mesh | undefined;
+    if (bar != null) {
+      bar.visible = false;
+    }
   }
 }
 
@@ -155,7 +174,7 @@ export function createLine(
   const geometry = new CylinderGeometry(0.0028, 0.0028, 1, 6, 1, true);
   geometry.translate(0, 0.5, 0);
   const material = new MeshBasicMaterial({
-    color: 0x46e0ff,
+    color: 0x46c8e8,
     transparent: true,
     opacity: 0,
     blending: AdditiveBlending,
@@ -311,7 +330,7 @@ export function createClusterLabel(
   position: Vector3,
   clusterIndex: number,
 ): Entity {
-  const label = createTextMesh(text, 0.028, new Color().setHSL(hue, 0.65, 0.72).getStyle());
+  const label = createTextMesh(text, 0.028, new Color(accentForHue(hue)).getStyle());
   label.name = 'cluster-label';
   label.position.copy(position);
   facePlayer(label);

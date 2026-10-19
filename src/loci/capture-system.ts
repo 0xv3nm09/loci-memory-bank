@@ -82,7 +82,7 @@ export class CaptureSystem extends createSystem({
     createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.52, 1.22, -0.62));
     createSeed(this.world, 'thesis', SEED_TITLES.thesis, new Vector3(-0.52, 1.06, -0.72));
     createSeed(this.world, 'kingdom', SEED_TITLES.kingdom, new Vector3(-0.52, 0.9, -0.62));
-    createOrganizeOrb(this.world, new Vector3(0.52, 1.18, -0.68));
+    createOrganizeOrb(this.world, new Vector3(0.58, 1.0, -0.72));
 
     this.queries.seedsPressed.subscribe('qualify', (entity) => {
       this.dumpSeed(entity.getValue(SeedCard, 'setKey') ?? 'exam');
