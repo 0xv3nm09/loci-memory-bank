@@ -59,6 +59,15 @@
       #loci-hud button:hover {
         filter: brightness(1.1);
       }
+      #loci-hud button#voice-btn.active {
+        background: linear-gradient(180deg, #ff8f8f, #d95858);
+        color: #fff;
+        animation: loci-pulse 1.2s ease-in-out infinite;
+      }
+      @keyframes loci-pulse {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.3); }
+      }
       #hud-status {
         position: fixed;
         left: 50%;
@@ -82,6 +91,7 @@
         maxlength="140"
         autocomplete="off"
       />
+      <button id="voice-btn" title="Speak a thought">&#127908;</button>
       <button id="add-btn">Add</button>
       <button id="organize-btn" class="secondary">Organize</button>
       <button id="recall-btn" class="secondary">Recall</button>

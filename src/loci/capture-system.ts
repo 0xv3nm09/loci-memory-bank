@@ -12,6 +12,7 @@ import {
 import { clusterCenter, gridHalfHeight } from './layout.js';
 import { getLoci } from './globals.js';
 import { primeAudioOnFirstGesture } from './audio.js';
+import { checkDistress, showCrisisCard } from './distress-gate.js';
 import {
   clearPalace,
   exportPalace,
@@ -172,6 +173,10 @@ export class CaptureSystem extends createSystem({
     // TODO(polish): a manual Organize before this timer fires causes a
     // second organize 2.2s later — harmless (same layout recomputed) but
     // the timer should be cleared once a manual organize has run.
+    this.scheduleAutoOrganize();
+  }
+
+  private scheduleAutoOrganize(): void {
     if (this.autoOrganizeTimer !== null) {
       clearTimeout(this.autoOrganizeTimer);
     }
@@ -184,6 +189,11 @@ export class CaptureSystem extends createSystem({
   private spawnRaw(text: string): void {
     const trimmed = text.trim();
     if (trimmed === '') {
+      return;
+    }
+    // The universal gate runs before anything else sees the thought.
+    if (checkDistress(trimmed).flagged) {
+      showCrisisCard();
       return;
     }
     this.noteCounter += 1;
@@ -214,6 +224,7 @@ export class CaptureSystem extends createSystem({
     const organizeBtn = document.getElementById('organize-btn');
     const demoBtn = document.getElementById('demo-btn');
     const recallBtn = document.getElementById('recall-btn');
+    const voiceBtn = document.getElementById('voice-btn');
     const clearBtn = document.getElementById('clear-btn');
     const exportBtn = document.getElementById('export-btn');
     if (hud == null || input == null) {
@@ -224,6 +235,7 @@ export class CaptureSystem extends createSystem({
       this.spawnRaw(input.value);
       input.value = '';
       input.focus();
+      this.scheduleAutoOrganize();
     };
     const organize = (): void => {
       getLoci(this.globals).requestOrganize();
@@ -234,6 +246,84 @@ export class CaptureSystem extends createSystem({
     const recall = (): void => {
       getLoci(this.globals).requestRecall();
     };
+    const setupVoice = (): void => {
+      if (voiceBtn == null) {
+        return;
+      }
+      const SR =
+        (window as unknown as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown })
+          .SpeechRecognition ??
+        (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition;
+      if (SR == null) {
+        voiceBtn.style.display = 'none';
+        return;
+      }
+      type Recognition = {
+        lang: string;
+        interimResults: boolean;
+        continuous: boolean;
+        start: () => void;
+        stop: () => void;
+        onresult:
+          | ((event: {
+              results: ArrayLike<{
+                isFinal: boolean;
+                length: number;
+                [index: number]: { transcript: string };
+              }>;
+            }) => void)
+          | null;
+        onend: (() => void) | null;
+        onerror: (() => void) | null;
+      };
+      let recognizing = false;
+      let recognition: Recognition | null = null;
+      const stop = (): void => {
+        recognizing = false;
+        voiceBtn?.classList.remove('active');
+        input.placeholder = "What's on your mind?";
+      };
+      voiceBtn.addEventListener('click', () => {
+        if (recognizing) {
+          recognition?.stop();
+          return;
+        }
+        const rec = new (SR as new () => Recognition)();
+        rec.lang = 'en-US';
+        rec.interimResults = true;
+        rec.continuous = false;
+        rec.onresult = (event) => {
+          const result = event.results[event.results.length - 1];
+          const transcript = result[0]?.transcript?.trim() ?? '';
+          if (result.isFinal && transcript !== '') {
+            input.value = '';
+            this.spawnRaw(transcript);
+            this.scheduleAutoOrganize();
+          } else {
+            input.value = transcript;
+          }
+        };
+        rec.onend = stop;
+        rec.onerror = stop;
+        try {
+          rec.start();
+          recognition = rec;
+          recognizing = true;
+          voiceBtn?.classList.add('active');
+          input.placeholder = 'Listening… speak your thought';
+        } catch {
+          stop();
+        }
+      });
+      this.cleanupFuncs.push(() => {
+        try {
+          recognition?.stop();
+        } catch {
+          // already stopped
+        }
+      });
+    };
+    setupVoice();
     const clear = (): void => {
       this.suppressExitFlush = true;
       clearPalace();

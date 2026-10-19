@@ -7,7 +7,9 @@ import {
   OrganizeOrb,
   SnapAnimation,
 } from './components.js';
-import { organize } from './clusterer.js';
+import { organize, type OrganizeResult } from './clusterer.js';
+import type { NoteInput } from './model-client.js';
+import { organizeWithModel } from './model-client.js';
 import { CLUSTER_HUES, clusterCenter, gridHalfHeight, noteOffset } from './layout.js';
 import { createClusterLabel, createLine, setNoteTint } from './note-factory.js';
 import { playSnapChord } from './audio.js';
@@ -21,6 +23,7 @@ export class OrganizeSystem extends createSystem({
   orbPressed: { required: [OrganizeOrb, Pressed] },
 }) {
   private trash: Entity[] = [];
+  private thinking = false;
 
   init(): void {
     getLoci(this.globals).requestOrganize = () => this.organize();
@@ -52,7 +55,7 @@ export class OrganizeSystem extends createSystem({
 
   private organize(): void {
     const loci = getLoci(this.globals);
-    if (loci.recallActive) {
+    if (loci.recallActive || this.thinking) {
       return;
     }
     const movable = Array.from(this.queries.notes.entities).filter(
@@ -62,13 +65,51 @@ export class OrganizeSystem extends createSystem({
       return;
     }
 
-    const result = organize(
-      movable.map((entity) => ({
-        id: entity.getValue(Note, 'id') ?? '',
-        text: entity.getValue(Note, 'text') ?? '',
-      })),
-    );
+    const inputs: NoteInput[] = movable.map((entity) => ({
+      id: entity.getValue(Note, 'id') ?? '',
+      text: entity.getValue(Note, 'text') ?? '',
+    }));
 
+    // The heuristic result exists before the question is even asked — if the
+    // model is slow, down, or wrong, the snap still happens this session.
+    const fallback = organize(inputs);
+    this.thinking = true;
+    this.setStatus('Sage is reading your thoughts…');
+
+    void this.applyBest(fallback, inputs);
+  }
+
+  private async applyBest(fallback: OrganizeResult, inputs: NoteInput[]): Promise<void> {
+    let result = fallback;
+    let source = 'local';
+    try {
+      const model = await organizeWithModel(inputs);
+      const covered = model.clusters.reduce((sum, cluster) => sum + cluster.noteIds.length, 0);
+      if (covered >= Math.ceil(inputs.length * 0.6)) {
+        result = model;
+        source = 'Sage';
+      }
+    } catch {
+      // model down, slow, or unusable — the heuristic stands
+    }
+    this.thinking = false;
+    this.setStatus(
+      source === 'Sage'
+        ? 'Sage organized your thoughts.'
+        : 'Organized locally — Sage is offline right now.',
+    );
+    this.applyResult(result);
+  }
+
+  private setStatus(message: string): void {
+    const status = document.getElementById('hud-status');
+    if (status != null) {
+      status.textContent = message;
+    }
+  }
+
+  private applyResult(result: OrganizeResult): void {
+    const loci = getLoci(this.globals);
     for (const line of Array.from(this.queries.lines.entities)) {
       this.trash.push(line);
     }
