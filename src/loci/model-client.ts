@@ -34,7 +34,7 @@ export interface ModelOrganizeResult {
 }
 
 const DEFAULT_BASE = 'https://ollama.youtubeccanalyzer.com';
-const HEALTH_TIMEOUT_MS = 4000;
+const HEALTH_TIMEOUT_MS = 8000;
 // 30s: covers a cold model load on the server; the thinking beat + instant
 // heuristic fallback cover everything longer.
 const ORGANIZE_TIMEOUT_MS = 30000;
@@ -179,7 +179,7 @@ export function warmupModel(): void {
     // warmup is best-effort — the fallback organizer covers failures
   });
 }
-export async function organizeWithModel(notes: NoteInput[]): Promise<ModelOrganizeResult> {
+async function organizeOnce(notes: NoteInput[]): Promise<ModelOrganizeResult> {
   const model = await resolveModel();
   if (model == null) {
     throw new Error('no model available');
@@ -291,4 +291,19 @@ export async function organizeWithModel(notes: NoteInput[]): Promise<ModelOrgani
   }
 
   return { clusters, edges, suggestions };
+}
+
+/**
+ * Ask the model to organize the notes — one fast retry to ride out tunnel
+ * blips, then the caller's heuristic fallback takes over. Response is
+ * validated and sanitized: unknown ids are dropped, leftover notes are
+ * swept into a final cluster so the snap always has a home for every thought.
+ */
+export async function organizeWithModel(notes: NoteInput[]): Promise<ModelOrganizeResult> {
+  try {
+    return await organizeOnce(notes);
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    return organizeOnce(notes);
+  }
 }
