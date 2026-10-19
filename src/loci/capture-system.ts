@@ -14,6 +14,11 @@ import { getLoci } from './globals.js';
 import { primeAudioOnFirstGesture } from './audio.js';
 import { checkDistress, showCrisisCard } from './distress-gate.js';
 import {
+  createRecognizer,
+  isSpeechSupported,
+  type SpeechRecognitionLike,
+} from './speech.js';
+import {
   clearPalace,
   exportPalace,
   loadPalace,
@@ -258,34 +263,12 @@ export class CaptureSystem extends createSystem({
       if (voiceBtn == null) {
         return;
       }
-      const SR =
-        (window as unknown as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown })
-          .SpeechRecognition ??
-        (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition;
-      if (SR == null) {
+      if (!isSpeechSupported()) {
         voiceBtn.style.display = 'none';
         return;
       }
-      type Recognition = {
-        lang: string;
-        interimResults: boolean;
-        continuous: boolean;
-        start: () => void;
-        stop: () => void;
-        onresult:
-          | ((event: {
-              results: ArrayLike<{
-                isFinal: boolean;
-                length: number;
-                [index: number]: { transcript: string };
-              }>;
-            }) => void)
-          | null;
-        onend: (() => void) | null;
-        onerror: (() => void) | null;
-      };
       let recognizing = false;
-      let recognition: Recognition | null = null;
+      let recognition: SpeechRecognitionLike | null = null;
       const stop = (): void => {
         recognizing = false;
         voiceBtn?.classList.remove('active');
@@ -296,10 +279,10 @@ export class CaptureSystem extends createSystem({
           recognition?.stop();
           return;
         }
-        const rec = new (SR as new () => Recognition)();
-        rec.lang = 'en-US';
-        rec.interimResults = true;
-        rec.continuous = false;
+        const rec = createRecognizer();
+        if (rec == null) {
+          return;
+        }
         rec.onresult = (event) => {
           const result = event.results[event.results.length - 1];
           const transcript = result[0]?.transcript?.trim() ?? '';

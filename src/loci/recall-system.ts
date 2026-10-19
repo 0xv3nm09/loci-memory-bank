@@ -17,6 +17,11 @@ import {
 } from './note-factory.js';
 import { playConnectTone, playMissTone, playSnapChord } from './audio.js';
 import { getLoci, type LociGlobals } from './globals.js';
+import {
+  createRecognizer,
+  isSpeechSupported,
+  type SpeechRecognitionLike,
+} from './speech.js';
 import type { RecallState } from './palace-store.js';
 import { schedulePalaceSave } from './palace-store.js';
 
@@ -78,6 +83,8 @@ export class RecallSystem extends createSystem({
   private waitingFeedback = false;
   private endEntity: Entity | null = null;
   private endTimer = 0;
+  private recognition: SpeechRecognitionLike | null = null;
+  private voiceActive = false;
 
   init(): void {
     createRecallOrb(this.world, new Vector3(0.84, 1.02, -0.72));
@@ -171,11 +178,107 @@ export class RecallSystem extends createSystem({
     this.correctCount = 0;
     playConnectTone();
     this.showQuestion(this.questions[0]);
+    this.startVoiceAnswers();
+  }
+
+  /**
+   * Voice answering: while the quiz is open, the mic listens (desktop
+   * browsers) and a spoken answer selects the closest option bar.
+   */
+  private startVoiceAnswers(): void {
+    if (!isSpeechSupported()) {
+      return;
+    }
+    this.voiceActive = true;
+    const listen = (): void => {
+      if (!this.sessionActive || !this.voiceActive) {
+        return;
+      }
+      const rec = createRecognizer();
+      if (rec == null) {
+        this.voiceActive = false;
+        return;
+      }
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.onresult = (event) => {
+        const result = event.results[event.results.length - 1];
+        const transcript = result?.[0]?.transcript?.trim() ?? '';
+        if (transcript !== '') {
+          this.answerByVoice(transcript);
+        }
+      };
+      rec.onend = () => {
+        if (this.sessionActive && this.voiceActive) {
+          window.setTimeout(listen, 350);
+        }
+      };
+      rec.onerror = () => {
+        this.voiceActive = false;
+      };
+      try {
+        rec.start();
+        this.recognition = rec;
+      } catch {
+        this.voiceActive = false;
+      }
+    };
+    listen();
+  }
+
+  private stopVoiceAnswers(): void {
+    this.voiceActive = false;
+    try {
+      this.recognition?.stop();
+    } catch {
+      // already stopped
+    }
+    this.recognition = null;
+  }
+
+  private answerByVoice(transcript: string): void {
+    if (!this.sessionActive || this.waitingFeedback) {
+      return;
+    }
+    const question = this.questions[this.questionIndex];
+    if (question == null) {
+      return;
+    }
+    const spoken = transcript.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+    let bestIndex = -1;
+    let bestScore = 0;
+    question.options.forEach((option, index) => {
+      const candidate = option.text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+      let score = 0;
+      if (candidate.includes(spoken) || spoken.includes(candidate.trim())) {
+        score = spoken.length + candidate.length;
+      } else {
+        for (const word of spoken.split(/\s+/)) {
+          if (word.length > 2 && candidate.includes(word)) {
+            score += word.length;
+          }
+        }
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+    if (bestIndex < 0 || bestScore < 4) {
+      return;
+    }
+    // Select the entity whose option text matches the winning index.
+    const optionEntities = this.quizEntities.filter((e) => e.hasComponent(AnswerCard));
+    const chosen = optionEntities[bestIndex];
+    if (chosen != null) {
+      this.answer(chosen);
+    }
   }
 
   /** Second press on the orb bails out of the session and restores the palace. */
   private cancel(): void {
     const loci = getLoci(this.globals);
+    this.stopVoiceAnswers();
     this.clearQuizEntities();
     for (const entity of loci.noteById.values()) {
       applyNoteBaseLook(entity);
@@ -332,6 +435,12 @@ export class RecallSystem extends createSystem({
     this.addPanelPiece(prompt, 0.235);
     this.quizEntities.push(this.world.createTransformEntity(prompt));
 
+    if (this.voiceActive) {
+      const hint = createLabel('or just say your answer', 0.012, '#8fa3d8', 0.5);
+      this.addPanelPiece(hint, 0.155);
+      this.quizEntities.push(this.world.createTransformEntity(hint));
+    }
+
     const optionYs = [0.08, -0.045, -0.17];
     question.options.forEach((option, index) => {
       const cardGroup = new Group();
@@ -443,6 +552,7 @@ export class RecallSystem extends createSystem({
 
   private finish(): void {
     const loci = getLoci(this.globals);
+    this.stopVoiceAnswers();
     this.clearQuizEntities();
     for (const entity of loci.noteById.values()) {
       applyNoteBaseLook(entity);
