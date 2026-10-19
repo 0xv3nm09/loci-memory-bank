@@ -35,7 +35,9 @@ export interface ModelOrganizeResult {
 
 const DEFAULT_BASE = 'https://ollama.youtubeccanalyzer.com';
 const HEALTH_TIMEOUT_MS = 4000;
-const ORGANIZE_TIMEOUT_MS = 20000;
+// 30s: covers a cold model load on the server; the thinking beat + instant
+// heuristic fallback cover everything longer.
+const ORGANIZE_TIMEOUT_MS = 30000;
 
 export function modelBaseUrl(): string {
   try {
@@ -72,21 +74,25 @@ async function fetchJson(path: string, init: RequestInit, timeoutMs: number): Pr
 
 let cachedModel: string | null = null;
 
-/** Prefer a Qwen model; otherwise the first model the server offers. */
+/** Prefer qwen3:14b (user's choice); else any qwen; else the server's first. */
 export async function resolveModel(): Promise<string | null> {
   if (cachedModel != null) {
     return cachedModel;
   }
   try {
     const data = (await fetchJson('/api/tags', { method: 'GET' }, HEALTH_TIMEOUT_MS)) as {
-      models?: Array<{ name?: string }>;
+      models?: Array<{ name?: string; size?: number }>;
     };
-    const names = (data.models ?? []).map((m) => m.name ?? '').filter((n) => n !== '');
-    if (names.length === 0) {
+    const models = (data.models ?? []).filter((m) => (m.name ?? '') !== '');
+    if (models.length === 0) {
       return null;
     }
-    cachedModel = names.find((n) => n.toLowerCase().startsWith('qwen')) ?? names[0];
-    return cachedModel;
+    const names = models.map((m) => m.name ?? '');
+    cachedModel =
+      names.find((n) => n.toLowerCase() === 'qwen3:14b') ??
+      names.find((n) => n.toLowerCase().startsWith('qwen')) ??
+      names[0];
+    return cachedModel === '' ? null : cachedModel;
   } catch {
     return null;
   }
@@ -145,10 +151,34 @@ const SYSTEM_PROMPT = [
 ].join(' ');
 
 /**
- * Ask the model to organize the notes. Validates and sanitizes the response;
- * ids that do not exist are dropped, leftover notes are swept into a final
- * cluster so the snap always has a home for every thought.
+ * Fire-and-forget at boot: loads the model into the server's VRAM so the
+ * visitor's first Organize is warm instead of a 30s cold start.
  */
+export function warmupModel(): void {
+  void (async () => {
+    const model = await resolveModel();
+    if (model == null) {
+      return;
+    }
+    await fetchJson(
+      '/api/chat',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          stream: false,
+          keep_alive: 1800,
+          options: { num_predict: 1 },
+          messages: [{ role: 'user', content: 'ready?' }],
+        }),
+      },
+      60000,
+    );
+  })().catch(() => {
+    // warmup is best-effort — the fallback organizer covers failures
+  });
+}
 export async function organizeWithModel(notes: NoteInput[]): Promise<ModelOrganizeResult> {
   const model = await resolveModel();
   if (model == null) {

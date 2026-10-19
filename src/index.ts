@@ -15,6 +15,7 @@ import { RewindSystem } from './loci/rewind-system.js';
 import { GrabWatchSystem, SnapSystem } from './loci/snap-system.js';
 import { createLociGlobals } from './loci/globals.js';
 import { loadLociFont } from './loci/text-label.js';
+import { warmupModel } from './loci/model-client.js';
 
 // Register the bundled Inter before any card label is drawn, so every
 // surface uses the same type from the first frame.
@@ -35,6 +36,9 @@ World.create(
   world.registerSystem(RecallSystem);
   world.registerSystem(RewindSystem);
   world.registerSystem(PanelSystem);
+
+  // Preload Sage into the server's VRAM so the first Organize is warm.
+  warmupModel();
 
   // Quest comfort + performance targets (judging: min 60fps, seated).
   world.visibilityState.subscribe((state) => {
