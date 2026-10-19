@@ -9,6 +9,7 @@ import {
   RecallOrb,
   SeedCard,
   SnapAnimation,
+  SuggestionBud,
 } from './loci/components.js';
 
 export default defineComponents([
@@ -21,4 +22,5 @@ export default defineComponents([
   RecallOrb,
   AnswerCard,
   QuizDone,
+  SuggestionBud,
 ]);

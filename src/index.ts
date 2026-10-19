@@ -3,7 +3,7 @@
  * Build for the Meta VR Start Developer Competition 2026 (Productivity track).
  */
 
-import { World } from '@iwsdk/core';
+import { VisibilityState, World } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
 import { PanelSystem } from './panel.js';
 import { AmbientSystem } from './loci/ambient-system.js';
@@ -35,4 +35,16 @@ World.create(
   world.registerSystem(RecallSystem);
   world.registerSystem(RewindSystem);
   world.registerSystem(PanelSystem);
+
+  // Quest comfort + performance targets (judging: min 60fps, seated).
+  world.visibilityState.subscribe((state) => {
+    if (state === VisibilityState.Visible) {
+      try {
+        world.session?.updateTargetFrameRate(72);
+        world.renderer.xr.setFoveation(0.8);
+      } catch {
+        // session may not support these — desktop is unaffected
+      }
+    }
+  });
 });

@@ -56,3 +56,13 @@ export const AnswerCard = createComponent('AnswerCard', {
 
 /** The "done" button on the recall panel — ends the session. */
 export const QuizDone = createComponent('QuizDone', {});
+
+/** A Sage suggestion bud: expand (green) or challenge (amber) a note. */
+export const SuggestionBud = createComponent('SuggestionBud', {
+  kind: {
+    type: Types.Enum,
+    enum: { Expand: 'expand', Challenge: 'challenge' },
+    default: 'expand',
+  },
+  text: { type: Types.String, default: '' },
+});

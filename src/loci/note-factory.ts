@@ -28,6 +28,7 @@ import {
   OrganizeOrb,
   RecallOrb,
   SeedCard,
+  SuggestionBud,
 } from './components.js';
 import { createTextLabel } from './text-label.js';
 
@@ -226,6 +227,50 @@ export function createOrganizeOrb(world: World, position: Vector3): Entity {
 
   const entity = world.createTransformEntity(group);
   entity.addComponent(OrganizeOrb);
+  entity.addComponent(RayInteractable);
+  return entity;
+}
+
+export function createSuggestionBud(
+  world: World,
+  kind: 'expand' | 'challenge',
+  text: string,
+  position: Vector3,
+): Entity {
+  const group = new Group();
+  group.name = `bud-${kind}`;
+
+  const isExpand = kind === 'expand';
+  const bud = new Mesh(
+    new SphereGeometry(0.014, 16, 12),
+    new MeshStandardMaterial({
+      color: isExpand ? 0x8fe8b0 : 0xf0c98a,
+      emissive: new Color(isExpand ? 0x2fbf6a : 0xbf7a2f),
+      emissiveIntensity: 0.85,
+      roughness: 0.35,
+    }),
+  );
+  bud.name = 'card';
+  group.add(bud);
+
+  const glyph = createTextLabel(isExpand ? '+' : '?', 0.016, { maxWidth: 0.03, color: '#06131c' });
+  glyph.position.z = 0.013;
+  group.add(glyph);
+
+  const bubble = createTextLabel(text, 0.0125, {
+    maxWidth: 0.4,
+    color: isExpand ? '#c9f5da' : '#ffe4c2',
+  });
+  bubble.name = 'bud-text';
+  bubble.position.set(0, 0.09, 0.01);
+  bubble.visible = false;
+  group.add(bubble);
+
+  group.position.copy(position);
+  facePlayer(group);
+
+  const entity = world.createTransformEntity(group);
+  entity.addComponent(SuggestionBud, { kind, text });
   entity.addComponent(RayInteractable);
   return entity;
 }

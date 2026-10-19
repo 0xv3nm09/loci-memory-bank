@@ -6,12 +6,13 @@ import {
   Note,
   OrganizeOrb,
   SnapAnimation,
+  SuggestionBud,
 } from './components.js';
 import { organize, type OrganizeResult } from './clusterer.js';
 import type { NoteInput } from './model-client.js';
 import { organizeWithModel } from './model-client.js';
 import { CLUSTER_HUES, clusterCenter, gridHalfHeight, noteOffset } from './layout.js';
-import { createClusterLabel, createLine, setNoteTint } from './note-factory.js';
+import { createClusterLabel, createLine, createSuggestionBud, setNoteTint } from './note-factory.js';
 import { playSnapChord } from './audio.js';
 import { getLoci } from './globals.js';
 import { schedulePalaceSave } from './palace-store.js';
@@ -20,6 +21,8 @@ export class OrganizeSystem extends createSystem({
   notes: { required: [Note] },
   lines: { required: [ConnectionLine] },
   labels: { required: [ClusterLabel] },
+  buds: { required: [SuggestionBud] },
+  budsPressed: { required: [SuggestionBud, Pressed] },
   orbPressed: { required: [OrganizeOrb, Pressed] },
 }) {
   private trash: Entity[] = [];
@@ -28,6 +31,12 @@ export class OrganizeSystem extends createSystem({
   init(): void {
     getLoci(this.globals).requestOrganize = () => this.organize();
     this.queries.orbPressed.subscribe('qualify', () => this.organize());
+    this.queries.budsPressed.subscribe('qualify', (entity) => {
+      const bubble = entity.object3D?.getObjectByName('bud-text');
+      if (bubble != null) {
+        bubble.visible = !bubble.visible;
+      }
+    });
   }
 
   update(): void {
@@ -116,6 +125,9 @@ export class OrganizeSystem extends createSystem({
     for (const label of Array.from(this.queries.labels.entities)) {
       this.trash.push(label);
     }
+    for (const bud of Array.from(this.queries.buds.entities)) {
+      this.trash.push(bud);
+    }
 
     let flightIndex = 0;
     let maxDelay = 0;
@@ -167,6 +179,25 @@ export class OrganizeSystem extends createSystem({
 
     for (const edge of result.edges) {
       createLine(this.world, edge.a, edge.b, maxDelay + 0.55);
+    }
+
+    // Sage's offers: expand (green) / challenge (amber) buds — press to read.
+    for (const suggestion of result.suggestions ?? []) {
+      const noteEntity = loci.noteById.get(suggestion.noteId);
+      const object = noteEntity?.object3D;
+      if (object == null) {
+        continue;
+      }
+      createSuggestionBud(
+        this.world,
+        suggestion.kind,
+        suggestion.text,
+        new Vector3(
+          object.position.x + 0.11,
+          object.position.y + 0.13,
+          object.position.z + 0.04,
+        ),
+      );
     }
 
     playSnapChord(0.18);

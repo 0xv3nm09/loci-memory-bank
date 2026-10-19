@@ -21,9 +21,16 @@ export interface ModelEdge {
   relation: string;
 }
 
+export interface ModelSuggestion {
+  noteId: string;
+  kind: 'expand' | 'challenge';
+  text: string;
+}
+
 export interface ModelOrganizeResult {
   clusters: ModelCluster[];
   edges: ModelEdge[];
+  suggestions?: ModelSuggestion[];
 }
 
 const DEFAULT_BASE = 'https://ollama.youtubeccanalyzer.com';
@@ -112,6 +119,18 @@ const ORGANIZE_SCHEMA = {
         required: ['a', 'b'],
       },
     },
+    suggestions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          noteId: { type: 'string' },
+          kind: { type: 'string', enum: ['expand', 'challenge'] },
+          text: { type: 'string' },
+        },
+        required: ['noteId', 'kind', 'text'],
+      },
+    },
   },
   required: ['clusters'],
 } as const;
@@ -121,6 +140,7 @@ const SYSTEM_PROMPT = [
   'Group the given thought notes into thematic clusters: 2 to 4 clusters when the material supports it; every note id appears in exactly one cluster.',
   'Give each cluster a short label (one or two words) drawn from the shared theme, in English.',
   'Draw up to 4 edges between notes in DIFFERENT clusters that genuinely relate; set relation to a two-word reason like "same deadline".',
+  'Then add up to 2 suggestions: at most one "expand" (offer to take a thin note further, one inviting question) and at most one "challenge" (kindly press on a weak or contradictory note, one honest question). Suggestions are offers, never instructions.',
   'Use EXACTLY the note ids provided — never invent ids. Keep every note text confidential and never add commentary.',
 ].join(' ');
 
@@ -162,6 +182,7 @@ export async function organizeWithModel(notes: NoteInput[]): Promise<ModelOrgani
   let parsed: {
     clusters?: Array<{ label?: unknown; noteIds?: unknown; confidence?: unknown }>;
     edges?: Array<{ a?: unknown; b?: unknown; relation?: unknown }>;
+    suggestions?: Array<{ noteId?: unknown; kind?: unknown; text?: unknown }>;
   };
   try {
     parsed = JSON.parse(content);
@@ -219,5 +240,25 @@ export async function organizeWithModel(notes: NoteInput[]): Promise<ModelOrgani
     }
   }
 
-  return { clusters, edges };
+  const suggestions: ModelSuggestion[] = [];
+  for (const raw of parsed.suggestions ?? []) {
+    if (suggestions.length >= 2) {
+      break;
+    }
+    if (
+      typeof raw.noteId === 'string' &&
+      validIds.has(raw.noteId) &&
+      (raw.kind === 'expand' || raw.kind === 'challenge') &&
+      typeof raw.text === 'string' &&
+      raw.text.trim() !== ''
+    ) {
+      suggestions.push({
+        noteId: raw.noteId,
+        kind: raw.kind,
+        text: raw.text.trim().slice(0, 160),
+      });
+    }
+  }
+
+  return { clusters, edges, suggestions };
 }

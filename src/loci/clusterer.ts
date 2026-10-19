@@ -24,6 +24,13 @@ export interface EdgeResult {
 export interface OrganizeResult {
   clusters: ClusterResult[];
   edges: EdgeResult[];
+  suggestions?: SuggestionResult[];
+}
+
+export interface SuggestionResult {
+  noteId: string;
+  kind: 'expand' | 'challenge';
+  text: string;
 }
 
 const STOPWORDS = new Set(
