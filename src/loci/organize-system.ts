@@ -105,7 +105,7 @@ export class OrganizeSystem extends createSystem({
     this.setStatus(
       source === 'Sage'
         ? 'Sage organized your thoughts.'
-        : 'Organized locally — Sage is offline right now.',
+        : 'Sage couldn\'t reach the model — organized locally instead.',
     );
     this.applyResult(result);
   }
