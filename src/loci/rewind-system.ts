@@ -5,6 +5,7 @@ import { Note, ClusterLabel, ConnectionLine, RewindHandle, RewindNow, SnapAnimat
 import { applyNoteBaseLook, createLabel } from './note-factory.js';
 import { getLoci } from './globals.js';
 import { loadPalace, type SavedSnapshot } from './palace-store.js';
+import { setAppStatus } from './status3d.js';
 
 const DIAL_POS = new Vector3(0.92, 1.12, -0.72);
 const TRACK_HALF = 0.14;
@@ -237,10 +238,7 @@ export class RewindSystem extends createSystem({
   }
 
   private setStatus(message: string): void {
-    const status = document.getElementById('hud-status');
-    if (status != null) {
-      status.textContent = message;
-    }
+    setAppStatus(message);
   }
 }
 

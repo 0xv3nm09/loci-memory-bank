@@ -12,8 +12,9 @@ import {
 import { clusterCenter, gridHalfHeight } from './layout.js';
 import { getLoci } from './globals.js';
 import { primeAudioOnFirstGesture } from './audio.js';
-import { TypeOrb } from './components.js';
-import { createTypeOrb } from './note-factory.js';
+import { MicOrb, TypeOrb } from './components.js';
+import { createMicOrb, createTypeOrb } from './note-factory.js';
+import { setAppStatus } from './status3d.js';
 import { checkDistress } from './distress-gate.js';
 import { CrisisPanelSystem } from './crisis-panel.js';
 import { GUIDE_STEPS } from './guide.js';
@@ -63,10 +64,12 @@ export class CaptureSystem extends createSystem({
   notes: { required: [Note] },
   seedsPressed: { required: [SeedCard, Pressed] },
   typePressed: { required: [TypeOrb, Pressed] },
+  micPressed: { required: [MicOrb, Pressed] },
 }) {
   private noteCounter = 0;
   private autoOrganizeTimer: ReturnType<typeof setTimeout> | null = null;
   private suppressExitFlush = false;
+  private toggleVoice: () => void = () => {};
 
   init(): void {
     const loci = getLoci(this.globals);
@@ -90,6 +93,7 @@ export class CaptureSystem extends createSystem({
     // the bottom edge of a seated frame — consider y 1.0-1.3 and a touch
     // closer after the first real-headset check.
     createTypeOrb(this.world, new Vector3(-0.02, 1.0, -0.72));
+    createMicOrb(this.world, new Vector3(0.28, 1.0, -0.72));
     createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.52, 1.22, -0.62));
     createSeed(this.world, 'thesis', SEED_TITLES.thesis, new Vector3(-0.52, 1.06, -0.72));
     createSeed(this.world, 'kingdom', SEED_TITLES.kingdom, new Vector3(-0.52, 0.9, -0.62));
@@ -103,6 +107,9 @@ export class CaptureSystem extends createSystem({
         this.spawnRaw(text);
         this.scheduleAutoOrganize();
       });
+    });
+    this.queries.micPressed.subscribe('qualify', () => {
+      this.toggleVoice();
     });
 
     this.restorePalace();
@@ -228,12 +235,10 @@ export class CaptureSystem extends createSystem({
   }
 
   private updateStatus(): void {
-    const status = document.getElementById('hud-status');
-    if (status != null) {
-      const count = getLoci(this.globals).noteById.size;
-      status.textContent =
-        count === 0 ? 'The space is calm. Dump a thought.' : `${count} thought${count === 1 ? '' : 's'} in the void.`;
-    }
+    const count = getLoci(this.globals).noteById.size;
+    setAppStatus(
+      count === 0 ? 'The space is calm. Dump a thought.' : `${count} thought${count === 1 ? '' : 's'} in the void.`,
+    );
   }
 
   private setupBrowserHud(): void {
@@ -272,62 +277,72 @@ export class CaptureSystem extends createSystem({
     const rewind = (): void => {
       getLoci(this.globals).requestRewindToggle();
     };
-    const setupVoice = (): void => {
-      if (voiceBtn == null) {
+    // One voice controller shared by the desktop mic button and the mic orb.
+    let recognizing = false;
+    let recognition: SpeechRecognitionLike | null = null;
+    const stopVoice = (): void => {
+      recognizing = false;
+      voiceBtn?.classList.remove('active');
+      input.placeholder = "What's on your mind?";
+      setAppStatus('Voice paused.');
+    };
+    const toggleVoice = (): void => {
+      if (recognizing) {
+        recognition?.stop();
         return;
       }
+      const rec = createRecognizer();
+      if (rec == null) {
+        setAppStatus('Voice capture needs a desktop browser — type instead.');
+        return;
+      }
+      rec.onresult = (event) => {
+        const result = event.results[event.results.length - 1];
+        const transcript = result[0]?.transcript?.trim() ?? '';
+        if (result.isFinal && transcript !== '') {
+          input.value = '';
+          this.spawnRaw(transcript);
+          this.scheduleAutoOrganize();
+        } else {
+          input.value = transcript;
+        }
+      };
+      rec.onend = () => {
+        stopVoice();
+      };
+      rec.onerror = () => {
+        stopVoice();
+      };
+      try {
+        rec.start();
+        recognition = rec;
+        recognizing = true;
+        voiceBtn?.classList.add('active');
+        input.placeholder = 'Listening… speak your thought';
+        setAppStatus('Listening… speak your thought.');
+      } catch {
+        stopVoice();
+      }
+    };
+    this.toggleVoice = toggleVoice;
+
+    if (voiceBtn != null) {
       if (!isSpeechSupported()) {
         voiceBtn.style.display = 'none';
-        return;
+      } else {
+        voiceBtn.addEventListener('click', toggleVoice);
+        this.cleanupFuncs.push(() => {
+          voiceBtn?.removeEventListener('click', toggleVoice);
+        });
       }
-      let recognizing = false;
-      let recognition: SpeechRecognitionLike | null = null;
-      const stop = (): void => {
-        recognizing = false;
-        voiceBtn?.classList.remove('active');
-        input.placeholder = "What's on your mind?";
-      };
-      voiceBtn.addEventListener('click', () => {
-        if (recognizing) {
-          recognition?.stop();
-          return;
-        }
-        const rec = createRecognizer();
-        if (rec == null) {
-          return;
-        }
-        rec.onresult = (event) => {
-          const result = event.results[event.results.length - 1];
-          const transcript = result[0]?.transcript?.trim() ?? '';
-          if (result.isFinal && transcript !== '') {
-            input.value = '';
-            this.spawnRaw(transcript);
-            this.scheduleAutoOrganize();
-          } else {
-            input.value = transcript;
-          }
-        };
-        rec.onend = stop;
-        rec.onerror = stop;
-        try {
-          rec.start();
-          recognition = rec;
-          recognizing = true;
-          voiceBtn?.classList.add('active');
-          input.placeholder = 'Listening… speak your thought';
-        } catch {
-          stop();
-        }
-      });
-      this.cleanupFuncs.push(() => {
-        try {
-          recognition?.stop();
-        } catch {
-          // already stopped
-        }
-      });
-    };
-    setupVoice();
+    }
+    this.cleanupFuncs.push(() => {
+      try {
+        recognition?.stop();
+      } catch {
+        // already stopped
+      }
+    });
     const clear = (): void => {
       this.suppressExitFlush = true;
       clearPalace();

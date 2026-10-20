@@ -11,6 +11,7 @@ import {
 import { organize, type OrganizeResult } from './clusterer.js';
 import type { NoteInput } from './model-client.js';
 import { organizeWithModel } from './model-client.js';
+import { setAppStatus } from './status3d.js';
 import { CLUSTER_HUES, clusterCenter, gridHalfHeight, noteOffset } from './layout.js';
 import { createClusterLabel, createLine, createSuggestionBud, setNoteTint } from './note-factory.js';
 import { playSnapChord } from './audio.js';
@@ -111,10 +112,7 @@ export class OrganizeSystem extends createSystem({
   }
 
   private setStatus(message: string): void {
-    const status = document.getElementById('hud-status');
-    if (status != null) {
-      status.textContent = message;
-    }
+    setAppStatus(message);
   }
 
   private applyResult(result: OrganizeResult): void {

@@ -24,6 +24,7 @@ import {
 } from './speech.js';
 import type { RecallState } from './palace-store.js';
 import { schedulePalaceSave } from './palace-store.js';
+import { setAppStatus } from './status3d.js';
 
 interface QuizOption {
   text: string;
@@ -574,10 +575,7 @@ export class RecallSystem extends createSystem({
     this.addPanelPiece(label, 0.06);
     this.endEntity = this.world.createTransformEntity(label);
     this.endTimer = 3.2;
-    const status = document.getElementById('hud-status');
-    if (status != null) {
-      status.textContent = message;
-    }
+    setAppStatus(message);
   }
 
   private clearQuizEntities(): void {

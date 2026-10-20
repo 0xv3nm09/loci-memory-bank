@@ -27,6 +27,7 @@ import {
   ConnectionLine,
   Note,
   OrganizeOrb,
+  MicOrb,
   RecallOrb,
   SeedCard,
   SuggestionBud,
@@ -293,6 +294,35 @@ export function createSuggestionBud(
 
   const entity = world.createTransformEntity(group);
   entity.addComponent(SuggestionBud, { kind, text });
+  entity.addComponent(RayInteractable);
+  return entity;
+}
+
+export function createMicOrb(world: World, position: Vector3): Entity {
+  const group = new Group();
+  group.name = 'mic-orb';
+
+  const orb = new Mesh(
+    new SphereGeometry(0.026, 20, 14),
+    new MeshStandardMaterial({
+      color: 0xffc9c9,
+      emissive: new Color(0xd05858),
+      emissiveIntensity: 0.7,
+      roughness: 0.3,
+    }),
+  );
+  orb.name = 'card';
+  group.add(orb);
+
+  const label = createTextMesh('mic', 0.016, '#ffd9d9');
+  label.position.y = -0.055;
+  group.add(label);
+
+  group.position.copy(position);
+  facePlayer(group);
+
+  const entity = world.createTransformEntity(group);
+  entity.addComponent(MicOrb);
   entity.addComponent(RayInteractable);
   return entity;
 }

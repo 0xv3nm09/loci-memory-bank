@@ -71,6 +71,9 @@ export const RewindHandle = createComponent('RewindHandle', {});
 /** The floating "type" orb — opens the in-headset keyboard. */
 export const TypeOrb = createComponent('TypeOrb', {});
 
+/** The floating mic orb — toggles voice capture (desktop browsers). */
+export const MicOrb = createComponent('MicOrb', {});
+
 /** "Back to now" button next to the Rewind dial. */
 export const RewindNow = createComponent('RewindNow', {});
 

@@ -18,6 +18,7 @@ import { GrabWatchSystem, SnapSystem } from './loci/snap-system.js';
 import { createLociGlobals } from './loci/globals.js';
 import { loadLociFont } from './loci/text-label.js';
 import { warmupModel } from './loci/model-client.js';
+import { initStatus3D } from './loci/status3d.js';
 
 // Register the bundled Inter before any card label is drawn, so every
 // surface uses the same type from the first frame.
@@ -40,6 +41,9 @@ World.create(
   world.registerSystem(CrisisPanelSystem);
   world.registerSystem(KeyboardSystem);
   world.registerSystem(PanelSystem);
+
+  // Sage's voice in the scene — status never depends on the DOM overlay.
+  initStatus3D(world);
 
   // Preload Sage into the server's VRAM so the first Organize is warm.
   warmupModel();

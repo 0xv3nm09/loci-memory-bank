@@ -12,6 +12,7 @@ import {
   RewindHandle,
   RewindNow,
   SeedCard,
+  MicOrb,
   SnapAnimation,
   SuggestionBud,
   TypeOrb,
@@ -31,6 +32,7 @@ export default defineComponents([
   TypeOrb,
   KeyboardKey,
   CrisisDismiss,
+  MicOrb,
   RewindHandle,
   RewindNow,
 ]);
