@@ -156,5 +156,24 @@ export function createTextLabel(
     }),
   );
   mesh.renderOrder = 5;
+  // Dynamic labels (e.g. the keyboard input field) redraw in place.
+  mesh.userData.redraw = (newText: string): void => {
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.font = fontSpec(drawPx, weight);
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'middle';
+    if (useShadow) {
+      ctx.shadowColor = 'rgba(2, 4, 12, 0.6)';
+      ctx.shadowBlur = drawPx * 0.16;
+      ctx.shadowOffsetY = drawPx * 0.05;
+    }
+    const redrawnLines = fitLines(ctx, newText, usablePx, maxLines);
+    redrawnLines.forEach((line, index) => {
+      const y = lineHeightPx * (index + 0.5);
+      const x = align === 'center' ? canvasWidth / 2 : 8;
+      ctx.fillText(line, x, y);
+    });
+    texture.needsUpdate = true;
+  };
   return mesh;
 }

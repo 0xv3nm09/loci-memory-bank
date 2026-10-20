@@ -57,6 +57,23 @@ export const AnswerCard = createComponent('AnswerCard', {
 /** The "done" button on the recall panel — ends the session. */
 export const QuizDone = createComponent('QuizDone', {});
 
+/** One key on the in-headset capture keyboard. */
+export const KeyboardKey = createComponent('KeyboardKey', {
+  char: { type: Types.String, default: '' },
+});
+
+/** Dismiss button on the 3D crisis panel. */
+export const CrisisDismiss = createComponent('CrisisDismiss', {});
+
+/** The grabbable knob on the Rewind dial. */
+export const RewindHandle = createComponent('RewindHandle', {});
+
+/** The floating "type" orb — opens the in-headset keyboard. */
+export const TypeOrb = createComponent('TypeOrb', {});
+
+/** "Back to now" button next to the Rewind dial. */
+export const RewindNow = createComponent('RewindNow', {});
+
 /** A Sage suggestion bud: expand (green) or challenge (amber) a note. */
 export const SuggestionBud = createComponent('SuggestionBud', {
   kind: {

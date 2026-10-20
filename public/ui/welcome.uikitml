@@ -59,11 +59,12 @@
   <div class="panel-content">
     <div class="heading">Loci</div>
     <Divider></Divider>
+    <!-- Keep in sync with src/loci/guide.ts (single source of truth) -->
     <div class="sub-heading">
-      1. Capture - type, speak, or press a seed card.
-      2. Organize - touch the glowing orb and watch the snap.
-      3. Arrange - grab cards. Yours stay where you put them.
-      Return tomorrow: Recall keeps it fresh.
+      Capture - type, speak, or press a seed card.
+      Organize - touch the orb and watch the snap.
+      Arrange - grab cards; yours stay put.
+      Recall - the violet orb quizzes you. Rewind - scrub your history.
     </div>
   </div>
   <Button id="xr-button" class="button">

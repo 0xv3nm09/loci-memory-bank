@@ -1,8 +1,13 @@
-import { createSystem, type Entity } from '@iwsdk/core';
-import { Note, ConnectionLine, ClusterLabel, SnapAnimation } from './components.js';
-import { applyNoteBaseLook } from './note-factory.js';
+import { createSystem, OneHandGrabbable, Pressed, RayInteractable, type Entity } from '@iwsdk/core';
+import { Color, Group, Mesh, MeshStandardMaterial, Vector3 } from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { Note, ClusterLabel, ConnectionLine, RewindHandle, RewindNow, SnapAnimation } from './components.js';
+import { applyNoteBaseLook, createLabel } from './note-factory.js';
 import { getLoci } from './globals.js';
 import { loadPalace, type SavedSnapshot } from './palace-store.js';
+
+const DIAL_POS = new Vector3(0.92, 1.12, -0.72);
+const TRACK_HALF = 0.14;
 
 function agoLabel(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();
@@ -18,38 +23,103 @@ function agoLabel(iso: string): string {
 }
 
 /**
- * Rewind — scrub the palace through its own history. Each save is a
- * snapshot; sliding plays the diffs back with the same snap animation.
- * Only what was genuinely saved can ever be shown: the distress gate
- * guarantees flagged captures never entered a snapshot.
+ * Rewind — scrub the palace through its own history with a spatial dial at
+ * the void's edge: a grabbable knob on a track (drag in VR by hand, on
+ * desktop by mouse). Each save is a snapshot; only what was genuinely saved
+ * can ever be shown.
  */
 export class RewindSystem extends createSystem({
   notes: { required: [Note] },
   lines: { required: [ConnectionLine] },
   labels: { required: [ClusterLabel] },
+  handlePressed: { required: [RewindHandle, Pressed] },
+  nowPressed: { required: [RewindNow, Pressed] },
 }) {
   private active = false;
   private history: SavedSnapshot[] = [];
+  private knob: Entity | null = null;
+  private knobMesh: Mesh | null = null;
+  private lastIndex = -1;
 
   init(): void {
     getLoci(this.globals).requestRewindToggle = () => this.toggle();
-
-    const button = document.getElementById('rewind-btn');
-    const nowButton = document.getElementById('rewind-now');
-    const slider = document.getElementById('rewind-slider') as HTMLInputElement | null;
-    const rewindLabel = document.getElementById('rewind-when');
-    button?.addEventListener('click', () => this.toggle());
-    nowButton?.addEventListener('click', () => this.exit());
-    slider?.addEventListener('input', () => {
-      const index = parseInt(slider.value, 10);
-      if (Number.isFinite(index)) {
-        this.apply(index);
+    this.buildDial();
+    this.queries.handlePressed.subscribe('qualify', () => {
+      if (!this.active) {
+        this.toggle();
       }
     });
-    this.cleanupFuncs.push(() => {
-      button?.removeEventListener('click', () => this.toggle());
-      nowButton?.removeEventListener('click', () => this.exit());
+    this.queries.nowPressed.subscribe('qualify', () => {
+      if (this.active) {
+        this.exit();
+      }
     });
+  }
+
+  private buildDial(): void {
+    const group = new Group();
+    group.name = 'rewind-dial';
+
+    const track = new Mesh(
+      new RoundedBoxGeometry(TRACK_HALF * 2 + 0.04, 0.014, 0.012, 1, 0.006),
+      new MeshStandardMaterial({
+        color: 0x141a2e,
+        emissive: new Color(0x3a335f),
+        emissiveIntensity: 0.5,
+        roughness: 0.6,
+      }),
+    );
+    group.add(track);
+
+    const knobGroup = new Group();
+    knobGroup.name = 'rewind-knob';
+    const knob = new Mesh(
+      new RoundedBoxGeometry(0.036, 0.036, 0.02, 1, 0.01),
+      new MeshStandardMaterial({
+        color: 0xcfc2ff,
+        emissive: new Color(0x7a5fd0),
+        emissiveIntensity: 0.8,
+        roughness: 0.35,
+      }),
+    );
+    knob.name = 'card';
+    knobGroup.add(knob);
+    const knobLabel = createLabel('rewind', 0.009, '#e2daff', 0.09);
+    knobLabel.position.y = -0.032;
+    knobGroup.add(knobLabel);
+    knobGroup.position.set(DIAL_POS.x, DIAL_POS.y, DIAL_POS.z + 0.005);
+    const knobEntity = this.world.createTransformEntity(knobGroup);
+    knobEntity.addComponent(RewindHandle);
+    knobEntity.addComponent(RayInteractable);
+    knobEntity.addComponent(OneHandGrabbable, {
+      translate: true,
+      translateMin: [DIAL_POS.x - TRACK_HALF, DIAL_POS.y, DIAL_POS.z + 0.005],
+      translateMax: [DIAL_POS.x + TRACK_HALF, DIAL_POS.y, DIAL_POS.z + 0.005],
+      rotate: false,
+    });
+    this.knob = knobEntity;
+    this.knobMesh = knob;
+
+    const nowGroup = new Group();
+    nowGroup.name = 'rewind-now-orb';
+    const nowOrb = new Mesh(
+      new RoundedBoxGeometry(0.06, 0.026, 0.012, 1, 0.008),
+      new MeshStandardMaterial({
+        color: 0x1c2745,
+        emissive: new Color(0x56639a),
+        emissiveIntensity: 0.5,
+        roughness: 0.5,
+      }),
+    );
+    nowOrb.name = 'card';
+    nowGroup.add(nowOrb);
+    const nowLabel = createLabel('now', 0.009, '#dfe6ff', 0.05);
+    nowLabel.position.z = 0.008;
+    nowGroup.add(nowLabel);
+    nowGroup.position.set(DIAL_POS.x - TRACK_HALF - 0.09, DIAL_POS.y, DIAL_POS.z);
+    const nowEntity = this.world.createTransformEntity(nowGroup);
+    nowEntity.addComponent(RewindNow);
+    nowEntity.addComponent(RayInteractable);
   }
 
   private toggle(): void {
@@ -58,7 +128,7 @@ export class RewindSystem extends createSystem({
       return;
     }
     const loci = getLoci(this.globals);
-    if (loci.recallActive) {
+    if (loci.recallActive || loci.crisActive) {
       return;
     }
     const saved = loadPalace();
@@ -70,6 +140,7 @@ export class RewindSystem extends createSystem({
     this.history = history;
     this.active = true;
     loci.rewindActive = true;
+    this.lastIndex = -1;
 
     for (const line of this.queries.lines.entities) {
       if (line.object3D != null) {
@@ -81,18 +152,8 @@ export class RewindSystem extends createSystem({
         label.object3D.visible = false;
       }
     }
-
-    const bar = document.getElementById('rewind-bar');
-    const slider = document.getElementById('rewind-slider') as HTMLInputElement | null;
-    if (bar != null) {
-      bar.style.display = 'flex';
-    }
-    if (slider != null) {
-      slider.max = String(history.length - 1);
-      slider.value = String(history.length - 1);
-    }
-    this.setStatus('Rewinding — drag the slider through your palace\'s history.');
-    this.apply(history.length - 1);
+    this.setStatus('Rewinding — drag the knob through your palace\'s history.');
+    this.applyFromKnob();
   }
 
   private exit(): void {
@@ -101,10 +162,6 @@ export class RewindSystem extends createSystem({
     }
     this.active = false;
     getLoci(this.globals).rewindActive = false;
-    const bar = document.getElementById('rewind-bar');
-    if (bar != null) {
-      bar.style.display = 'none';
-    }
     // "Now" is the most recent snapshot — cards return to the last save.
     this.apply(this.history.length - 1);
     for (const line of this.queries.lines.entities) {
@@ -120,16 +177,35 @@ export class RewindSystem extends createSystem({
     this.setStatus('Back to now. Your palace kept everything.');
   }
 
+  update(): void {
+    if (!this.active) {
+      return;
+    }
+    this.applyFromKnob();
+  }
+
+  /** Knob position (works for XR grab and desktop mouse-drag) → snapshot. */
+  private applyFromKnob(): void {
+    const x = this.knob?.object3D?.position.x ?? DIAL_POS.x;
+    const fraction = Math.min(
+      1,
+      Math.max(0, (x - (DIAL_POS.x - TRACK_HALF)) / (TRACK_HALF * 2)),
+    );
+    const index = Math.round(fraction * (this.history.length - 1));
+    if (index === this.lastIndex) {
+      return;
+    }
+    this.lastIndex = index;
+    this.apply(index);
+  }
+
   private apply(index: number): void {
     const snapshot = this.history[index];
     if (snapshot == null) {
       return;
     }
     const loci = getLoci(this.globals);
-    const rewindLabel = document.getElementById('rewind-when');
-    if (rewindLabel != null) {
-      rewindLabel.textContent = agoLabel(snapshot.at);
-    }
+    this.setStatus(`Rewinding — ${agoLabel(snapshot.at)}.`);
 
     for (const [id, entity] of loci.noteById) {
       const object = entity.object3D;
@@ -138,7 +214,6 @@ export class RewindSystem extends createSystem({
       }
       const saved = snapshot.notes.find((note) => note.id === id);
       if (saved == null) {
-        // This thought didn't exist yet — it stays out of the past.
         object.visible = false;
         continue;
       }
@@ -168,3 +243,4 @@ export class RewindSystem extends createSystem({
     }
   }
 }
+

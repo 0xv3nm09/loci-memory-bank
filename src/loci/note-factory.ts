@@ -30,6 +30,7 @@ import {
   RecallOrb,
   SeedCard,
   SuggestionBud,
+  TypeOrb,
 } from './components.js';
 import { createTextLabel } from './text-label.js';
 import { GLASS, accentForHue } from './palette.js';
@@ -292,6 +293,35 @@ export function createSuggestionBud(
 
   const entity = world.createTransformEntity(group);
   entity.addComponent(SuggestionBud, { kind, text });
+  entity.addComponent(RayInteractable);
+  return entity;
+}
+
+export function createTypeOrb(world: World, position: Vector3): Entity {
+  const group = new Group();
+  group.name = 'type-orb';
+
+  const orb = new Mesh(
+    new SphereGeometry(0.026, 20, 14),
+    new MeshStandardMaterial({
+      color: 0xaac6ff,
+      emissive: new Color(0x4a6fd0),
+      emissiveIntensity: 0.8,
+      roughness: 0.3,
+    }),
+  );
+  orb.name = 'card';
+  group.add(orb);
+
+  const label = createTextMesh('type', 0.016, '#c9d8ff');
+  label.position.y = -0.055;
+  group.add(label);
+
+  group.position.copy(position);
+  facePlayer(group);
+
+  const entity = world.createTransformEntity(group);
+  entity.addComponent(TypeOrb);
   entity.addComponent(RayInteractable);
   return entity;
 }

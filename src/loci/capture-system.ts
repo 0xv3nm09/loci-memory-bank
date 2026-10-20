@@ -12,7 +12,11 @@ import {
 import { clusterCenter, gridHalfHeight } from './layout.js';
 import { getLoci } from './globals.js';
 import { primeAudioOnFirstGesture } from './audio.js';
-import { checkDistress, showCrisisCard } from './distress-gate.js';
+import { TypeOrb } from './components.js';
+import { createTypeOrb } from './note-factory.js';
+import { checkDistress } from './distress-gate.js';
+import { CrisisPanelSystem } from './crisis-panel.js';
+import { GUIDE_STEPS } from './guide.js';
 import {
   createRecognizer,
   isSpeechSupported,
@@ -58,6 +62,7 @@ const SEED_TITLES: Record<string, string> = {
 export class CaptureSystem extends createSystem({
   notes: { required: [Note] },
   seedsPressed: { required: [SeedCard, Pressed] },
+  typePressed: { required: [TypeOrb, Pressed] },
 }) {
   private noteCounter = 0;
   private autoOrganizeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -84,6 +89,7 @@ export class CaptureSystem extends createSystem({
     // TODO(polish, XR framing): in the Quest view these affordances sit at
     // the bottom edge of a seated frame — consider y 1.0-1.3 and a touch
     // closer after the first real-headset check.
+    createTypeOrb(this.world, new Vector3(-0.02, 1.0, -0.72));
     createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.52, 1.22, -0.62));
     createSeed(this.world, 'thesis', SEED_TITLES.thesis, new Vector3(-0.52, 1.06, -0.72));
     createSeed(this.world, 'kingdom', SEED_TITLES.kingdom, new Vector3(-0.52, 0.9, -0.62));
@@ -91,6 +97,12 @@ export class CaptureSystem extends createSystem({
 
     this.queries.seedsPressed.subscribe('qualify', (entity) => {
       this.dumpSeed(entity.getValue(SeedCard, 'setKey') ?? 'exam');
+    });
+    this.queries.typePressed.subscribe('qualify', () => {
+      getLoci(this.globals).requestKeyboard('', (text) => {
+        this.spawnRaw(text);
+        this.scheduleAutoOrganize();
+      });
     });
 
     this.restorePalace();
@@ -166,7 +178,7 @@ export class CaptureSystem extends createSystem({
 
   private dumpSeed(key: string): void {
     const loci = getLoci(this.globals);
-    if (loci.recallActive || loci.rewindActive) {
+    if (loci.recallActive || loci.rewindActive || loci.crisActive) {
       return;
     }
     const thoughts = SEED_SETS[key];
@@ -199,7 +211,8 @@ export class CaptureSystem extends createSystem({
     }
     // The universal gate runs before anything else sees the thought.
     if (checkDistress(trimmed).flagged) {
-      showCrisisCard();
+      const crisis = this.world.getSystem(CrisisPanelSystem);
+      crisis?.show();
       return;
     }
     this.noteCounter += 1;
@@ -371,6 +384,30 @@ export class CaptureSystem extends createSystem({
         hud.style.display = immersive ? 'none' : 'flex';
       }),
     );
+
+    const helpList = document.getElementById('help-list');
+    if (helpList != null) {
+      helpList.innerHTML = GUIDE_STEPS.map(
+        (step) => `<li><b>${step.title}</b> — ${step.body}</li>`,
+      ).join('');
+    }
+    const helpData = document.getElementById('help-data');
+    if (helpData != null) {
+      const exportClick = (): void => exportPalace();
+      const clearClick = (): void => {
+        this.suppressExitFlush = true;
+        clearPalace();
+        location.reload();
+      };
+      const exportDataBtn = document.getElementById('data-export-btn');
+      const clearDataBtn = document.getElementById('data-clear-btn');
+      exportDataBtn?.addEventListener('click', exportClick);
+      clearDataBtn?.addEventListener('click', clearClick);
+      this.cleanupFuncs.push(
+        () => exportDataBtn?.removeEventListener('click', exportClick),
+        () => clearDataBtn?.removeEventListener('click', clearClick),
+      );
+    }
 
     this.updateStatus();
   }

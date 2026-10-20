@@ -79,43 +79,7 @@
         z-index: 10;
         pointer-events: none;
       }
-      #rewind-bar {
-        position: fixed;
-        left: 50%;
-        bottom: 82px;
-        transform: translateX(-50%);
-        display: none;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 18px;
-        background: rgba(10, 14, 28, 0.9);
-        border: 1px solid rgba(190, 170, 255, 0.4);
-        border-radius: 14px;
-        backdrop-filter: blur(8px);
-        z-index: 11;
-      }
-      #rewind-when {
-        font-size: 13px;
-        font-weight: 600;
-        color: #cabfff;
-        min-width: 90px;
-        text-align: center;
-      }
-      #rewind-slider {
-        width: 320px;
-        accent-color: #8f7bff;
-        cursor: pointer;
-      }
-      #rewind-now {
-        padding: 8px 14px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #06131c;
-        background: linear-gradient(180deg, #cfc2ff, #8f7bff);
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-      }
+
       #loci-help {
         position: fixed;
         inset: 0;
@@ -158,6 +122,33 @@
         border-radius: 8px;
         cursor: pointer;
       }
+      #loci-help .help-divider {
+        margin: 16px 0 10px;
+        border-top: 1px solid rgba(140, 170, 255, 0.2);
+      }
+      #loci-help .help-data-title {
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #8fa3d8;
+        margin-bottom: 8px;
+      }
+      #loci-help .help-data {
+        display: flex;
+        gap: 8px;
+      }
+      #loci-help .help-data button {
+        margin-top: 0;
+        padding: 8px 12px;
+        font-size: 13px;
+        color: #c3cdea;
+        background: rgba(40, 52, 96, 0.9);
+        border: 1px solid rgba(120, 160, 255, 0.3);
+      }
+      #loci-help .help-data button.danger {
+        color: #ffc9c9;
+        border-color: rgba(255, 140, 140, 0.4);
+      }
       @media (max-width: 640px) {
         #rewind-slider {
           width: 160px;
@@ -181,33 +172,20 @@
       <button id="recall-btn" class="secondary">Recall</button>
       <button id="rewind-btn" class="secondary">Rewind</button>
       <button id="demo-btn" class="secondary">Demo dump</button>
-      <button id="clear-btn" class="secondary">Clear</button>
-      <button id="export-btn" class="secondary">Export</button>
       <button id="help-btn" title="How Loci works" class="secondary">?</button>
     </div>
     <div id="loci-help" style="display: none">
       <div class="help-card">
         <div class="help-title">How Loci works</div>
-        <ol class="help-list">
-          <li><b>Capture</b> — type a thought, speak with the mic, or press a
-            seed card to spill a whole set.</li>
-          <li><b>Organize</b> — touch the glowing orb: your thoughts snap into
-            connected clusters. Sage groups them; you can always rearrange.</li>
-          <li><b>Arrange</b> — grab and drag any card. Your placements are
-            never overwritten.</li>
-          <li><b>Recall</b> — the violet orb quizzes your weakest notes first; answer
-            by touching a bar or just saying it. Correct answers come back
-            less often.</li>
-          <li><b>Rewind</b> — scrub time and watch your palace grow.</li>
-          <li><b>Everything persists</b> — export anytime from the bar below.</li>
-        </ol>
+        <ol class="help-list" id="help-list"></ol>
+        <div class="help-divider"></div>
+        <div class="help-data-title">Desktop data tools</div>
+        <div class="help-data">
+          <button id="data-export-btn" class="secondary">Export palace JSON</button>
+          <button id="data-clear-btn" class="secondary danger">Clear palace</button>
+        </div>
         <button id="help-close">Got it</button>
       </div>
-    </div>
-    <div id="rewind-bar" style="display: none">
-      <span id="rewind-when">now</span>
-      <input id="rewind-slider" type="range" min="0" max="1" value="1" step="1" />
-      <button id="rewind-now">Back to now</button>
     </div>
     <script type="module" src="/src/index.ts"></script>
   </body>

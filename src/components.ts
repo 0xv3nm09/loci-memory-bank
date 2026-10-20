@@ -3,13 +3,18 @@ import {
   AnswerCard,
   ClusterLabel,
   ConnectionLine,
+  CrisisDismiss,
+  KeyboardKey,
   Note,
   OrganizeOrb,
   QuizDone,
   RecallOrb,
+  RewindHandle,
+  RewindNow,
   SeedCard,
   SnapAnimation,
   SuggestionBud,
+  TypeOrb,
 } from './loci/components.js';
 
 export default defineComponents([
@@ -23,4 +28,9 @@ export default defineComponents([
   AnswerCard,
   QuizDone,
   SuggestionBud,
+  TypeOrb,
+  KeyboardKey,
+  CrisisDismiss,
+  RewindHandle,
+  RewindNow,
 ]);

@@ -10,6 +10,8 @@ import { AmbientSystem } from './loci/ambient-system.js';
 import { CaptureSystem } from './loci/capture-system.js';
 import { MouseDragSystem } from './loci/mouse-drag-system.js';
 import { OrganizeSystem } from './loci/organize-system.js';
+import { CrisisPanelSystem } from './loci/crisis-panel.js';
+import { KeyboardSystem } from './loci/capture-keyboard.js';
 import { RecallSystem } from './loci/recall-system.js';
 import { RewindSystem } from './loci/rewind-system.js';
 import { GrabWatchSystem, SnapSystem } from './loci/snap-system.js';
@@ -35,6 +37,8 @@ World.create(
   world.registerSystem(MouseDragSystem);
   world.registerSystem(RecallSystem);
   world.registerSystem(RewindSystem);
+  world.registerSystem(CrisisPanelSystem);
+  world.registerSystem(KeyboardSystem);
   world.registerSystem(PanelSystem);
 
   // Preload Sage into the server's VRAM so the first Organize is warm.
