@@ -68,6 +68,8 @@ export class OrganizeSystem extends createSystem({
     if (loci.recallActive || this.thinking || loci.rewindActive || loci.crisActive) {
       return;
     }
+    // A deliberate organize supersedes any pending auto-organize timer.
+    loci.cancelAutoOrganize();
     const movable = Array.from(this.queries.notes.entities).filter(
       (entity) => !entity.getValue(Note, 'userPlaced'),
     );

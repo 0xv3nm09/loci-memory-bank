@@ -89,9 +89,8 @@ export class CaptureSystem extends createSystem({
       this.updateStatus();
     });
 
-    // TODO(polish, XR framing): in the Quest view these affordances sit at
-    // the bottom edge of a seated frame — consider y 1.0-1.3 and a touch
-    // closer after the first real-headset check.
+    // Affordances sit in the suggested seated band (y 1.0-1.3); confirm on
+    // a real headset before submission (TASKS.md §5 — needs a device).
     createTypeOrb(this.world, new Vector3(-0.02, 1.0, -0.72));
     createMicOrb(this.world, new Vector3(0.28, 1.0, -0.72));
     createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.52, 1.22, -0.62));
@@ -111,6 +110,13 @@ export class CaptureSystem extends createSystem({
     this.queries.micPressed.subscribe('qualify', () => {
       this.toggleVoice();
     });
+
+    getLoci(this.globals).cancelAutoOrganize = () => {
+      if (this.autoOrganizeTimer !== null) {
+        clearTimeout(this.autoOrganizeTimer);
+        this.autoOrganizeTimer = null;
+      }
+    };
 
     this.restorePalace();
     this.setupBrowserHud();
@@ -195,9 +201,6 @@ export class CaptureSystem extends createSystem({
     for (const thought of thoughts) {
       this.spawnRaw(thought);
     }
-    // TODO(polish): a manual Organize before this timer fires causes a
-    // second organize 2.2s later — harmless (same layout recomputed) but
-    // the timer should be cleared once a manual organize has run.
     this.scheduleAutoOrganize();
   }
 
@@ -246,7 +249,6 @@ export class CaptureSystem extends createSystem({
     const input = document.getElementById('note-input') as HTMLInputElement | null;
     const addBtn = document.getElementById('add-btn');
     const organizeBtn = document.getElementById('organize-btn');
-    const demoBtn = document.getElementById('demo-btn');
     const recallBtn = document.getElementById('recall-btn');
     const rewindBtn = document.getElementById('rewind-btn');
     const voiceBtn = document.getElementById('voice-btn');
@@ -267,9 +269,6 @@ export class CaptureSystem extends createSystem({
     };
     const organize = (): void => {
       getLoci(this.globals).requestOrganize();
-    };
-    const demo = (): void => {
-      this.dumpSeed('exam');
     };
     const recall = (): void => {
       getLoci(this.globals).requestRecall();
@@ -360,7 +359,6 @@ export class CaptureSystem extends createSystem({
 
     const addClick = (): void => add();
     const organizeClick = (): void => organize();
-    const demoClick = (): void => demo();
     const recallClick = (): void => recall();
     const rewindClick = (): void => rewind();
     const clearClick = (): void => clear();
@@ -374,7 +372,6 @@ export class CaptureSystem extends createSystem({
     };
     addBtn?.addEventListener('click', addClick);
     organizeBtn?.addEventListener('click', organizeClick);
-    demoBtn?.addEventListener('click', demoClick);
     recallBtn?.addEventListener('click', recallClick);
     rewindBtn?.addEventListener('click', rewindClick);
     clearBtn?.addEventListener('click', clearClick);
@@ -386,7 +383,6 @@ export class CaptureSystem extends createSystem({
     this.cleanupFuncs.push(
       () => addBtn?.removeEventListener('click', addClick),
       () => organizeBtn?.removeEventListener('click', organizeClick),
-      () => demoBtn?.removeEventListener('click', demoClick),
       () => recallBtn?.removeEventListener('click', recallClick),
       () => rewindBtn?.removeEventListener('click', rewindClick),
       () => clearBtn?.removeEventListener('click', clearClick),

@@ -15,5 +15,5 @@ export const GUIDE_STEPS: GuideStep[] = [
   { title: 'Arrange', body: 'Grab and drag any card. Your placements are never overwritten.' },
   { title: 'Recall', body: 'The violet orb quizzes your weakest notes — answer by touch or voice.' },
   { title: 'Rewind', body: 'Scrub the dial at the edge of the void to watch your palace grow.' },
-  { title: 'Persist', body: 'Everything autosaves. Export a backup from the desktop bar.' },
+  { title: 'Persist', body: 'Everything autosaves. Export a backup from the question-mark menu.' },
 ];

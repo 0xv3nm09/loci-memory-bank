@@ -141,9 +141,11 @@ export class RecallSystem extends createSystem({
         // already detached
       }
       try {
-        entity.destroy();
+        // dispose() = destroy() + GPU resource cleanup (labels carry unique
+        // canvas textures; destroy() alone leaks them across sessions).
+        entity.dispose();
       } catch {
-        // already destroyed
+        // already gone
       }
     }
   }
