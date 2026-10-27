@@ -212,12 +212,13 @@ class Sequence:
             if kind == "note":
                 return 40 + 16 * (len(norm(d["text"])) - 1)
             if kind == "alt":
-                return self.step + 12
+                return self.step + 20
             return self.step
 
         n = len(self.parts)
         span = W - 180
         xs = [90 + span * (i + 0.5) / n for i in range(n)]
+        box_w = min(124, span / n - 10)
         idx = {p: i for i, p in enumerate(self.parts)}
         head = 96
         total = head + sum(row_h(k, d) for k, d in self.rows) + 50
@@ -227,7 +228,7 @@ class Sequence:
              f'<text x="50" y="70" font-size="13.5" fill="{DIM}">{esc(self.subtitle)}</text>']
         y0 = head - 6
         for i, part in enumerate(self.parts):
-            p.append(f'<rect x="{xs[i]-62}" y="{y0}" width="124" height="36" rx="9" fill="{GLASS}" stroke="{self.accent}"/>')
+            p.append(f'<rect x="{xs[i]-box_w/2}" y="{y0}" width="{box_w}" height="36" rx="9" fill="{GLASS}" stroke="{self.accent}"/>')
             p.append(f'<text x="{xs[i]}" y="{y0+23}" font-size="12" font-weight="700" fill="{INK}" text-anchor="middle">{esc(part)}</text>')
             p.append(f'<line x1="{xs[i]}" y1="{y0+36}" x2="{xs[i]}" y2="{total-20}" stroke="{STROKE}" stroke-dasharray="4 5"/>')
         y = y0 + 58
@@ -257,14 +258,19 @@ class Sequence:
                 y += 44
             elif kind == "alt":
                 xa, xb = xs[idx[d["a"]]], xs[idx[d["b"]]]
-                lo, hi = min(xa, xb) - 24, max(xa, xb) + 24
-                p.append(f'<rect x="{lo}" y="{y-18}" width="{hi-lo}" height="46" rx="8" fill="none" stroke="{GOLD}" stroke-dasharray="5 4"/>')
-                p.append(f'<rect x="{lo}" y="{y-30}" width="{9*len(d["label"])+14}" height="20" rx="9" fill="{GOLD}" opacity="0.2"/>')
-                p.append(f'<text x="{lo+8}" y="{y-16}" font-size="11" font-weight="700" fill="{GOLD}">{esc(d["label"])}</text>')
+                midx = (xa + xb) / 2
+                text_w = 6.6 * len(d["text"])
+                lo = max(10, min(min(xa, xb) - 30, midx - text_w / 2 - 14))
+                hi = min(W - 10, max(max(xa, xb) + 30, midx + text_w / 2 + 14))
+                # UML style: label tab sits ABOVE the frame — nothing overlaps
+                p.append(f'<rect x="{lo}" y="{y-30}" width="{hi-lo}" height="64" rx="8" fill="none" stroke="{GOLD}" stroke-dasharray="5 4"/>')
+                tab_w = 9 * len(d["label"]) + 16
+                p.append(f'<rect x="{lo}" y="{y-46}" width="{tab_w}" height="20" rx="9" fill="{GOLD}" opacity="0.22"/>')
+                p.append(f'<text x="{lo+8}" y="{y-32}" font-size="11" font-weight="700" fill="{GOLD}">{esc(d["label"])}</text>')
                 dash = ' stroke-dasharray="6 5"' if d["dashed"] else ""
                 p.append(f'<line x1="{xa}" y1="{y}" x2="{xb}" y2="{y}" stroke="#7f8ec4" stroke-width="2"{dash} marker-end="url(#arr)"/>')
-                p.append(f'<text x="{(xa+xb)/2}" y="{y-4}" font-size="12.5" fill="{BODY}" text-anchor="middle">{esc(d["text"])}</text>')
-                y += self.step + 12
+                p.append(f'<text x="{midx}" y="{y-6}" font-size="12.5" fill="{BODY}" text-anchor="middle">{esc(d["text"])}</text>')
+                y += self.step + 20
             elif kind == "note":
                 lines = norm(d["text"])
                 h = 24 + 16 * (len(lines) - 1)
