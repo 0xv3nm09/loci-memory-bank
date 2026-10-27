@@ -38,7 +38,7 @@ space, and its agency is **visible, safe, and honest**:
 | Fallback-first arbitration (≥60% coverage rule) | `organize-system.ts` `applyBest()` |
 | Gold/gray agent-status orb | `organize-system.ts` `tintOrb()` |
 | Expand/challenge suggestion buds | `organize-system.ts`, `note-factory.ts` `createSuggestionBud` |
-| Voice capture + voice quiz answering | `speech.ts`, `recall-system.ts` `answerByVoice()` |
+| Voice capture + voice quiz answering | `speech.ts` (shared recognizer API) + `capture-system.ts` (voice capture) + `recall-system.ts` `answerByVoice()` |
 | Safety gate before the model | `distress-gate.ts`, `crisis-panel.ts` |
 | Boot-time model warmup | `model-client.ts` `warmupModel()` |
 

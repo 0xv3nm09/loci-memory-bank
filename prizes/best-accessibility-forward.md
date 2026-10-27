@@ -10,7 +10,7 @@ Inclusive by default was a design constraint, not a mode:
 
 1. **Voice and hands each work alone.** Capture: voice (mic orb; desktop browsers — Quest browser does not yet ship SpeechRecognition, so on headset the keyboard path covers this) →
    spatial keyboard (everywhere) → seed cards (one touch). Answers: touch or
-   spoken. Nothing requires both channels at once (`speech.ts`,
+   spoken. Nothing requires both channels at once (`speech.ts` — shared Web Speech helper —,
    `capture-keyboard.ts`).
 2. **Cluster colors are *verified* colorblind-safe, not claimed.** The six
    accents (`palette.ts`) were searched under Viénot deuteranopia /
@@ -44,7 +44,7 @@ Inclusive by default was a design constraint, not a mode:
 | Webcam hand tracking | Desktop pinch-to-grab without VR headset | `webcam-hand-system.ts` |
 | Spawn tone | Non-visual audio feedback when a thought materializes | `audio.ts` (`playSpawnTone`) |
 | Spatial keyboard (voice alternative) | `capture-keyboard.ts` |
-| Voice capture + voice answers | `speech.ts`, `recall-system.ts` |
+| Voice capture + voice answers | `capture-system.ts` (capture), `recall-system.ts` (answers), `speech.ts` (shared API) |
 | Crisis calm tone | `audio.ts` `playCalmTone()`, `crisis-panel.ts` |
 | Glyphs with every color signal | `note-factory.ts` buds, `recall-system.ts` |
 | One-hand-only interaction | `note-factory.ts` (`OneHandGrabbable` only) |

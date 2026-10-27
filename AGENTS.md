@@ -64,9 +64,13 @@ never declares URLs, geometry or materials — only manifest IDs.
 imports that same manifest to build its inspector, so a component that is not in
 it cannot be authored in scenes.
 
-**Import Three.js from `@iwsdk/core`, never from `three`.** `@iwsdk/core`
-re-exports all of Three; importing `three` directly creates a duplicate instance
-and subtle breakage. Exception: `import type { GLTF } from 'three/addons/...'`.
+**Import Three.js from `'three'` — this project pins it.** `package.json`
+aliases `three` to `npm:super-three@0.181.0` with a matching `overrides`
+entry, so the app and `@iwsdk/core` share one copy and direct `three`
+imports are safe (and required — `@iwsdk/core` does not re-export Three
+primitives like Vector3/Mesh). Do not add `three` from any other source or
+remove the override: duplicate Three instances cause subtle breakage.
+(Verified Oct 27: 12 files import from `'three'`; single shared instance.)
 
 ## Traps that produce silent failures
 

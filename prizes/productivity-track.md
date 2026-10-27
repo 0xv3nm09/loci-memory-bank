@@ -18,7 +18,7 @@ under ten minutes, fully seated: the "airplane seat test" passes by design.
 
 | Capability | Where |
 |---|---|
-| Capture: typed, voice, spatial keyboard, seed sets | `capture-system.ts`, `capture-keyboard.ts`, `speech.ts` |
+| Capture: typed, voice, spatial keyboard, seed sets | `capture-system.ts`, `capture-keyboard.ts`, `speech.ts` (shared Web Speech helper) |
 | Note birth animation: scale bloom, glow fade, shimmer tone | `ambient-system.ts` (`SpawnAnimation`), `audio.ts` (`playSpawnTone`) |
 | Organize: real model (qwen3:14b) + instant local fallback | `organize-system.ts`, `model-client.ts`, `clusterer.ts` |
 | The snap (the hook) | `snap-system.ts`, `audio.ts` (`playSnapChord`), particle trails |
