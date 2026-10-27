@@ -104,7 +104,7 @@ export function createNote(
   accentBar.visible = false;
   group.add(accentBar);
 
-  const label = createTextMesh(text, 0.0155, GLASS.ink);
+  const label = createTextMesh(text, 0.018, GLASS.ink);
   label.position.z = CARD_D / 2 + 0.004;
   label.name = 'label';
   group.add(label);

@@ -139,14 +139,25 @@ export function createTextLabel(
   ctx.font = fontSpec(drawPx, weight);
   ctx.fillStyle = color;
   ctx.textBaseline = 'middle';
+  ctx.textAlign = align === 'center' ? 'center' : 'left';
   if (useShadow) {
     ctx.shadowColor = 'rgba(2, 4, 12, 0.6)';
     ctx.shadowBlur = drawPx * 0.16;
     ctx.shadowOffsetY = drawPx * 0.05;
   }
+  // Faux-bold: stroke behind fill thickens glyphs when only Regular weight is
+  // loaded.  The stroke width scales with requested weight so 500 is neutral
+  // and 600–700 adds visible heft.
+  const fauxBold = weight > 400;
+  if (fauxBold) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(0.5, drawPx * (weight - 400) / 600);
+    ctx.lineJoin = 'round';
+  }
   lines.forEach((line, index) => {
     const y = lineHeightPx * (index + 0.5);
     const x = align === 'center' ? canvasWidth / 2 : 8;
+    if (fauxBold) { ctx.strokeText(line, x, y); }
     ctx.fillText(line, x, y);
   });
 
@@ -174,15 +185,22 @@ export function createTextLabel(
     ctx.font = fontSpec(drawPx, weight);
     ctx.fillStyle = color;
     ctx.textBaseline = 'middle';
+    ctx.textAlign = align === 'center' ? 'center' : 'left';
     if (useShadow) {
       ctx.shadowColor = 'rgba(2, 4, 12, 0.6)';
       ctx.shadowBlur = drawPx * 0.16;
       ctx.shadowOffsetY = drawPx * 0.05;
     }
+    if (fauxBold) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(0.5, drawPx * (weight - 400) / 600);
+      ctx.lineJoin = 'round';
+    }
     const redrawnLines = fitLines(ctx, newText, usablePx, maxLines);
     redrawnLines.forEach((line, index) => {
       const y = lineHeightPx * (index + 0.5);
       const x = align === 'center' ? canvasWidth / 2 : 8;
+      if (fauxBold) { ctx.strokeText(line, x, y); }
       ctx.fillText(line, x, y);
     });
     texture.needsUpdate = true;
