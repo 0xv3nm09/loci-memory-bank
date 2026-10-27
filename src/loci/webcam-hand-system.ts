@@ -126,7 +126,6 @@ export class WebcamHandSystem extends createSystem({}) {
       setAppStatus('Starting webcam hand tracking…');
       // Dynamic import — the module must be installed (npm i @mediapipe/tasks-vision).
       const { FilesetResolver, HandLandmarker } = await import(
-        // @ts-expect-error — module is dynamically resolved at runtime
         '@mediapipe/tasks-vision'
       );
 
