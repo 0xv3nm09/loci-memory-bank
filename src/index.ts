@@ -19,6 +19,7 @@ import { createLociGlobals } from './loci/globals.js';
 import { loadLociFont } from './loci/text-label.js';
 import { warmupModel } from './loci/model-client.js';
 import { initStatus3D } from './loci/status3d.js';
+import { WebcamHandSystem } from './loci/webcam-hand-system.js';
 
 // Register the bundled Inter before any card label is drawn, so every
 // surface uses the same type from the first frame.
@@ -41,6 +42,7 @@ World.create(
   world.registerSystem(CrisisPanelSystem);
   world.registerSystem(KeyboardSystem);
   world.registerSystem(PanelSystem);
+  world.registerSystem(WebcamHandSystem);
 
   // Sage's voice in the scene — status never depends on the DOM overlay.
   initStatus3D(world);
