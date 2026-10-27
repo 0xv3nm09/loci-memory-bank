@@ -59,19 +59,11 @@ intact. Keep the greeting on screen long enough to read.
 
 ## System flow — the loop across sessions (flowchart)
 
-```mermaid
-flowchart TB
-  S1["Session N: dump, organize, arrange by hand"] --> SAVE["Autosave: notes, layout, per-note strength, history snapshot"]
-  SAVE --> CLOSE["App closed - palace persists in the browser"]
-  CLOSE -->|"hours or days pass"| OPEN["Session N+1 opens"]
-  OPEN --> RESTORE["Restore exactly as left - lines redraw themselves"]
-  RESTORE --> GREET["Welcome back - last here N ago. N thoughts due for Recall."]
-  GREET --> QUIZ["Recall: weakest or never-seen notes first"]
-  QUIZ -->|"correct"| UP["strength +1 - returns less often - green glow, rising ping"]
-  QUIZ -->|"miss"| DOWN["strength reset - resurfaces first - soft tone, no shame"]
-  UP --> SAVE
-  DOWN --> SAVE
-  SAVE --> GROW["Palace grows - Rewind dial scrubs the growth backward"]
-  GROW -.->|"the visible reason to return"| OPEN
-```
+![The cross-session loop as a sequence — session N, time passes, session N+1 with greeting and graded recall](diagrams/retention-loop-sequence.svg)
+*Figure: two sessions with the time divide in the middle; the CORRECT and
+MISS frames show how each answer reschedules tomorrow.*
+
+![The same loop as a vertical flow — what is saved, what greets you, what is scheduled](diagrams/retention-loop-flow.svg)
+*Figure: the flow view with per-section details — persistence, the
+no-nag design, the greeting hook, and Rewind as visible growth.*
 

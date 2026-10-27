@@ -69,33 +69,10 @@ own five seconds; judges reward agents that fail honestly.
 
 ## System flow — one organize, every branch (sequence)
 
-```mermaid
-sequenceDiagram
-  participant P as Player
-  participant C as Client - WebXR
-  participant G as Distress gate
-  participant M as model-client
-  participant O as Ollama qwen3-14b - GPU box
-  participant H as Heuristic organizer
-  P->>C: dump thoughts
-  C->>G: raw capture text - before anything else
-  G-->>C: clear
-  C->>H: heuristic result computed instantly - held ready
-  C->>M: schema-constrained request
-  M->>O: POST api/chat - JSON format enforced
-  alt model answers
-    O-->>M: clusters, edges, suggestions
-    M-->>C: validated - ids sanitized - coverage checked
-    C->>P: SNAP + orb turns GOLD + expand and challenge buds
-  else model down or slow
-    M->>O: retry once after 1.5s
-    O-->>M: still failing
-    M-->>C: error swallowed
-    C->>P: SNAP with the heuristic + orb turns GRAY
-  end
-  P->>C: drags one card
-  Note over C: userPlaced = true - the agent never moves it again
-```
+![One organize with every branch — model answers, model down, retry, gold and gray orbs](diagrams/agentic-organize-sequence.svg)
+*Figure: the two framed boxes are the real-case branches — MODEL ANSWERS
+(gold orb, buds) and MODEL DOWN (retry, gray orb). Either way the snap
+lands and the note at the bottom holds: your placements are never touched.*
 *The buds are model-exclusive: the heuristic structurally cannot produce
 them — every bud on screen is visible proof the agent contributed.*
 

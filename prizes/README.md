@@ -27,25 +27,9 @@ is off, the deterministic organizer inside the browser answers instantly and
 the orb turns gray. The palace lives in the browser's local storage: notes,
 layout, per-note memory strength, and 30 history snapshots backing Rewind.
 
-```mermaid
-flowchart LR
-  subgraph HEADSET["Quest / desktop browser — WebXR via IWSDK"]
-    U["Player: hands, gaze, pinch, voice, mouse"] --> CAP["Capture: mic orb, type orb + spatial keyboard, seed cards"]
-    CAP --> GATE{"Distress gate runs first, every capture"}
-    GATE -- "flagged" --> CRISIS["3D crisis panel + calm tone - flow stops"]
-    GATE -- "clear" --> ORG["OrganizeSystem"]
-    ORG -- "instant local result" --> H["clusterer.ts deterministic organizer"]
-    ORG -- "schema-bound call, retry once" --> OLL["Ollama on GPU box: qwen3-14b, gpt-oss-20b"]
-    ORG --> SNAP["SnapSystem: flights, connection lines, chord"]
-    SNAP --> CARDS["Note cards: OneHandGrabbable, placements win"]
-    CARDS --> STORE["palace-store: localStorage - notes, strength, 30 snapshots"]
-    STORE --> RET["Restore + welcome-back greeting"]
-    RET --> QUIZ["RecallSystem: quiz, spaced repetition"]
-    QUIZ --> STORE
-    STORE --> DIAL["Rewind dial: scrub history"]
-    ORB["Organize orb: GOLD = model did it, GRAY = local did"] -.-> ORG
-  end
-  OLL --- ORG
-```
+![Loci master system map — vertical flow with per-section details](diagrams/master-system.svg)
+*Figure: the full system, top to bottom. Side panels carry the detail for
+each section — including the real-case fallback (GPU box asleep → gray
+orb → the product still works).*
 *Real case: GPU box asleep → the gray path keeps the whole product working;
 judges never see a failure state.*

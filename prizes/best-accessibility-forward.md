@@ -70,26 +70,11 @@ the palette verification be a confident sentence, not a lecture.
 
 ## System flow — redundant channels in, redundant signals out (flowchart)
 
-```mermaid
-flowchart LR
-  subgraph IN["Every input channel works alone"]
-    V["Voice: mic orb - desktop"]
-    HN["Hands: pinch-grab, touch"]
-    T["Typed: type orb - spatial keyboard, works everywhere"]
-    F["One finger: seed cards and orbs"]
-  end
-  V --> GATE{"Distress gate"}
-  HN --> GATE
-  T --> GATE
-  F --> GATE
-  GATE -- "clear" --> PIPE["The same organize pipeline - identical for everyone"]
-  PIPE --> OUT
-  subgraph OUT["Every output signal is redundant"]
-    C1["Color: CVD-verified palette, worst pair distance 72"]
-    C2["Glyphs: + and ? marks - never color-only"]
-    C3["Audio: chord, pings, calm crisis tone"]
-    C4["Scale: Aa orb - 100 to 150 percent, live"]
-  end
-  GATE -- "flagged" --> CR["Crisis panel: text + calm tone - reaches users who cannot rely on vision"]
-```
+![Channels converge — voice, hands, typed, one finger — then redundant outputs](diagrams/accessibility-channels-sequence.svg)
+*Figure: each framed row is an input channel working alone; they all land
+in the same gate and pipeline.*
+
+![The accessibility flow with per-section details — four channels in, four redundant signals out](diagrams/accessibility-channels-flow.svg)
+*Figure: the flow view — including the CVD verification note and the
+crisis surface that reaches users who cannot rely on vision.*
 

@@ -48,20 +48,9 @@ Say the claim once, plainly; don't oversell it.
 
 ## System flow — why it collapses off-platform (flowchart)
 
-```mermaid
-flowchart LR
-  subgraph FLAT["Any flat screen"]
-    N1["Notes app: a list"] --> N2["Spaced repetition: a schedule"]
-    N2 --> N3["Mind map: a diagram"]
-    N3 --> N4["History: a changelog"]
-  end
-  subgraph VR["Loci in VR"]
-    L1["Thoughts have a PLACE around you"] --> L2["Understanding is physical: grab and move meaning"]
-    L2 --> L3["Memory has a ROOM: the palace persists and grows"]
-    L3 --> L4["History has a DIAL: scrub your own mind's past"]
-  end
-  FLAT -.->|"no presence, no depth, no body - the loop falls apart"| VR
-```
+![The collapse test — what every flat-screen rival is, versus what only VR can be](diagrams/boldest-collapse-flow.svg)
+*Figure: the claim drawn — each right-hand step needs presence, depth, or
+hands; the three things a monitor cannot deliver.*
 *Each right-side step depends on presence, spatial depth, or hands — the
 three things a monitor cannot deliver. That is the Boldest claim, drawn.*
 

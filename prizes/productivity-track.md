@@ -53,25 +53,7 @@ recurring-context habit the criteria ask for.
 
 ## System flow — the daily ritual (sequence)
 
-```mermaid
-sequenceDiagram
-  participant U as You - seated
-  participant L as Loci - WebXR in-headset
-  participant G as Distress gate
-  participant S as Sage - qwen3-14b on your GPU box
-  participant K as Palace storage
-  U->>L: morning ritual: dump thoughts - voice, type orb, or seed card
-  L->>G: raw text first - always
-  G-->>L: clear
-  L->>S: schema-bound organize request
-  S-->>L: clusters, connections, suggestions
-  L->>U: THE SNAP - scattered cards become a constellation
-  U->>L: arrange by hand - your placements are never overwritten
-  L->>K: autosave - layout, memory strength, history snapshot
-  U->>L: next day: return
-  L-->>U: welcome back - last here N ago, N thoughts due for Recall
-  L->>U: Recall quiz - weakest notes first
-  U->>L: answer by touch or voice
-  L->>K: strengths updated - tomorrow's session is scheduled
-```
+![The daily ritual as a sequence — you, Loci, Sage, and the palace storage across two days](diagrams/productivity-ritual-sequence.svg)
+*Figure: time flows downward. The day divide marks the recurrence the
+track rewards; the dashed return is the welcome-back greeting.*
 
