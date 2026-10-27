@@ -130,6 +130,27 @@ export class OrganizeSystem extends createSystem({
     material.color.set(color);
   }
 
+  /** Push point `a` away from `b` so they're at least `minDist` apart. */
+  private separate(a: Vector3, b: Vector3, minDist: number): void {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    const dz = a.z - b.z;
+    let dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (dist >= minDist) {
+      return;
+    }
+    if (dist < 1e-4) {
+      // Perfect overlap: nudge along a stable pseudo-random direction.
+      a.x += Math.random() * 0.01;
+      a.y += Math.random() * 0.005;
+      dist = 1e-4;
+    }
+    const push = (minDist - dist) / dist;
+    a.x += dx * push;
+    a.y += dy * push;
+    a.z += dz * push;
+  }
+
   private setStatus(message: string): void {
     setAppStatus(message);
   }
@@ -146,11 +167,19 @@ export class OrganizeSystem extends createSystem({
       this.trash.push(bud);
     }
 
-    let flightIndex = 0;
-    let maxDelay = 0;
+    // Phase 1 — compute every movable note's base grid target.
+    interface Targeted {
+      entity: Entity;
+      target: Vector3;
+    }
+    const targets: Targeted[] = [];
+    const clusterMeta: Array<{ center: Vector3; hue: number; count: number; label: string }> = [];
     result.clusters.forEach((cluster, clusterIndex) => {
-      const center = clusterCenter(clusterIndex, result.clusters.length);
+      const center = new Vector3();
+      const raw = clusterCenter(clusterIndex, result.clusters.length);
+      center.set(raw.x, raw.y, raw.z);
       const hue = CLUSTER_HUES[clusterIndex % CLUSTER_HUES.length];
+      clusterMeta.push({ center, hue, count: cluster.noteIds.length, label: cluster.label });
 
       cluster.noteIds.forEach((id, index) => {
         const entity = loci.noteById.get(id);
@@ -159,37 +188,67 @@ export class OrganizeSystem extends createSystem({
           return;
         }
         const offset = noteOffset(index, cluster.noteIds.length);
-        const target = new Vector3(
-          center.x + offset.x,
-          center.y + offset.y,
-          center.z + offset.z,
-        );
-        const start = object.position;
-        const delay = flightIndex * 0.045;
-        maxDelay = Math.max(maxDelay, delay);
-        flightIndex += 1;
-
+        targets.push({
+          entity,
+          target: new Vector3(center.x + offset.x, center.y + offset.y, center.z + offset.z),
+        });
         entity.setValue(Note, 'cluster', clusterIndex);
         entity.setValue(Note, 'hue', hue);
         entity.setValue(Note, 'state', 'snapping');
-        if (entity.hasComponent(SnapAnimation)) {
-          entity.removeComponent(SnapAnimation);
-        }
-        entity.addComponent(SnapAnimation, {
-          startPos: [start.x, start.y, start.z],
-          targetPos: [target.x, target.y, target.z],
-          elapsed: 0,
-          duration: 0.65,
-          delay,
-        });
         setNoteTint(entity, hue, 0.45);
       });
+    });
 
+    // Phase 2 — declump: relax movable targets away from overlaps, treating
+    // user-placed cards as immovable obstacles. A gentle nudge so nothing
+    // visually overlaps — never a rearrangement of the user's placements.
+    const MIN_DIST = 0.185;
+    const obstacles: Vector3[] = [];
+    for (const entity of this.queries.notes.entities) {
+      if ((entity.getValue(Note, 'userPlaced') ?? false) && entity.object3D != null) {
+        obstacles.push(entity.object3D.position.clone());
+      }
+    }
+    for (let pass = 0; pass < 5; pass += 1) {
+      for (let i = 0; i < targets.length; i += 1) {
+        for (let j = i + 1; j < targets.length; j += 1) {
+          this.separate(targets[i].target, targets[j].target, MIN_DIST);
+        }
+        for (const obstacle of obstacles) {
+          this.separate(targets[i].target, obstacle, MIN_DIST);
+        }
+      }
+    }
+
+    // Phase 3 — launch the flights with the declumped targets.
+    let flightIndex = 0;
+    let maxDelay = 0;
+    for (const { entity, target } of targets) {
+      const object = entity.object3D!;
+      const start = object.position;
+      const delay = flightIndex * 0.045;
+      maxDelay = Math.max(maxDelay, delay);
+      flightIndex += 1;
+      if (entity.hasComponent(SnapAnimation)) {
+        entity.removeComponent(SnapAnimation);
+      }
+      entity.addComponent(SnapAnimation, {
+        startPos: [start.x, start.y, start.z],
+        targetPos: [target.x, target.y, target.z],
+        elapsed: 0,
+        duration: 0.65,
+        delay,
+      });
+    }
+
+    // Phase 4 — labels above each (declumped) cluster.
+    result.clusters.forEach((_, clusterIndex) => {
+      const meta = clusterMeta[clusterIndex];
       createClusterLabel(
         this.world,
-        cluster.label,
-        hue,
-        new Vector3(center.x, center.y + gridHalfHeight(cluster.noteIds.length) + 0.1, center.z + 0.02),
+        meta.label,
+        meta.hue,
+        new Vector3(meta.center.x, meta.center.y + gridHalfHeight(meta.count) + 0.1, meta.center.z + 0.02),
         clusterIndex,
       );
     });
@@ -217,6 +276,8 @@ export class OrganizeSystem extends createSystem({
       );
     }
 
+    // The guide did its job — clear the stage for the snap.
+    loci.hideWelcome();
     playSnapChord(0.18);
     // Remember the structure for recall quizzes and the palace save, then
     // save after the flights land so stored positions are the settled ones.

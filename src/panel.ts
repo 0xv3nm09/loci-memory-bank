@@ -6,9 +6,24 @@
  */
 
 import { createSystem, UIKitMLAsset, VisibilityState } from '@iwsdk/core';
+import { getLoci } from './loci/globals.js';
 
 export class PanelSystem extends createSystem({}) {
   init(): void {
+    // The welcome panel's job is onboarding — once the first organize runs,
+    // OrganizeSystem hides it so the snap happens in a clear space. The same
+    // guide lives on in the desktop help overlay.
+    getLoci(this.globals).hideWelcome = () => {
+      // UIKitMLAsset IS an Object3D — hide it directly.
+      const panel = this.world.getSceneObject<UIKitMLAsset>('welcome-panel');
+      if (panel != null) {
+        panel.visible = false;
+      }
+      const screenSpace = document.getElementById('welcome-panel');
+      if (screenSpace != null) {
+        screenSpace.style.display = 'none';
+      }
+    };
     const panel = this.world.getSceneObject<UIKitMLAsset>('welcome-panel');
     const xrButton = panel?.getElementById('xr-button');
     const exitButton = panel?.getElementById('exit-button');
