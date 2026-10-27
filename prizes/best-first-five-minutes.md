@@ -70,3 +70,20 @@ and judging week.
 The criteria are about *pace* — cut ruthlessly. No menus, no settings, no
 reading on camera beyond two guide lines. If a beat needs narration to make
 sense, that's a bug: fix the beat, not the narration.
+
+## System flow — the first 100 seconds (flowchart)
+
+```mermaid
+flowchart LR
+  A["0s: open"] --> B["1.5s: app interactive - guide panel, orb row, seed cards"]
+  B --> C["First touch: seed card spills 5 thoughts - or type orb / mic orb"]
+  C --> D["2.2s after capture: auto-organize fires - no button needed"]
+  D --> E["THE SNAP: chord, clusters, connection lines"]
+  E --> F["First drag: grab any card - zero instructions"]
+  F --> G["Violet orb: quiz opens in 1.1s"]
+  G --> H["First answer graded - green or amber, ping or soft tone"]
+  H --> I["~1.5 min of the 5-minute budget used"]
+```
+*Measured Oct 20 on the built app. Real case: if the GPU box is down, the
+first snap arrives via the local organizer — the beat still lands.*
+

@@ -67,3 +67,29 @@ Inclusive by default was a design constraint, not a mode:
 Accessibility demonstrations fail when they feel like a settings tour — keep
 it woven into the main flow: use voice once, keyboard once, Aa once, and let
 the palette verification be a confident sentence, not a lecture.
+
+## System flow — redundant channels in, redundant signals out (flowchart)
+
+```mermaid
+flowchart LR
+  subgraph IN["Every input channel works alone"]
+    V["Voice: mic orb - desktop"]
+    HN["Hands: pinch-grab, touch"]
+    T["Typed: type orb - spatial keyboard, works everywhere"]
+    F["One finger: seed cards and orbs"]
+  end
+  V --> GATE{"Distress gate"}
+  HN --> GATE
+  T --> GATE
+  F --> GATE
+  GATE -- "clear" --> PIPE["The same organize pipeline - identical for everyone"]
+  PIPE --> OUT
+  subgraph OUT["Every output signal is redundant"]
+    C1["Color: CVD-verified palette, worst pair distance 72"]
+    C2["Glyphs: + and ? marks - never color-only"]
+    C3["Audio: chord, pings, calm crisis tone"]
+    C4["Scale: Aa orb - 100 to 150 percent, live"]
+  end
+  GATE -- "flagged" --> CR["Crisis panel: text + calm tone - reaches users who cannot rely on vision"]
+```
+
