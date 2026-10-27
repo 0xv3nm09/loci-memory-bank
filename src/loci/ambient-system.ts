@@ -81,6 +81,7 @@ export class AmbientSystem extends createSystem({
       const card = object.getObjectByName('card') as Mesh | undefined;
       if (card != null) {
         const material = card.material as MeshStandardMaterial;
+        material.transparent = true;
         material.opacity = eased;
         // Glow bloom that fades: peaks at t=0.4, settles to base.
         const bloom = Math.sin(Math.PI * t) * 0.6;
@@ -103,7 +104,9 @@ export class AmbientSystem extends createSystem({
     // ── Note hover/grab feedback ──
     for (const entity of this.queries.notes.entities) {
       const object = entity.object3D;
-      if (object == null || entity.hasComponent(SnapAnimation)) {
+      // While spawning, the spawn loop owns scale/opacity — hover feedback
+      // would lerp against the overshoot and dampen the pop.
+      if (object == null || entity.hasComponent(SnapAnimation) || entity.hasComponent(SpawnAnimation)) {
         continue;
       }
       if (feedbackAllowed) {

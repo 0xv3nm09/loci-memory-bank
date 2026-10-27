@@ -61,9 +61,17 @@ export class WebcamHandSystem extends createSystem({}) {
       return;
     }
     this.canvas = this.renderer.domElement;
-    this.buildUI();
-    this.bootMediaPipe();
-    this.cleanupFuncs.push(() => this.teardown());
+    // Defer the camera prompt until the visitor's first interaction: a
+    // permission dialog on page load is a terrible first five minutes.
+    const startOnGesture = (): void => {
+      this.buildUI();
+      void this.bootMediaPipe();
+    };
+    window.addEventListener('pointerdown', startOnGesture, { once: true });
+    this.cleanupFuncs.push(() => {
+      window.removeEventListener('pointerdown', startOnGesture);
+      this.teardown();
+    });
   }
 
   /* ---- UI: webcam preview + cursor ---- */
