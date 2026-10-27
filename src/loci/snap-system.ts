@@ -96,6 +96,8 @@ export class SnapSystem extends createSystem({
 }) {
   private direction = new Vector3();
   private trailTimer = 0;
+  private readonly _flightScratch: import('@iwsdk/core').Entity[] = [];
+  private readonly _lineScratch: import('@iwsdk/core').Entity[] = [];
 
   update(delta: number): void {
     // ── Update trail particles ──
@@ -134,7 +136,10 @@ export class SnapSystem extends createSystem({
       this.trailTimer = 0;
     }
 
-    for (const entity of Array.from(this.queries.flights.entities)) {
+    const flights = this._flightScratch;
+    flights.length = 0;
+    for (const e of this.queries.flights.entities) { flights.push(e); }
+    for (const entity of flights) {
       const elapsed = (entity.getValue(SnapAnimation, 'elapsed') ?? 0) + delta;
       entity.setValue(SnapAnimation, 'elapsed', elapsed);
 
@@ -182,7 +187,10 @@ export class SnapSystem extends createSystem({
       }
     }
 
-    for (const line of Array.from(this.queries.lines.entities)) {
+    const lines = this._lineScratch;
+    lines.length = 0;
+    for (const e of this.queries.lines.entities) { lines.push(e); }
+    for (const line of lines) {
       const previous = line.getValue(ConnectionLine, 'elapsed') ?? 0;
       const elapsed = previous + delta;
       line.setValue(ConnectionLine, 'elapsed', elapsed);

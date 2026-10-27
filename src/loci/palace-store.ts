@@ -71,7 +71,7 @@ export function loadPalace(): SavedPalace | null {
       return null;
     }
     return data;
-  } catch {
+  } catch (err) {
     return null;
   }
 }
@@ -79,7 +79,7 @@ export function loadPalace(): SavedPalace | null {
 export function clearPalace(): void {
   try {
     localStorage.removeItem(KEY);
-  } catch {
+  } catch (err) {
     // nothing to clear
   }
 }
@@ -146,8 +146,11 @@ export function writePalaceSave(loci: LociGlobals): void {
     ].slice(-30);
     payload.history = history;
     localStorage.setItem(KEY, JSON.stringify(payload));
-  } catch {
-    // Storage blocked or full — the palace still works, it just won't persist.
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+      console.warn('[Loci] Palace save failed — browser storage full. Export your palace to avoid data loss.');
+    }
+    // Storage blocked or full — the palace still works in memory, it just won't persist.
   }
 }
 

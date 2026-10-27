@@ -25,10 +25,12 @@ import { WebcamHandSystem } from './loci/webcam-hand-system.js';
 // surface uses the same type from the first frame.
 await loadLociFont();
 
-World.create(
-  document.getElementById('scene-container') as HTMLDivElement,
-  projectOptions,
-).then((world) => {
+const sceneContainer = document.getElementById('scene-container');
+if (sceneContainer == null) {
+  throw new Error('Missing #scene-container element');
+}
+
+World.create(sceneContainer as HTMLDivElement, projectOptions).then((world) => {
   (world.globals as Record<string, unknown>)['loci'] = createLociGlobals();
 
   world.registerSystem(CaptureSystem);

@@ -21,7 +21,7 @@ work beyond what each file's flow sequence shows on camera.
 ## Master system map — how everything is connected
 
 The app runs entirely in the headset's browser (IWSDK/WebXR). The only
-external dependency is Sage: your GPU box running Ollama (qwen3:14b) over an
+external dependency is Sage: a dedicated GPU server running Ollama (HTTPS, no data stored server-side) (qwen3:14b) over an
 HTTPS tunnel — called directly, no backend, schema-constrained. If that box
 is off, the deterministic organizer inside the browser answers instantly and
 the orb turns gray. The palace lives in the browser's local storage: notes,

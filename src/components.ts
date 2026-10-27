@@ -14,6 +14,7 @@ import {
   SeedCard,
   MicOrb,
   SnapAnimation,
+  SpawnAnimation,
   SuggestionBud,
   TextScaleOrb,
   TypeOrb,
@@ -22,6 +23,7 @@ import {
 export default defineComponents([
   Note,
   SnapAnimation,
+  SpawnAnimation,
   ConnectionLine,
   SeedCard,
   OrganizeOrb,

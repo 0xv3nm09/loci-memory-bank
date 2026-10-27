@@ -63,6 +63,7 @@ export class WebcamHandSystem extends createSystem({}) {
     this.canvas = this.renderer.domElement;
     this.buildUI();
     this.bootMediaPipe();
+    this.cleanupFuncs.push(() => this.teardown());
   }
 
   /* ---- UI: webcam preview + cursor ---- */
@@ -132,7 +133,7 @@ export class WebcamHandSystem extends createSystem({}) {
       const vision = await FilesetResolver.forVisionTasks(
         // The WASM files are loaded from the node_modules via Vite's dependency
         // bundling, or from the CDN fallback baked into the package.
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm',
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm',
       );
 
       this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
@@ -276,7 +277,7 @@ export class WebcamHandSystem extends createSystem({}) {
 
   /* ---- Cleanup ---- */
 
-  destroy(): void {
+  private teardown(): void {
     this.active = false;
     if (this.rafId) {
       cancelAnimationFrame(this.rafId);

@@ -11,10 +11,10 @@ mouse-friendly, seated, under ten minutes a session.
 
 ## The loop
 
-1. **Capture** — type a thought or press a seed card to spill a curated set.
-2. **Organize** — the on-device heuristic organizer clusters your notes and
-   draws the connections (a small local model slotting in behind the same
-   schema is on the roadmap).
+1. **Capture** — type a thought, speak it, or press a seed card to spill a curated set.
+2. **Organize** — tap the orb and Sage (a small model running on a dedicated
+   GPU server via Ollama) clusters your notes and draws connections. If Sage
+   is unreachable, a heuristic fallback organizes locally — no internet required.
 3. **Arrange** — grab any card; your placements are always respected.
 4. **Recall** — the palace quizzes your weakest notes first; spaced repetition
    schedules the next visit.

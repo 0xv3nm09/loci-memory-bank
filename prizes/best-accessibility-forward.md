@@ -8,7 +8,7 @@ or experiences inclusive by default."
 
 Inclusive by default was a design constraint, not a mode:
 
-1. **Voice and hands each work alone.** Capture: voice (mic orb, desktop) →
+1. **Voice and hands each work alone.** Capture: voice (mic orb; desktop browsers — Quest browser does not yet ship SpeechRecognition, so on headset the keyboard path covers this) →
    spatial keyboard (everywhere) → seed cards (one touch). Answers: touch or
    spoken. Nothing requires both channels at once (`speech.ts`,
    `capture-keyboard.ts`).
@@ -41,6 +41,8 @@ Inclusive by default was a design constraint, not a mode:
 | CVD-verified palette + rationale | `palette.ts` `CLUSTER_ACCENTS` |
 | Hue→accent mapping (old saves safe) | `palette.ts` `accentForHue()` |
 | Text-scale orb + live traversal | `capture-system.ts`, `text-label.ts` |
+| Webcam hand tracking | Desktop pinch-to-grab without VR headset | `webcam-hand-system.ts` |
+| Spawn tone | Non-visual audio feedback when a thought materializes | `audio.ts` (`playSpawnTone`) |
 | Spatial keyboard (voice alternative) | `capture-keyboard.ts` |
 | Voice capture + voice answers | `speech.ts`, `recall-system.ts` |
 | Crisis calm tone | `audio.ts` `playCalmTone()`, `crisis-panel.ts` |
@@ -49,7 +51,7 @@ Inclusive by default was a design constraint, not a mode:
 
 ## The flow sequence
 
-1. **Open on the orb row.** Narrate: "voice OR hands OR one finger — every
+1. **Open on the orb row.** Narrate: "keyboard or hands or one finger — every
    path works alone."
 2. **Capture without hands:** mic orb → speak a thought (desktop). Then
    capture without voice: **type** orb → spatial keyboard → done.

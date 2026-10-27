@@ -21,12 +21,12 @@ before the user takes the headset off."
 
 Measured on the built app served locally; steps driven by real clicks with
 the in-app status line as the clock. XR-enter and hand-pinch timing must be
-confirmed on a real headset (TASKS.md §5) — desktop is the upper bound
+confirmed on a real headset — desktop is the upper bound
 because hand-tracking adds physical time, not app latency.
 
 **Measured Oct 20** (built app, desktop browser, real clicks, status line as
 the clock — XR-enter + hand-pinch adds physical time, not app latency; on-device
-confirmation tracked in TASKS.md §5):
+on-device confirmation pending):
 
 | Beat | Measured | Notes |
 |---|---|---|

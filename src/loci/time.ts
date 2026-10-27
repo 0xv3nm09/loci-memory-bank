@@ -9,5 +9,6 @@ export function agoLabel(iso: string): string {
   if (hours < 24) {
     return `${hours} hr ago`;
   }
-  return `${Math.round(hours / 24)} days ago`;
+  const days = Math.round(hours / 24);
+  return `${days} ${days === 1 ? 'day' : 'days'} ago`;
 }

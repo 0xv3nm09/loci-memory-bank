@@ -261,6 +261,11 @@ export class CaptureSystem extends createSystem({
     if (trimmed === '') {
       return;
     }
+    // Don't capture during quiz or timeline scrub.
+    const loci = getLoci(this.globals);
+    if (loci.recallActive || loci.rewindActive) {
+      return;
+    }
     // The universal gate runs before anything else sees the thought.
     if (checkDistress(trimmed).flagged) {
       const crisis = this.world.getSystem(CrisisPanelSystem);

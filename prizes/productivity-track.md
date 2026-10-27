@@ -19,12 +19,14 @@ under ten minutes, fully seated: the "airplane seat test" passes by design.
 | Capability | Where |
 |---|---|
 | Capture: typed, voice, spatial keyboard, seed sets | `capture-system.ts`, `capture-keyboard.ts`, `speech.ts` |
+| Note birth animation: scale bloom, glow fade, shimmer tone | `ambient-system.ts` (`SpawnAnimation`), `audio.ts` (`playSpawnTone`) |
 | Organize: real model (qwen3:14b) + instant local fallback | `organize-system.ts`, `model-client.ts`, `clusterer.ts` |
-| The snap (the hook) | `snap-system.ts`, `audio.ts` (`playSnapChord`) |
+| The snap (the hook) | `snap-system.ts`, `audio.ts` (`playSnapChord`), particle trails |
 | Arrange by hand; user placements never overwritten | `note-factory.ts` (`OneHandGrabbable`), `mouse-drag-system.ts`, `snap-system.ts` (`GrabWatchSystem`) |
 | Persistence + export | `palace-store.ts` |
 | Recall with spaced repetition | `recall-system.ts` |
 | Rewind through history | `rewind-system.ts` |
+| Desktop hand tracking (webcam) for testing without headset | `webcam-hand-system.ts` (MediaPipe HandLandmarker) |
 | 72fps target + foveation | `index.ts` |
 
 ## The flow sequence (this is the daily ritual — show exactly this)
@@ -33,7 +35,7 @@ under ten minutes, fully seated: the "airplane seat test" passes by design.
    "The space is calm. Dump a thought." — the space greets returning users
    with *"Welcome back — last here N hours ago. N thoughts due for Recall."*
 2. **Dump** (0:10). Speak via the mic orb, or tap the **type** orb and use
-   the spatial keyboard, or press a seed card. Cards land scattered and dim.
+   the spatial keyboard, or press a seed card. Each card blooms into existence — scale pop, glow surge, shimmer tone.
 3. **The snap** (0:40). Touch the teal **organize** orb → "Sage is reading
    your thoughts…" → cards arc into clusters, connection lines draw in, the
    chord resolves. The orb's glow tells the truth about who did it: **gold

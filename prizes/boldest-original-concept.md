@@ -16,7 +16,7 @@ screen — Loci is unbuildable without VR.**
   and can be rewound** exists nowhere — Rewind (scrubbing your own mental
   history through physical space) is the beat no other platform can even
   imitate.
-- The snap — scattered thoughts resolving into a constellation *around you* —
+- The snap — scattered thoughts resolving into a constellation *around you* (each note blooms in with a scale pop and shimmer, then drifts gently — the palace breathes) —
   uses presence as the medium, not the garnish.
 - The method of loci is a 2,000-year-old memory technique that has always
   required an imagined *place*; VR is the first medium where the place is
