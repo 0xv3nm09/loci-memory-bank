@@ -4,6 +4,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { CrisisDismiss } from './components.js';
 import { getLoci } from './globals.js';
 import { createLabel } from './note-factory.js';
+import { playCalmTone } from './audio.js';
 
 /**
  * The 3D crisis surface — the one feature that must exist in-headset.
@@ -29,6 +30,9 @@ export class CrisisPanelSystem extends createSystem({
     }
     const loci = getLoci(this.globals);
     loci.crisActive = true;
+
+    // Calm audio cue — presence and care, never an alarm.
+    playCalmTone();
 
     const group = new Group();
     group.name = 'crisis-panel';

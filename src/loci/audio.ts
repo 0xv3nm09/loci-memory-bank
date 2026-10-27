@@ -128,6 +128,67 @@ export function playCalmTone(): void {
   voice({ freq: 246.9, start: t0 + 0.4, duration: 1.8, peak: 0.05, attack: 0.5 });
 }
 
+/** Orb press — crisp tick, slightly higher than place click. */
+export function playOrbClick(): void {
+  const audio = ensureAudio();
+  if (audio == null) {
+    return;
+  }
+  const t0 = audio.currentTime;
+  voice({ freq: 1400, start: t0, duration: 0.04, peak: 0.09, type: 'triangle', attack: 0.003 });
+  voice({ freq: 2100, start: t0 + 0.02, duration: 0.03, peak: 0.05, type: 'sine', attack: 0.003 });
+}
+
+/**
+ * Ambient drone — a barely-audible low hum that establishes the "calm dark
+ * mind-space." Two detuned oscillators through a heavy lowpass, very quiet.
+ * Returns a stop function. Idempotent: calling when already running is a no-op.
+ */
+let droneActive = false;
+export function startAmbientDrone(): () => void {
+  if (droneActive) {
+    return () => {};
+  }
+  const audio = ensureAudio();
+  if (audio == null || master == null) {
+    return () => {};
+  }
+  droneActive = true;
+
+  const droneGain = audio.createGain();
+  droneGain.gain.setValueAtTime(0.0001, audio.currentTime);
+  droneGain.gain.exponentialRampToValueAtTime(0.035, audio.currentTime + 3);
+
+  const lp = audio.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 180;
+  lp.Q.value = 0.7;
+
+  const osc1 = audio.createOscillator();
+  osc1.type = 'sine';
+  osc1.frequency.value = 55; // A1
+
+  const osc2 = audio.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.value = 55.6; // slightly detuned — slow beat
+
+  osc1.connect(droneGain);
+  osc2.connect(droneGain);
+  droneGain.connect(lp);
+  lp.connect(master);
+  osc1.start();
+  osc2.start();
+
+  return () => {
+    droneGain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 1);
+    setTimeout(() => {
+      osc1.stop();
+      osc2.stop();
+      droneActive = false;
+    }, 1200);
+  };
+}
+
 /** A recall miss — soft neutral tone, never a "failure" buzz. */
 export function playMissTone(): void {
   const audio = ensureAudio();

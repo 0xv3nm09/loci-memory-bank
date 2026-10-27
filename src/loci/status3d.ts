@@ -8,11 +8,12 @@ import type { Mesh } from 'three';
  * convenience) mirrors every message.
  */
 
-const POS = { x: 0, y: 0.78, z: -0.9 };
+const POS = { x: 0, y: 0.86, z: -0.82 };
 let redraw: ((text: string) => void) | null = null;
 
 export function initStatus3D(world: World): void {
-  const label = createLabel('The space is calm. Dump a thought.', 0.0135, '#9fb0d8', 0.6);
+  // 16px+ for comfortable VR reading (Meta guideline: 18px+ preferred).
+  const label = createLabel('The space is calm. Dump a thought.', 0.015, '#9fb0d8', 0.6);
   label.position.set(POS.x, POS.y, POS.z);
   label.lookAt(POS.x, POS.y, 0.001);
   world.createTransformEntity(label, { persistent: true });

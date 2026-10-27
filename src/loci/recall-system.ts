@@ -15,7 +15,7 @@ import {
   setNoteGlow,
   applyNoteBaseLook,
 } from './note-factory.js';
-import { playConnectTone, playMissTone, playSnapChord } from './audio.js';
+import { playConnectTone, playMissTone, playOrbClick, playSnapChord } from './audio.js';
 import { getLoci, type LociGlobals } from './globals.js';
 import {
   createRecognizer,
@@ -88,9 +88,10 @@ export class RecallSystem extends createSystem({
   private voiceActive = false;
 
   init(): void {
-    createRecallOrb(this.world, new Vector3(0.84, 1.02, -0.72));
+    createRecallOrb(this.world, new Vector3(0.34, 1.02, -0.72));
     getLoci(this.globals).requestRecall = () => this.start();
     this.queries.orbPressed.subscribe('qualify', () => {
+      playOrbClick();
       if (this.sessionActive) {
         this.cancel();
       } else {

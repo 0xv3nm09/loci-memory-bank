@@ -265,8 +265,9 @@ export function createSuggestionBud(
   group.name = `bud-${kind}`;
 
   const isExpand = kind === 'expand';
+  // 20mm radius → 40mm diameter, above Meta's 48dp min at ray distance.
   const bud = new Mesh(
-    new SphereGeometry(0.014, 16, 12),
+    new SphereGeometry(0.020, 16, 12),
     new MeshStandardMaterial({
       color: isExpand ? 0x8fe8b0 : 0xf0c98a,
       emissive: new Color(isExpand ? 0x2fbf6a : 0xbf7a2f),

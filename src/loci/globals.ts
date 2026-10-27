@@ -15,6 +15,10 @@ export interface LociGlobals {
   recallState: RecallState;
   lastEdges: SavedEdge[];
   lastLabels: SavedLabel[];
+  /** True on first launch (empty palace) — triggers discovery pulse on orbs. */
+  firstLaunch: boolean;
+  /** Timestamp of world creation — discovery pulse fades after ~6s. */
+  birthTime: number;
 }
 
 export function createLociGlobals(): LociGlobals {
@@ -31,6 +35,8 @@ export function createLociGlobals(): LociGlobals {
     recallState: {},
     lastEdges: [],
     lastLabels: [],
+    firstLaunch: true,
+    birthTime: performance.now() / 1000,
   };
 }
 

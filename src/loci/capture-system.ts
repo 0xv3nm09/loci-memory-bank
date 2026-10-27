@@ -11,7 +11,7 @@ import {
 } from './note-factory.js';
 import { clusterCenter, gridHalfHeight } from './layout.js';
 import { getLoci } from './globals.js';
-import { primeAudioOnFirstGesture } from './audio.js';
+import { playOrbClick, primeAudioOnFirstGesture, startAmbientDrone } from './audio.js';
 import { MicOrb, TextScaleOrb, TypeOrb } from './components.js';
 import { createMicOrb, createTextScaleOrb, createTypeOrb } from './note-factory.js';
 import { getTextScale, setTextScale } from './text-label.js';
@@ -93,29 +93,33 @@ export class CaptureSystem extends createSystem({
       this.updateStatus();
     });
 
-    // Affordances sit in the suggested seated band (y 1.0-1.3); confirm on
-    // a real headset before submission (TASKS.md §5 — needs a device).
-    createTypeOrb(this.world, new Vector3(-0.02, 1.0, -0.72));
-    createMicOrb(this.world, new Vector3(0.28, 1.0, -0.72));
-    createTextScaleOrb(this.world, new Vector3(-0.32, 1.0, -0.72));
-    createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.52, 1.22, -0.62));
-    createSeed(this.world, 'thesis', SEED_TITLES.thesis, new Vector3(-0.52, 1.06, -0.72));
-    createSeed(this.world, 'kingdom', SEED_TITLES.kingdom, new Vector3(-0.52, 0.9, -0.62));
-    createOrganizeOrb(this.world, new Vector3(0.58, 1.0, -0.72));
+    // Affordances in a tight arc within ±30° of center gaze (Meta comfort
+    // guideline). Primary pair centered; secondary pair flanking; seeds left.
+    createTypeOrb(this.world, new Vector3(-0.06, 1.02, -0.66));
+    createMicOrb(this.world, new Vector3(0.06, 1.02, -0.66));
+    createTextScaleOrb(this.world, new Vector3(-0.20, 1.0, -0.70));
+    createOrganizeOrb(this.world, new Vector3(0.20, 1.0, -0.70));
+    createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.38, 1.22, -0.66));
+    createSeed(this.world, 'thesis', SEED_TITLES.thesis, new Vector3(-0.38, 1.06, -0.70));
+    createSeed(this.world, 'kingdom', SEED_TITLES.kingdom, new Vector3(-0.38, 0.9, -0.66));
 
     this.queries.seedsPressed.subscribe('qualify', (entity) => {
+      playOrbClick();
       this.dumpSeed(entity.getValue(SeedCard, 'setKey') ?? 'exam');
     });
     this.queries.typePressed.subscribe('qualify', () => {
+      playOrbClick();
       getLoci(this.globals).requestKeyboard('', (text) => {
         this.spawnRaw(text);
         this.scheduleAutoOrganize();
       });
     });
     this.queries.micPressed.subscribe('qualify', () => {
+      playOrbClick();
       this.toggleVoice();
     });
     this.queries.textScalePressed.subscribe('qualify', () => {
+      playOrbClick();
       // Cycle 100% -> 125% -> 150% -> 100%. Applies to every live label
       // immediately (scene traversal); new labels pick it up at creation.
       const steps = [1, 1.25, 1.5];
@@ -140,6 +144,10 @@ export class CaptureSystem extends createSystem({
     this.restorePalace();
     this.setupBrowserHud();
     primeAudioOnFirstGesture();
+
+    // Ambient drone fades in after first user gesture (audio context primed).
+    const startDrone = (): void => { startAmbientDrone(); };
+    window.addEventListener('pointerdown', startDrone, { once: true });
 
     // A thought captured but not yet organized must survive a tab close —
     // except when Clear deliberately wiped the palace.
@@ -166,8 +174,9 @@ export class CaptureSystem extends createSystem({
   private restorePalace(): void {
     const saved = loadPalace();
     if (saved == null || saved.notes.length === 0) {
-      return;
+      return; // firstLaunch stays true — discovery pulse will run
     }
+    getLoci(this.globals).firstLaunch = false;
     this.noteCounter = Math.max(0, saved.nextCounter - 1);
     for (const note of saved.notes) {
       const entity = createNote(

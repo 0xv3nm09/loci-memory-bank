@@ -8,7 +8,7 @@ import { loadPalace, type SavedSnapshot } from './palace-store.js';
 import { setAppStatus } from './status3d.js';
 import { agoLabel } from './time.js';
 
-const DIAL_POS = new Vector3(0.92, 1.12, -0.72);
+const DIAL_POS = new Vector3(0.46, 1.10, -0.72);
 const TRACK_HALF = 0.14;
 
 /**

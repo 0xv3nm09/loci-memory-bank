@@ -1,5 +1,5 @@
 import { createSystem, Grabbed } from '@iwsdk/core';
-import { Mesh, MeshBasicMaterial, Vector3 } from 'three';
+import { Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from 'three';
 import { ConnectionLine, Note, SnapAnimation } from './components.js';
 import { playConnectTone, playPlaceClick } from './audio.js';
 import { getLoci } from './globals.js';
@@ -49,6 +49,12 @@ export class SnapSystem extends createSystem({
         object.scale.setScalar(1);
         if (entity.hasComponent(Note)) {
           entity.setValue(Note, 'state', 'settled');
+        }
+        // Brief bloom flash on settle — emissive spikes then ambient-system
+        // lerps it back to its base over the next few frames.
+        const card = object.getObjectByName('card') as Mesh | undefined;
+        if (card != null) {
+          (card.material as MeshStandardMaterial).emissiveIntensity = 0.9;
         }
         entity.removeComponent(SnapAnimation);
       }
