@@ -74,6 +74,9 @@ export const TypeOrb = createComponent('TypeOrb', {});
 /** The floating mic orb — toggles voice capture (desktop browsers). */
 export const MicOrb = createComponent('MicOrb', {});
 
+/** The "Aa" orb — cycles global text scale (accessibility). */
+export const TextScaleOrb = createComponent('TextScaleOrb', {});
+
 /** "Back to now" button next to the Rewind dial. */
 export const RewindNow = createComponent('RewindNow', {});
 

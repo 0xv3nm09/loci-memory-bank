@@ -114,6 +114,20 @@ export function playPlaceClick(): void {
   });
 }
 
+/**
+ * Crisis surface cue — deliberately calm, low, slow: presence and care,
+ * never an alarm. The one audio accompaniment to the safety panel.
+ */
+export function playCalmTone(): void {
+  const audio = ensureAudio();
+  if (audio == null) {
+    return;
+  }
+  const t0 = audio.currentTime;
+  voice({ freq: 196, start: t0, duration: 2.2, peak: 0.07, attack: 0.5 });
+  voice({ freq: 246.9, start: t0 + 0.4, duration: 1.8, peak: 0.05, attack: 0.5 });
+}
+
 /** A recall miss — soft neutral tone, never a "failure" buzz. */
 export function playMissTone(): void {
   const audio = ensureAudio();

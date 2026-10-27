@@ -30,6 +30,18 @@ export interface RecallRecord {
 
 export type RecallState = Record<string, RecallRecord>;
 
+/** Strength at/above which a note counts as remembered (tunable). */
+export const RECALL_DUE_THRESHOLD = 1;
+
+/** Notes with no recall history, or strength below the threshold, are due. */
+export function countDue(
+  recall: RecallState,
+  noteIds: string[],
+  threshold = RECALL_DUE_THRESHOLD,
+): number {
+  return noteIds.filter((id) => (recall[id]?.strength ?? 0) < threshold).length;
+}
+
 export interface SavedSnapshot {
   at: string;
   notes: SavedNote[];

@@ -11,8 +11,9 @@ export interface LayoutVec {
 }
 
 /** Distinct hues for cluster identity (cyan, green, amber, violet, rose, blue). */
-/** Curated, colorblind-safe hue positions (see palette.ts accents). */
-export const CLUSTER_HUES = [0.55, 0.44, 0.1, 0.73, 0.94, 0.62, 0.28];
+/** Hue positions matching palette.ts's verified accents 1:1 (nearest-hue
+ * mapping then resolves exactly). Interleaved warm/cool for variety. */
+export const CLUSTER_HUES = [0.537, 0.102, 0.406, 0.07, 0.64, 0.003];
 
 const SPACING_X = 0.19;
 const SPACING_Y = 0.135;

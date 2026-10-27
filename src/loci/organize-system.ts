@@ -1,5 +1,5 @@
 import { createSystem, Pressed, type Entity } from '@iwsdk/core';
-import { Vector3 } from 'three';
+import { Mesh, MeshStandardMaterial, Vector3 } from 'three';
 import {
   ClusterLabel,
   ConnectionLine,
@@ -25,6 +25,7 @@ export class OrganizeSystem extends createSystem({
   buds: { required: [SuggestionBud] },
   budsPressed: { required: [SuggestionBud, Pressed] },
   orbPressed: { required: [OrganizeOrb, Pressed] },
+  orbs: { required: [OrganizeOrb] },
 }) {
   private trash: Entity[] = [];
   private thinking = false;
@@ -110,7 +111,23 @@ export class OrganizeSystem extends createSystem({
         ? 'Sage organized your thoughts.'
         : 'Sage couldn\'t reach the model — organized locally instead.',
     );
+    // Persistent who-did-this indicator: the orb stays gold after a real
+    // model organize, gray after the local fallback — visible at a glance
+    // which intelligence shaped the current layout.
+    this.tintOrb(source === 'Sage' ? 0xe8b34b : 0x8a93a8, source === 'Sage' ? 1.15 : 0.5);
     this.applyResult(result);
+  }
+
+  private tintOrb(color: number, intensity: number): void {
+    const orb = this.queries.orbs.entities.values().next().value;
+    const card = orb?.object3D?.getObjectByName('card');
+    if (card == null) {
+      return;
+    }
+    const material = (card as Mesh).material as MeshStandardMaterial;
+    material.emissive.set(color);
+    material.emissiveIntensity = intensity;
+    material.color.set(color);
   }
 
   private setStatus(message: string): void {

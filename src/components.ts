@@ -15,6 +15,7 @@ import {
   MicOrb,
   SnapAnimation,
   SuggestionBud,
+  TextScaleOrb,
   TypeOrb,
 } from './loci/components.js';
 
@@ -33,6 +34,7 @@ export default defineComponents([
   KeyboardKey,
   CrisisDismiss,
   MicOrb,
+  TextScaleOrb,
   RewindHandle,
   RewindNow,
 ]);

@@ -31,6 +31,20 @@ npm run typecheck
 Deployed to GitHub Pages on every push to `main` (see
 `.github/workflows/deploy.yml`).
 
+## Accessibility
+
+Every action — capture, organize, arrange, recall, rewind — is reachable
+one-handed and seated. Cluster colors are **verified** colorblind-safe
+(simulated under deuteranopia/protanopia/tritanopia; see `src/loci/palette.ts`),
+meaning is never carried by color alone (every state also has a glyph or
+shape), and the green **Aa orb** cycles global text size (100/125/150%).
+The crisis safety surface has its own calm audio cue.
+
+## Prize targeting
+
+`prizes/` documents, per competition category we are targeting, what judges
+reward, what is built (with file references), and the exact demo flow.
+
 ## Privacy note
 
 Thoughts you capture are processed on your device and, for AI organizing, by a

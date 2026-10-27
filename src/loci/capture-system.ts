@@ -12,10 +12,13 @@ import {
 import { clusterCenter, gridHalfHeight } from './layout.js';
 import { getLoci } from './globals.js';
 import { primeAudioOnFirstGesture } from './audio.js';
-import { MicOrb, TypeOrb } from './components.js';
-import { createMicOrb, createTypeOrb } from './note-factory.js';
+import { MicOrb, TextScaleOrb, TypeOrb } from './components.js';
+import { createMicOrb, createTextScaleOrb, createTypeOrb } from './note-factory.js';
+import { getTextScale, setTextScale } from './text-label.js';
 import { setAppStatus } from './status3d.js';
 import { checkDistress } from './distress-gate.js';
+import { countDue } from './palace-store.js';
+import { agoLabel } from './time.js';
 import { CrisisPanelSystem } from './crisis-panel.js';
 import { GUIDE_STEPS } from './guide.js';
 import {
@@ -65,6 +68,7 @@ export class CaptureSystem extends createSystem({
   seedsPressed: { required: [SeedCard, Pressed] },
   typePressed: { required: [TypeOrb, Pressed] },
   micPressed: { required: [MicOrb, Pressed] },
+  textScalePressed: { required: [TextScaleOrb, Pressed] },
 }) {
   private noteCounter = 0;
   private autoOrganizeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -93,6 +97,7 @@ export class CaptureSystem extends createSystem({
     // a real headset before submission (TASKS.md §5 — needs a device).
     createTypeOrb(this.world, new Vector3(-0.02, 1.0, -0.72));
     createMicOrb(this.world, new Vector3(0.28, 1.0, -0.72));
+    createTextScaleOrb(this.world, new Vector3(-0.32, 1.0, -0.72));
     createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.52, 1.22, -0.62));
     createSeed(this.world, 'thesis', SEED_TITLES.thesis, new Vector3(-0.52, 1.06, -0.72));
     createSeed(this.world, 'kingdom', SEED_TITLES.kingdom, new Vector3(-0.52, 0.9, -0.62));
@@ -109,6 +114,20 @@ export class CaptureSystem extends createSystem({
     });
     this.queries.micPressed.subscribe('qualify', () => {
       this.toggleVoice();
+    });
+    this.queries.textScalePressed.subscribe('qualify', () => {
+      // Cycle 100% -> 125% -> 150% -> 100%. Applies to every live label
+      // immediately (scene traversal); new labels pick it up at creation.
+      const steps = [1, 1.25, 1.5];
+      const current = getTextScale();
+      const next = steps[(steps.indexOf(current) + 1) % steps.length] ?? 1;
+      setTextScale(next);
+      this.world.scene.traverse((object) => {
+        if (object.userData.isLociLabel === true) {
+          object.scale.setScalar(next);
+        }
+      });
+      setAppStatus(`Text size: ${Math.round(next * 100)}%.`);
     });
 
     getLoci(this.globals).cancelAutoOrganize = () => {
@@ -187,6 +206,19 @@ export class CaptureSystem extends createSystem({
     saved.edges.forEach((edge, index) => {
       createLine(this.world, edge.a, edge.b, 0.4 + index * 0.12);
     });
+
+    // Best Reason to Come Back: surface retention state at re-entry — the
+    // moment it matters. Nothing overwrites this until the next capture.
+    const latest = saved.history?.[saved.history.length - 1];
+    if (latest != null) {
+      const due = countDue(
+        loci.recallState,
+        saved.notes.map((note) => note.id),
+      );
+      setAppStatus(
+        `Welcome back — last here ${agoLabel(latest.at)}. ${due} thought${due === 1 ? '' : 's'} due for Recall.`,
+      );
+    }
   }
 
   private dumpSeed(key: string): void {

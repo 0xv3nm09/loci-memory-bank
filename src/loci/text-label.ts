@@ -10,6 +10,16 @@ import {
 const PX_PER_METER = 1024;
 const LINE_HEIGHT = 1.32;
 
+// Global text scale (accessibility). Module-level: the toggle orb updates it
+// and re-scales every live label mesh via a scene traversal.
+let textScale = 1;
+export function getTextScale(): number {
+  return textScale;
+}
+export function setTextScale(next: number): void {
+  textScale = next;
+}
+
 let fontReady = false;
 
 /** Register the bundled Inter as a canvas-readable font (graceful fallback). */
@@ -156,6 +166,8 @@ export function createTextLabel(
     }),
   );
   mesh.renderOrder = 5;
+  mesh.userData.isLociLabel = true;
+  mesh.scale.setScalar(getTextScale());
   // Dynamic labels (e.g. the keyboard input field) redraw in place.
   mesh.userData.redraw = (newText: string): void => {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
