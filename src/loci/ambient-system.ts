@@ -7,6 +7,7 @@ import {
   RecallOrb,
   SeedCard,
   SnapAnimation,
+  SpawnAnimation,
   SuggestionBud,
   TextScaleOrb,
   TypeOrb,
@@ -34,8 +35,11 @@ function baseGlow(entity: import('@iwsdk/core').Entity): number {
  * and orbs, hover feedback on every interactable, suggestion bud pulse.
  * Skipped during Recall (which owns the glow).
  */
+const easeOutQuart = (t: number): number => 1 - Math.pow(1 - t, 4);
+
 export class AmbientSystem extends createSystem({
   notes: { required: [Note] },
+  spawning: { required: [SpawnAnimation] },
   seeds: { required: [SeedCard] },
   organizeOrbs: { required: [OrganizeOrb] },
   recallOrbs: { required: [RecallOrb] },
@@ -56,6 +60,45 @@ export class AmbientSystem extends createSystem({
     const loci = getLoci(this.globals);
     const feedbackAllowed = !loci.recallActive && !loci.rewindActive;
     const lerp = Math.min(1, delta * 12);
+
+    // ── Spawn animation: scale 0→1 + opacity 0→1 + glow bloom ──
+    for (const entity of Array.from(this.queries.spawning.entities)) {
+      const elapsed = (entity.getValue(SpawnAnimation, 'elapsed') ?? 0) + delta;
+      entity.setValue(SpawnAnimation, 'elapsed', elapsed);
+      const duration = entity.getValue(SpawnAnimation, 'duration') ?? 0.45;
+      const t = Math.min(1, elapsed / duration);
+      const eased = easeOutQuart(t);
+      const object = entity.object3D;
+      if (object == null) {
+        entity.removeComponent(SpawnAnimation);
+        continue;
+      }
+      // Scale ramps from near-zero to 1; a slight overshoot makes it pop.
+      const overshoot = t < 0.85 ? eased * 1.08 : 1 + (1 - t) * 0.08;
+      object.scale.setScalar(Math.max(0.001, overshoot));
+
+      // Card material opacity ramp.
+      const card = object.getObjectByName('card') as Mesh | undefined;
+      if (card != null) {
+        const material = card.material as MeshStandardMaterial;
+        material.opacity = eased;
+        // Glow bloom that fades: peaks at t=0.4, settles to base.
+        const bloom = Math.sin(Math.PI * t) * 0.6;
+        material.emissiveIntensity = GLASS.rawRimIntensity + bloom;
+      }
+
+      if (t >= 1) {
+        // Ensure final state is clean.
+        object.scale.setScalar(1);
+        if (card != null) {
+          const material = card.material as MeshStandardMaterial;
+          material.opacity = 1;
+          material.transparent = false;
+          material.emissiveIntensity = GLASS.rawRimIntensity;
+        }
+        entity.removeComponent(SpawnAnimation);
+      }
+    }
 
     // ── Note hover/grab feedback ──
     for (const entity of this.queries.notes.entities) {
@@ -81,10 +124,31 @@ export class AmbientSystem extends createSystem({
       }
 
       if ((entity.getValue(Note, 'state') ?? 'raw') !== 'raw') {
+        // ── Settled note subtle breathing — they're alive, just calm ──
+        if (!entity.hasComponent(SnapAnimation) && !entity.hasComponent(SpawnAnimation)) {
+          const noteId = Number((entity.getValue(Note, 'id') ?? '').slice(1)) || 0;
+          const breathe = 1 + Math.sin(time * 0.5 + noteId * 2.3) * 0.012;
+          object.scale.setScalar(breathe);
+        }
         continue;
       }
+      // ── Raw note wandering drift: lissajous-like float in the void ──
       const seed = Number((entity.getValue(Note, 'id') ?? '').slice(1)) || 0;
-      object.rotation.z = Math.sin(time * 0.6 + seed * 1.7) * 0.02;
+      if (!entity.hasComponent(SpawnAnimation)) {
+        let rest = this.restY.get(entity);
+        if (rest == null) {
+          rest = object.position.y;
+          this.restY.set(entity, rest);
+        }
+        // Gentle wandering — each note drifts on its own path.
+        const phase = seed * 1.7;
+        object.position.y = rest + Math.sin(time * 0.4 + phase) * 0.018;
+        object.position.x += Math.sin(time * 0.25 + phase * 0.7) * delta * 0.003;
+        object.position.z += Math.cos(time * 0.3 + phase * 1.1) * delta * 0.002;
+      }
+      // Gentle tilt adds to the floating feel.
+      object.rotation.z = Math.sin(time * 0.6 + seed * 1.7) * 0.025;
+      object.rotation.x = Math.cos(time * 0.4 + seed * 2.1) * 0.015;
     }
 
     // ── Breathing float for all affordances ──

@@ -128,6 +128,19 @@ export function playCalmTone(): void {
   voice({ freq: 246.9, start: t0 + 0.4, duration: 1.8, peak: 0.05, attack: 0.5 });
 }
 
+/** A thought materializes — soft rising shimmer, gentle and brief. */
+export function playSpawnTone(): void {
+  const audio = ensureAudio();
+  if (audio == null) {
+    return;
+  }
+  const t0 = audio.currentTime;
+  // Breathy shimmer: two detuned sines that swell and die quickly.
+  voice({ freq: 523, start: t0, duration: 0.22, peak: 0.06, attack: 0.04 });
+  voice({ freq: 784, start: t0 + 0.05, duration: 0.18, peak: 0.04, attack: 0.03 });
+  voice({ freq: 1047, start: t0 + 0.08, duration: 0.12, peak: 0.02, attack: 0.02 });
+}
+
 /** Orb press — crisp tick, slightly higher than place click. */
 export function playOrbClick(): void {
   const audio = ensureAudio();

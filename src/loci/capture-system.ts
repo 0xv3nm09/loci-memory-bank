@@ -11,7 +11,7 @@ import {
 } from './note-factory.js';
 import { clusterCenter, gridHalfHeight } from './layout.js';
 import { getLoci } from './globals.js';
-import { playOrbClick, primeAudioOnFirstGesture, startAmbientDrone } from './audio.js';
+import { playOrbClick, playSpawnTone, primeAudioOnFirstGesture, startAmbientDrone } from './audio.js';
 import { MicOrb, TextScaleOrb, TypeOrb } from './components.js';
 import { createMicOrb, createTextScaleOrb, createTypeOrb } from './note-factory.js';
 import { getTextScale, setTextScale } from './text-label.js';
@@ -184,6 +184,7 @@ export class CaptureSystem extends createSystem({
         note.id,
         note.text,
         new Vector3(...note.position),
+        true, // skipSpawn — restored notes appear instantly
       );
       entity.setValue(Note, 'cluster', note.cluster);
       entity.setValue(Note, 'hue', note.hue);
@@ -276,6 +277,7 @@ export class CaptureSystem extends createSystem({
       -Math.cos(azimuth) * radius,
     );
     createNote(this.world, id, trimmed, position);
+    playSpawnTone();
   }
 
   private updateStatus(): void {

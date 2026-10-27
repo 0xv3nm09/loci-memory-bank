@@ -14,6 +14,12 @@ export const Note = createComponent('Note', {
   userPlaced: { type: Types.Boolean, default: false },
 });
 
+/** Birth animation — scale/opacity ramp when a note first materializes. */
+export const SpawnAnimation = createComponent('SpawnAnimation', {
+  elapsed: { type: Types.Float32, default: 0 },
+  duration: { type: Types.Float32, default: 0.45 },
+});
+
 /** Eased flight from startPos to targetPos — the snap. */
 export const SnapAnimation = createComponent('SnapAnimation', {
   startPos: { type: Types.Vec3, default: [0, 0, 0] },

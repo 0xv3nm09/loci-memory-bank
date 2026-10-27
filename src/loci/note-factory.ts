@@ -30,6 +30,7 @@ import {
   MicOrb,
   RecallOrb,
   SeedCard,
+  SpawnAnimation,
   SuggestionBud,
   TextScaleOrb,
   TypeOrb,
@@ -80,6 +81,8 @@ export function createNote(
   id: string,
   text: string,
   position: Vector3,
+  /** Skip the spawn animation (e.g. when restoring a saved palace). */
+  skipSpawn = false,
 ): Entity {
   const group = new Group();
   group.name = `note-${id}`;
@@ -112,8 +115,18 @@ export function createNote(
   group.position.copy(position);
   facePlayer(group);
 
+  if (!skipSpawn) {
+    // Start invisible and tiny — SpawnAnimation will ramp up.
+    group.scale.setScalar(0.001);
+    material.opacity = 0;
+    material.transparent = true;
+  }
+
   const entity = world.createTransformEntity(group);
   entity.addComponent(Note, { id, text });
+  if (!skipSpawn) {
+    entity.addComponent(SpawnAnimation, { elapsed: 0, duration: 0.45 });
+  }
   entity.addComponent(RayInteractable);
   entity.addComponent(OneHandGrabbable, {
     translate: true,

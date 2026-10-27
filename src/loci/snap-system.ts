@@ -1,5 +1,15 @@
 import { createSystem, Grabbed } from '@iwsdk/core';
-import { Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from 'three';
+import {
+  AdditiveBlending,
+  BufferGeometry,
+  Float32BufferAttribute,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  Points,
+  PointsMaterial,
+  Vector3,
+} from 'three';
 import { ConnectionLine, Note, SnapAnimation } from './components.js';
 import { playConnectTone, playPlaceClick } from './audio.js';
 import { getLoci } from './globals.js';
@@ -8,6 +18,73 @@ import { schedulePalaceSave } from './palace-store.js';
 const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
 const clamp01 = (t: number): number => Math.min(1, Math.max(0, t));
 const UP = new Vector3(0, 1, 0);
+
+/* ── Lightweight particle trail for snap flights ── */
+
+const TRAIL_PARTICLES = 6;
+const TRAIL_LIFE = 0.7; // seconds each particle lives
+
+interface TrailParticle {
+  x: number;
+  y: number;
+  z: number;
+  vx: number;
+  vy: number;
+  vz: number;
+  life: number;
+  maxLife: number;
+}
+
+interface TrailCloud {
+  particles: TrailParticle[];
+  points: Points;
+  geometry: BufferGeometry;
+  material: PointsMaterial;
+}
+
+const trailClouds: TrailCloud[] = [];
+
+function spawnTrailParticle(x: number, y: number, z: number): TrailParticle {
+  return {
+    x,
+    y,
+    z,
+    vx: (Math.random() - 0.5) * 0.04,
+    vy: (Math.random() - 0.3) * 0.03,
+    vz: (Math.random() - 0.5) * 0.04,
+    life: TRAIL_LIFE,
+    maxLife: TRAIL_LIFE,
+  };
+}
+
+function getOrCreateTrailCloud(scene: { add(o: Points): void }): TrailCloud {
+  // Reuse a dead cloud if available.
+  for (const cloud of trailClouds) {
+    if (cloud.particles.length === 0) {
+      return cloud;
+    }
+  }
+  const geometry = new BufferGeometry();
+  const positions = new Float32Array(TRAIL_PARTICLES * 3 * 8);
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geometry.setDrawRange(0, 0);
+  const material = new PointsMaterial({
+    color: 0x82c8ff,
+    size: 0.008,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.6,
+    blending: AdditiveBlending,
+    depthWrite: false,
+  });
+  const points = new Points(geometry, material);
+  points.renderOrder = 8;
+  points.frustumCulled = false;
+  scene.add(points);
+  const cloud: TrailCloud = { particles: [], points, geometry, material };
+  trailClouds.push(cloud);
+  return cloud;
+}
 
 /**
  * The snap: eased flights with an arc lift and scale pop, then connection
@@ -18,8 +95,45 @@ export class SnapSystem extends createSystem({
   lines: { required: [ConnectionLine] },
 }) {
   private direction = new Vector3();
+  private trailTimer = 0;
 
   update(delta: number): void {
+    // ── Update trail particles ──
+    for (const cloud of trailClouds) {
+      if (cloud.particles.length === 0) {
+        continue;
+      }
+      const posAttr = cloud.geometry.getAttribute('position');
+      const arr = posAttr.array as Float32Array;
+      let alive = 0;
+      for (let i = 0; i < cloud.particles.length; i++) {
+        const p = cloud.particles[i];
+        p.life -= delta;
+        if (p.life <= 0) {
+          continue;
+        }
+        p.x += p.vx * delta;
+        p.y += p.vy * delta;
+        p.z += p.vz * delta;
+        arr[alive * 3] = p.x;
+        arr[alive * 3 + 1] = p.y;
+        arr[alive * 3 + 2] = p.z;
+        cloud.particles[alive] = p;
+        alive++;
+      }
+      cloud.particles.length = alive;
+      cloud.geometry.setDrawRange(0, alive);
+      posAttr.needsUpdate = true;
+      cloud.material.opacity = alive > 0 ? 0.5 : 0;
+    }
+
+    // ── Spawn trail particles from moving cards ──
+    this.trailTimer += delta;
+    const shouldSpawnTrail = this.trailTimer > 0.04; // ~25fps trail spawn rate
+    if (shouldSpawnTrail) {
+      this.trailTimer = 0;
+    }
+
     for (const entity of Array.from(this.queries.flights.entities)) {
       const elapsed = (entity.getValue(SnapAnimation, 'elapsed') ?? 0) + delta;
       entity.setValue(SnapAnimation, 'elapsed', elapsed);
@@ -44,6 +158,14 @@ export class SnapSystem extends createSystem({
       );
       object.lookAt(0, object.position.y, 0.001);
       object.scale.setScalar(1 + Math.sin(Math.PI * t) * 0.05);
+
+      // Spawn trail dust while in flight.
+      if (shouldSpawnTrail && t > 0.05 && t < 0.95) {
+        const cloud = getOrCreateTrailCloud(this.world.scene);
+        cloud.particles.push(
+          spawnTrailParticle(object.position.x, object.position.y, object.position.z),
+        );
+      }
 
       if (t >= 1) {
         object.scale.setScalar(1);
