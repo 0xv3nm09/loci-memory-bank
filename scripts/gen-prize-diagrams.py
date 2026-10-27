@@ -141,9 +141,23 @@ class Flow:
                 prev_bottom = y + h
                 y += h + 56
             elif kind == "note":
-                h = 46
+                # wrap at ~78 chars so the text never crosses the dashed border
+                words = d["text"].split(" ")
+                wrapped, line = [], ""
+                for word in words:
+                    if len(line) + len(word) + 1 > 78:
+                        wrapped.append(line)
+                        line = word
+                    else:
+                        line = f"{line} {word}".strip()
+                if line:
+                    wrapped.append(line)
+                h = 40 + 19 * (len(wrapped) - 1)
                 p.append(f'<rect x="{COL_X}" y="{y}" width="{COL_W}" height="{h}" rx="10" fill="{GLASS2}" stroke="{d["accent"]}" stroke-dasharray="5 4"/>')
-                p.append(f'<text x="{COL_X+16}" y="{y+28}" font-size="13" fill="{d["accent"]}">{esc(d["text"])}</text>')
+                ty = y + 26
+                for line in wrapped:
+                    p.append(f'<text x="{COL_X+16}" y="{ty}" font-size="13" fill="{d["accent"]}">{esc(line)}</text>')
+                    ty += 19
                 prev_bottom = y + h
                 y += h + 46
         return y + 30, p
