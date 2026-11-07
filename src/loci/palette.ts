@@ -12,6 +12,20 @@ export const GLASS = {
   rawRim: 0x6b6152,
   rawRimIntensity: 0.26,
   clusteredRimIntensity: 0.28,
+  /** Panel surfaces — slightly lighter than cards for z-depth layering. */
+  panelBody: 0x0e1428,
+  panelEmissive: 0x1a2440,
+  panelEmissiveIntensity: 0.55,
+  panelOpacity: 0.96,
+  /** Button surfaces — UI affordances on panels. */
+  buttonBody: 0x1c2745,
+  buttonEmissive: 0x3a4b7a,
+  buttonEmissiveIntensity: 0.3,
+  /** Correct/incorrect feedback. */
+  correctBody: 0x1d4a35,
+  correctGlow: 0x2fbf6a,
+  incorrectBody: 0x4a351d,
+  incorrectGlow: 0xbf7a2f,
 };
 
 /**
@@ -53,4 +67,12 @@ export const SEMANTIC = {
   connection: 0x46c8e8, // lines: slightly desaturated cyan
   expand: 0x43d9a3,
   challenge: 0xf0b24f,
+  /** Status text in 3D scene. */
+  statusText: '#9fb0d8',
+  /** Calm accent for positive messaging. */
+  calmAccent: '#bdf5e6',
+  /** Prompt text on panels. */
+  promptText: '#e8edff',
+  /** Dim hint text. */
+  hintText: '#8fa3d8',
 };

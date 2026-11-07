@@ -25,6 +25,7 @@ import {
 import type { RecallState } from './palace-store.js';
 import { schedulePalaceSave } from './palace-store.js';
 import { setAppStatus } from './status3d.js';
+import { GLASS, SEMANTIC } from './palette.js';
 
 interface QuizOption {
   text: string;
@@ -42,6 +43,9 @@ const MAX_QUESTIONS = 5;
 
 const trunc = (text: string, max: number): string =>
   text.length <= max ? text : `${text.slice(0, max - 1)}…`;
+
+const PROMPT_TRUNC = 72;
+const OPTION_TRUNC = 52;
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -351,7 +355,7 @@ export class RecallSystem extends createSystem({
             ];
             question = {
               targetId: target.id,
-              prompt: `You placed: "${trunc(target.text, 58)}" — which thread did it join?`,
+              prompt: `You placed: "${trunc(target.text, PROMPT_TRUNC)}" — which thread did it join?`,
               options: shuffle(options),
             };
           }
@@ -386,10 +390,10 @@ export class RecallSystem extends createSystem({
           if (optionNotes.length >= 2) {
             question = {
               targetId: target.id,
-              prompt: `"${trunc(target.text, 58)}" — which thought was closest to it?`,
+              prompt: `"${trunc(target.text, PROMPT_TRUNC)}" — which thought was closest to it?`,
               options: shuffle(
                 optionNotes.map((n) => ({
-                  text: trunc(n.text, 46),
+                  text: trunc(n.text, OPTION_TRUNC),
                   correct: n.id === peer.id,
                 })),
               ),
@@ -422,12 +426,12 @@ export class RecallSystem extends createSystem({
     const backdrop = new Mesh(
       this.panelGeometry,
       new MeshStandardMaterial({
-        color: 0x0e1428,
-        emissive: new Color(0x1a2440),
-        emissiveIntensity: 0.55,
-        roughness: 0.7,
+        color: GLASS.panelBody,
+        emissive: new Color(GLASS.panelEmissive),
+        emissiveIntensity: GLASS.panelEmissiveIntensity,
+        roughness: 0.65,
         transparent: true,
-        opacity: 0.96,
+        opacity: GLASS.panelOpacity,
       }),
     );
     backdrop.name = 'panel';
@@ -435,12 +439,12 @@ export class RecallSystem extends createSystem({
     const backdropEntity = this.world.createTransformEntity(backdrop);
     this.quizEntities.push(backdropEntity);
 
-    const prompt = createLabel(question.prompt, 0.019, '#e8edff', 0.74);
+    const prompt = createLabel(question.prompt, 0.019, SEMANTIC.promptText, 0.74);
     this.addPanelPiece(prompt, 0.235);
     this.quizEntities.push(this.world.createTransformEntity(prompt));
 
     if (this.voiceActive) {
-      const hint = createLabel('or just say your answer', 0.012, '#8fa3d8', 0.5);
+      const hint = createLabel('or just say your answer', 0.012, SEMANTIC.hintText, 0.5);
       this.addPanelPiece(hint, 0.155);
       this.quizEntities.push(this.world.createTransformEntity(hint));
     }
@@ -449,15 +453,15 @@ export class RecallSystem extends createSystem({
     question.options.forEach((option, index) => {
       const cardGroup = new Group();
       const material = new MeshStandardMaterial({
-        color: 0x1c2745,
-        emissive: new Color(0x3a4b7a),
-        emissiveIntensity: 0.3,
-        roughness: 0.5,
+        color: GLASS.buttonBody,
+        emissive: new Color(GLASS.buttonEmissive),
+        emissiveIntensity: GLASS.buttonEmissiveIntensity,
+        roughness: 0.45,
       });
       const card = new Mesh(this.optionGeometry, material);
       card.name = 'card';
       cardGroup.add(card);
-      const label = createLabel(option.text, 0.0145, '#dfe6ff', 0.62);
+      const label = createLabel(option.text, 0.0145, SEMANTIC.promptText, 0.62);
       label.position.set(0, 0, 0.009);
       cardGroup.add(label);
       this.addPanelPiece(cardGroup, optionYs[index]);
@@ -472,15 +476,15 @@ export class RecallSystem extends createSystem({
     const doneMesh = new Mesh(
       this.doneGeometry,
       new MeshStandardMaterial({
-        color: 0x232c4d,
-        emissive: new Color(0x56639a),
-        emissiveIntensity: 0.4,
-        roughness: 0.5,
+        color: GLASS.buttonBody,
+        emissive: new Color(GLASS.buttonEmissive),
+        emissiveIntensity: GLASS.buttonEmissiveIntensity + 0.1,
+        roughness: 0.45,
       }),
     );
     doneMesh.name = 'card';
     doneGroup.add(doneMesh);
-    const doneLabel = createLabel('done', 0.013, '#9fb0e0', 0.2);
+    const doneLabel = createLabel('done', 0.013, SEMANTIC.statusText, 0.2);
     doneLabel.position.set(0, 0, 0.008);
     doneGroup.add(doneLabel);
     this.addPanelPiece(doneGroup, -0.3);
@@ -524,12 +528,12 @@ export class RecallSystem extends createSystem({
       }
       const material = card.material as MeshStandardMaterial;
       if (isCorrect) {
-        material.color.set(0x1d4a35);
-        material.emissive.set(0x2fbf6a);
+        material.color.set(GLASS.correctBody);
+        material.emissive.set(GLASS.correctGlow);
         material.emissiveIntensity = 1.2;
       } else if (quizEntity === entity && !chosenCorrect) {
-        material.color.set(0x4a351d);
-        material.emissive.set(0xbf7a2f);
+        material.color.set(GLASS.incorrectBody);
+        material.emissive.set(GLASS.incorrectGlow);
         material.emissiveIntensity = 1.2;
       }
     }
@@ -574,7 +578,7 @@ export class RecallSystem extends createSystem({
     if (this.endEntity != null) {
       this.trash.push(this.endEntity);
     }
-    const label = createLabel(message, 0.021, '#bdf5e6', 0.74);
+    const label = createLabel(message, 0.021, SEMANTIC.calmAccent, 0.74);
     this.addPanelPiece(label, 0.06);
     this.endEntity = this.world.createTransformEntity(label);
     this.endTimer = 3.2;

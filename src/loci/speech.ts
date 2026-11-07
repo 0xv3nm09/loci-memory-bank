@@ -43,7 +43,7 @@ export function createRecognizer(): SpeechRecognitionLike | null {
     return null;
   }
   const rec = new Ctor();
-  rec.lang = 'en-US';
+  rec.lang = navigator.language || 'en-US';
   rec.interimResults = true;
   rec.continuous = false;
   return rec;

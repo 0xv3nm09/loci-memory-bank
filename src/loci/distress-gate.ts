@@ -24,6 +24,9 @@ const TRIGGERS: RegExp[] = [
   /\boverdos(e|ing)\b/i,
   /\bcut(ting)? myself\b/i,
   /\bdon'?t want to be alive\b/i,
+  /\bwish i (was|were) dead\b/i,
+  /\bcan'?t (go on|take it|do this) any ?more\b/i,
+  /\bnobody (would|will) (miss|care|notice)\b/i,
 ];
 
 export function checkDistress(text: string): DistressCheck {

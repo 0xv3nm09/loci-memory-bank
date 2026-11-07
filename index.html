@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -9,145 +9,299 @@
     <link rel="icon" href="data:," />
     <title>Loci — spatial memory bank</title>
     <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         font-family: 'Inter', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow: hidden;
+        background: #060a16;
       }
+
+      /* ── Status bar ── */
+      #hud-status {
+        position: fixed;
+        left: 50%;
+        bottom: 86px;
+        transform: translateX(-50%);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        color: rgba(160, 178, 230, 0.9);
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+        pointer-events: none;
+        white-space: nowrap;
+        transition: opacity 0.4s ease;
+      }
+
+      /* ── HUD bar ── */
       #loci-hud {
         position: fixed;
         left: 50%;
-        bottom: 24px;
+        bottom: 20px;
         transform: translateX(-50%);
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        background: rgba(10, 14, 28, 0.82);
-        border: 1px solid rgba(120, 160, 255, 0.25);
-        border-radius: 14px;
-        backdrop-filter: blur(8px);
+        gap: 6px;
+        padding: 8px 12px;
+        background: rgba(8, 12, 24, 0.88);
+        border: 1px solid rgba(100, 140, 240, 0.18);
+        border-radius: 16px;
+        backdrop-filter: blur(14px) saturate(1.2);
+        -webkit-backdrop-filter: blur(14px) saturate(1.2);
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.45),
+          0 0 0 1px rgba(80, 120, 220, 0.08) inset;
         z-index: 10;
+        transition: opacity 0.3s ease, transform 0.3s ease;
       }
       #loci-hud input {
-        width: 320px;
-        padding: 9px 12px;
+        width: min(280px, 48vw);
+        padding: 10px 14px;
         font-size: 14px;
+        font-weight: 400;
         color: #eef1ff;
-        background: rgba(20, 26, 48, 0.9);
-        border: 1px solid rgba(120, 160, 255, 0.3);
-        border-radius: 8px;
+        background: rgba(16, 22, 42, 0.85);
+        border: 1px solid rgba(100, 140, 240, 0.22);
+        border-radius: 10px;
         outline: none;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      }
+      #loci-hud input::placeholder {
+        color: rgba(160, 178, 230, 0.5);
       }
       #loci-hud input:focus {
-        border-color: rgba(90, 220, 255, 0.7);
+        border-color: rgba(70, 200, 232, 0.6);
+        box-shadow: 0 0 0 3px rgba(70, 200, 232, 0.12);
       }
+
+      /* ── Buttons ── */
       #loci-hud button {
         padding: 9px 14px;
         font-size: 13px;
         font-weight: 600;
+        letter-spacing: 0.01em;
         color: #06131c;
-        background: linear-gradient(180deg, #7ee7d2, #46c9ae);
+        background: linear-gradient(180deg, #7ee7d2 0%, #3dbfa3 100%);
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         cursor: pointer;
+        transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.2s ease;
+        white-space: nowrap;
+        position: relative;
+        overflow: hidden;
       }
-      #loci-hud button.secondary {
-        color: #cfe2ff;
-        background: rgba(40, 52, 96, 0.9);
-        border: 1px solid rgba(120, 160, 255, 0.3);
-      }
-      #loci-hud button:hover {
-        filter: brightness(1.1);
-      }
-      #loci-hud button#voice-btn.active {
-        background: linear-gradient(180deg, #ff8f8f, #d95858);
-        color: #fff;
-        animation: loci-pulse 1.2s ease-in-out infinite;
-      }
-      @keyframes loci-pulse {
-        0%, 100% { filter: brightness(1); }
-        50% { filter: brightness(1.3); }
-      }
-      #hud-status {
-        position: fixed;
-        left: 50%;
-        bottom: 82px;
-        transform: translateX(-50%);
-        font-size: 12px;
-        letter-spacing: 0.04em;
-        color: rgba(160, 178, 230, 0.85);
-        z-index: 10;
+      #loci-hud button::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
         pointer-events: none;
       }
+      #loci-hud button.secondary {
+        color: #c3d4f5;
+        background: rgba(32, 44, 82, 0.85);
+        border: 1px solid rgba(100, 140, 240, 0.2);
+      }
+      #loci-hud button.secondary::after {
+        background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 50%);
+      }
+      #loci-hud button:hover {
+        filter: brightness(1.12);
+        box-shadow: 0 2px 12px rgba(70, 200, 232, 0.2);
+      }
+      #loci-hud button.secondary:hover {
+        border-color: rgba(100, 140, 240, 0.4);
+        box-shadow: 0 2px 12px rgba(70, 100, 220, 0.15);
+      }
+      #loci-hud button:active {
+        filter: brightness(0.92);
+        transform: scale(0.96);
+        transition-duration: 0.05s;
+      }
+      #loci-hud button:focus-visible {
+        outline: 2px solid rgba(70, 200, 232, 0.7);
+        outline-offset: 2px;
+      }
 
+      /* ── Voice button states ── */
+      #loci-hud button#voice-btn {
+        min-width: 40px;
+        padding: 9px 10px;
+        font-size: 16px;
+        line-height: 1;
+      }
+      #loci-hud button#voice-btn.active {
+        background: linear-gradient(180deg, #ff8888, #d04848);
+        color: #fff;
+        animation: loci-pulse 1.4s ease-in-out infinite;
+        box-shadow: 0 0 16px rgba(220, 80, 80, 0.35);
+      }
+      @keyframes loci-pulse {
+        0%, 100% { filter: brightness(1); box-shadow: 0 0 12px rgba(220,80,80,0.25); }
+        50% { filter: brightness(1.2); box-shadow: 0 0 22px rgba(220,80,80,0.5); }
+      }
+
+      /* ── Help button ── */
+      #loci-hud button#help-btn {
+        min-width: 36px;
+        padding: 9px 0;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      /* ── Reduced motion ── */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* ── Mobile responsive ── */
+      @media (max-width: 640px) {
+        #loci-hud {
+          gap: 4px;
+          padding: 6px 8px;
+          border-radius: 12px;
+        }
+        #loci-hud input {
+          width: min(200px, 40vw);
+          padding: 8px 10px;
+          font-size: 13px;
+        }
+        #loci-hud button {
+          padding: 8px 10px;
+          font-size: 12px;
+        }
+      }
+
+      /* ── Help overlay ── */
       #loci-help {
         position: fixed;
         inset: 0;
         z-index: 50;
-        background: rgba(4, 6, 14, 0.88);
+        background: rgba(4, 6, 14, 0.92);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
         display: flex;
         align-items: center;
         justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s;
+      }
+      #loci-help.visible {
+        opacity: 1;
+        visibility: visible;
       }
       #loci-help .help-card {
-        max-width: 480px;
-        padding: 26px 30px;
-        background: #0e1428;
-        border: 1px solid rgba(140, 170, 255, 0.3);
-        border-radius: 16px;
+        max-width: 500px;
+        width: calc(100% - 32px);
+        padding: 28px 32px;
+        background: linear-gradient(180deg, rgba(16,22,44,0.98) 0%, rgba(10,14,30,0.98) 100%);
+        border: 1px solid rgba(120, 160, 255, 0.2);
+        border-radius: 20px;
         color: #dfe6ff;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(80,120,220,0.06) inset;
+        transform: translateY(12px) scale(0.97);
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+      }
+      #loci-help.visible .help-card {
+        transform: translateY(0) scale(1);
       }
       #loci-help .help-title {
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 700;
-        margin-bottom: 12px;
+        margin-bottom: 4px;
+        background: linear-gradient(135deg, #eef1ff, #9fb0d8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      #loci-help .help-subtitle {
+        font-size: 13px;
+        color: #8fa3d8;
+        margin-bottom: 16px;
       }
       #loci-help .help-list {
         font-size: 14px;
-        line-height: 1.65;
+        line-height: 1.7;
         padding-left: 18px;
-        color: #c3cdea;
+        color: #b9c5e2;
+      }
+      #loci-help .help-list li {
+        margin-bottom: 4px;
       }
       #loci-help .help-list b {
         color: #eef1ff;
-      }
-      #loci-help button {
-        margin-top: 16px;
-        padding: 10px 18px;
-        font-size: 14px;
         font-weight: 600;
-        color: #06131c;
-        background: linear-gradient(180deg, #7ee7d2, #46c9ae);
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
       }
       #loci-help .help-divider {
-        margin: 16px 0 10px;
-        border-top: 1px solid rgba(140, 170, 255, 0.2);
+        margin: 18px 0 12px;
+        border: none;
+        border-top: 1px solid rgba(120, 160, 255, 0.12);
       }
       #loci-help .help-data-title {
-        font-size: 12px;
-        letter-spacing: 0.06em;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #8fa3d8;
-        margin-bottom: 8px;
+        color: #7888b8;
+        margin-bottom: 10px;
       }
       #loci-help .help-data {
         display: flex;
         gap: 8px;
       }
+      #loci-help button {
+        margin-top: 18px;
+        padding: 11px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #06131c;
+        background: linear-gradient(180deg, #7ee7d2 0%, #3dbfa3 100%);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: filter 0.15s ease, transform 0.1s ease;
+      }
+      #loci-help button:hover {
+        filter: brightness(1.1);
+      }
+      #loci-help button:active {
+        filter: brightness(0.92);
+        transform: scale(0.97);
+      }
       #loci-help .help-data button {
         margin-top: 0;
-        padding: 8px 12px;
+        padding: 8px 14px;
         font-size: 13px;
-        color: #c3cdea;
-        background: rgba(40, 52, 96, 0.9);
-        border: 1px solid rgba(120, 160, 255, 0.3);
+        color: #b9c5e2;
+        background: rgba(32, 44, 82, 0.85);
+        border: 1px solid rgba(100, 140, 240, 0.2);
+        border-radius: 8px;
+      }
+      #loci-help .help-data button:hover {
+        border-color: rgba(100, 140, 240, 0.4);
       }
       #loci-help .help-data button.danger {
-        color: #ffc9c9;
-        border-color: rgba(255, 140, 140, 0.4);
+        color: #ffb0b0;
+        border-color: rgba(255, 120, 120, 0.3);
+      }
+      #loci-help .help-data button.danger:hover {
+        border-color: rgba(255, 120, 120, 0.55);
+        background: rgba(80, 30, 30, 0.5);
       }
     </style>
   </head>
@@ -160,23 +314,25 @@
         placeholder="What's on your mind?"
         maxlength="140"
         autocomplete="off"
+        aria-label="Capture a thought"
       />
-      <button id="voice-btn" title="Speak a thought">&#127908;</button>
-      <button id="add-btn">Add</button>
-      <button id="organize-btn" class="secondary">Organize</button>
-      <button id="recall-btn" class="secondary">Recall</button>
-      <button id="rewind-btn" class="secondary">Rewind</button>
-      <button id="help-btn" title="How Loci works" class="secondary">?</button>
+      <button id="voice-btn" title="Speak a thought" aria-label="Voice capture">&#127908;</button>
+      <button id="add-btn" aria-label="Add thought">Add</button>
+      <button id="organize-btn" class="secondary" aria-label="Organize thoughts">Organize</button>
+      <button id="recall-btn" class="secondary" aria-label="Start recall quiz">Recall</button>
+      <button id="rewind-btn" class="secondary" aria-label="Rewind timeline">Rewind</button>
+      <button id="help-btn" title="How Loci works" class="secondary" aria-label="Help">?</button>
     </div>
-    <div id="loci-help" style="display: none">
+    <div id="loci-help">
       <div class="help-card">
         <div class="help-title">How Loci works</div>
+        <div class="help-subtitle">Your spatial memory bank</div>
         <ol class="help-list" id="help-list"></ol>
         <div class="help-divider"></div>
-        <div class="help-data-title">Desktop data tools</div>
-        <div class="help-data">
-          <button id="data-export-btn" class="secondary">Export palace JSON</button>
-          <button id="data-clear-btn" class="secondary danger">Clear palace</button>
+        <div class="help-data-title">Data tools</div>
+        <div class="help-data" id="help-data">
+          <button id="data-export-btn">Export palace</button>
+          <button id="data-clear-btn" class="danger">Clear palace</button>
         </div>
         <button id="help-close">Got it</button>
       </div>

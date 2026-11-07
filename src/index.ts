@@ -23,14 +23,21 @@ import { WebcamHandSystem } from './loci/webcam-hand-system.js';
 
 // Register the bundled Inter before any card label is drawn, so every
 // surface uses the same type from the first frame.
-await loadLociFont();
+try {
+  await loadLociFont();
+} catch {
+  // Font load failed — canvas labels fall back to system font.
+}
 
 const sceneContainer = document.getElementById('scene-container');
 if (sceneContainer == null) {
   throw new Error('Missing #scene-container element');
 }
 
-World.create(sceneContainer as HTMLDivElement, projectOptions).then((world) => {
+World.create(sceneContainer as HTMLDivElement, projectOptions).catch((err) => {
+  console.error('[Loci] World.create failed:', err);
+}).then((world) => {
+  if (world == null) { return; }
   (world.globals as Record<string, unknown>)['loci'] = createLociGlobals();
 
   world.registerSystem(CaptureSystem);

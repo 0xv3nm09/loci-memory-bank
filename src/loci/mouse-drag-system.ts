@@ -1,5 +1,5 @@
 import { createSystem, VisibilityState, type Entity } from '@iwsdk/core';
-import { Object3D, Plane, Raycaster, Vector3, Vector2 } from 'three';
+import { Mesh, MeshStandardMaterial, Object3D, Plane, Raycaster, Vector3, Vector2 } from 'three';
 import { Note, SnapAnimation } from './components.js';
 import { playPlaceClick } from './audio.js';
 import { getLoci } from './globals.js';
@@ -40,12 +40,17 @@ export class MouseDragSystem extends createSystem({}) {
       }
       event.preventDefault();
       this.dragEntity = entity;
-      this.camera.getWorldDirection(this.cameraDirection);
-      this.plane.setFromNormalAndCoplanarPoint(
-        this.cameraDirection.negate(),
-        this.hitPoint,
-      );
+      const dir = this.camera.getWorldDirection(this.cameraDirection).clone().negate();
+      this.plane.setFromNormalAndCoplanarPoint(dir, this.hitPoint);
       this.grabOffset.subVectors(object.position, this.hitPoint);
+      // Drag feedback: subtle lift + glow boost.
+      object.scale.setScalar(1.06);
+      const card = object.getObjectByName('card') as Mesh | undefined;
+      if (card != null) {
+        const mat = card.material as MeshStandardMaterial;
+        card.userData.preDragGlow = mat.emissiveIntensity;
+        mat.emissiveIntensity = Math.min(1, mat.emissiveIntensity + 0.3);
+      }
       canvas.setPointerCapture(event.pointerId);
     };
 
@@ -70,6 +75,16 @@ export class MouseDragSystem extends createSystem({}) {
         return;
       }
       try {
+        const obj = this.dragEntity.object3D;
+        if (obj != null) {
+          obj.scale.setScalar(1);
+          const card = obj.getObjectByName('card') as Mesh | undefined;
+          if (card != null) {
+            const mat = card.material as MeshStandardMaterial;
+            mat.emissiveIntensity = (card.userData.preDragGlow as number) ?? mat.emissiveIntensity;
+            delete card.userData.preDragGlow;
+          }
+        }
         if (this.dragEntity.hasComponent(Note)) {
           this.dragEntity.setValue(Note, 'userPlaced', true);
           this.dragEntity.setValue(Note, 'state', 'settled');

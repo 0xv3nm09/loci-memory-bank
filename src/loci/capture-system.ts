@@ -274,7 +274,7 @@ export class CaptureSystem extends createSystem({
     }
     this.noteCounter += 1;
     const id = `n${this.noteCounter}`;
-    const azimuth = (Math.random() - 0.5) * 1.7;
+    const azimuth = (Math.random() - 0.5) * 1.4;
     const radius = 0.75 + Math.random() * 0.45;
     const position = new Vector3(
       Math.sin(azimuth) * radius,
@@ -288,7 +288,7 @@ export class CaptureSystem extends createSystem({
   private updateStatus(): void {
     const count = getLoci(this.globals).noteById.size;
     setAppStatus(
-      count === 0 ? 'The space is calm. Dump a thought.' : `${count} thought${count === 1 ? '' : 's'} in the void.`,
+      count === 0 ? 'The space is calm. Drop a thought.' : `${count} thought${count === 1 ? '' : 's'} captured.`,
     );
   }
 
@@ -400,8 +400,7 @@ export class CaptureSystem extends createSystem({
     };
     const helpToggle = (): void => {
       if (helpOverlay != null) {
-        const shown = helpOverlay.style.display === 'flex';
-        helpOverlay.style.display = shown ? 'none' : 'flex';
+        helpOverlay.classList.toggle('visible');
       }
     };
 

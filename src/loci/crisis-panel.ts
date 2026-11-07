@@ -5,6 +5,7 @@ import { CrisisDismiss } from './components.js';
 import { getLoci } from './globals.js';
 import { createLabel } from './note-factory.js';
 import { playCalmTone } from './audio.js';
+import { GLASS, SEMANTIC } from './palette.js';
 
 /**
  * The 3D crisis surface — the one feature that must exist in-headset.
@@ -40,12 +41,12 @@ export class CrisisPanelSystem extends createSystem({
     const backdrop = new Mesh(
       this.panelGeometry,
       new MeshStandardMaterial({
-        color: 0x0e1428,
-        emissive: new Color(0x24304f),
-        emissiveIntensity: 0.6,
-        roughness: 0.7,
+        color: GLASS.panelBody,
+        emissive: new Color(GLASS.panelEmissive),
+        emissiveIntensity: GLASS.panelEmissiveIntensity,
+        roughness: 0.65,
         transparent: true,
-        opacity: 0.97,
+        opacity: GLASS.panelOpacity,
       }),
     );
     group.add(backdrop);
@@ -55,29 +56,29 @@ export class CrisisPanelSystem extends createSystem({
       group.add(object);
     };
 
-    place(createLabel('That sounds really heavy.', 0.022, '#eef1ff', 0.8), 0.27);
+    place(createLabel('That sounds really heavy.', 0.022, SEMANTIC.promptText, 0.8), 0.27);
     place(
       createLabel(
         'You do not have to carry this alone, and nothing here needs to be organized right now. Please reach out to a real person:',
         0.014,
-        '#c3cdea',
+        SEMANTIC.hintText,
         0.8,
       ),
       0.19,
     );
-    place(createLabel('findahelpline.com - free, confidential helplines in your country', 0.014, '#eef1ff', 0.8), 0.09);
-    place(createLabel('US & Canada: call or text 988 (Suicide & Crisis Lifeline)', 0.014, '#eef1ff', 0.8), 0.045);
-    place(createLabel('In immediate danger? Contact your local emergency services.', 0.014, '#eef1ff', 0.8), 0.0);
-    place(createLabel('Tell someone you trust. You matter.', 0.014, '#bdf5e6', 0.8), -0.045);
+    place(createLabel('findahelpline.com - free, confidential helplines in your country', 0.014, SEMANTIC.promptText, 0.8), 0.09);
+    place(createLabel('US & Canada: call or text 988 (Suicide & Crisis Lifeline)', 0.018, '#ffffff', 0.8), 0.045);
+    place(createLabel('In immediate danger? Contact your local emergency services.', 0.014, SEMANTIC.promptText, 0.8), 0.0);
+    place(createLabel('Tell someone you trust. You matter.', 0.014, SEMANTIC.calmAccent, 0.8), -0.045);
 
     const dismissGroup = new Group();
     const button = new Mesh(
       this.buttonGeometry,
       new MeshStandardMaterial({
-        color: 0x1c2745,
-        emissive: new Color(0x56639a),
-        emissiveIntensity: 0.45,
-        roughness: 0.5,
+        color: GLASS.buttonBody,
+        emissive: new Color(GLASS.buttonEmissive),
+        emissiveIntensity: GLASS.buttonEmissiveIntensity + 0.15,
+        roughness: 0.45,
       }),
     );
     button.name = 'card';
@@ -90,8 +91,10 @@ export class CrisisPanelSystem extends createSystem({
     group.position.set(0, 1.42, -0.8);
     group.lookAt(0, 1.42, 0.001);
     this.panelEntity = this.world.createTransformEntity(group);
-    this.panelEntity.addComponent(CrisisDismiss);
-    this.panelEntity.addComponent(RayInteractable);
+    // Dismiss via the button only — not the whole panel.
+    const dismissEntity = this.world.createTransformEntity(dismissGroup, { parent: this.panelEntity });
+    dismissEntity.addComponent(CrisisDismiss);
+    dismissEntity.addComponent(RayInteractable);
   }
 
   private dismiss(): void {

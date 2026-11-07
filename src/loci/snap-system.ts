@@ -69,11 +69,11 @@ function getOrCreateTrailCloud(scene: { add(o: Points): void }): TrailCloud {
   geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
   geometry.setDrawRange(0, 0);
   const material = new PointsMaterial({
-    color: 0x82c8ff,
-    size: 0.008,
+    color: 0x8ad0ff,
+    size: 0.010,
     sizeAttenuation: true,
     transparent: true,
-    opacity: 0.6,
+    opacity: 0.55,
     blending: AdditiveBlending,
     depthWrite: false,
   });
@@ -162,7 +162,7 @@ export class SnapSystem extends createSystem({
         start[2] + (target[2] - start[2]) * eased,
       );
       object.lookAt(0, object.position.y, 0.001);
-      object.scale.setScalar(1 + Math.sin(Math.PI * t) * 0.05);
+      object.scale.setScalar(1 + Math.sin(Math.PI * t) * 0.08);
 
       // Spawn trail dust while in flight.
       if (shouldSpawnTrail && t > 0.05 && t < 0.95) {
@@ -225,7 +225,7 @@ export class SnapSystem extends createSystem({
       mesh.position.copy(fromPos);
       mesh.quaternion.setFromUnitVectors(UP, this.direction);
       mesh.scale.set(1, Math.max(length * t, 0.0001), 1);
-      (mesh.material as MeshBasicMaterial).opacity = t * 0.85;
+      (mesh.material as MeshBasicMaterial).opacity = t * 0.45;
     }
   }
 }

@@ -4,10 +4,8 @@
  * behind it: any error, timeout, or malformed response falls back cleanly.
  */
 
-export interface NoteInput {
-  id: string;
-  text: string;
-}
+export type { NoteInput } from './clusterer.js';
+import type { NoteInput } from './clusterer.js';
 
 export interface ModelCluster {
   label: string;

@@ -79,6 +79,7 @@ export function loadPalace(): SavedPalace | null {
 export function clearPalace(): void {
   try {
     localStorage.removeItem(KEY);
+    cachedHistory = null;
   } catch (err) {
     // nothing to clear
   }
@@ -101,6 +102,11 @@ export function exportPalace(): void {
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+// In-memory history cache — avoids re-parsing the entire palace from
+// localStorage on every save just to append one snapshot. Seeded from
+// the first loadPalace() that finds existing data, then maintained here.
+let cachedHistory: SavedSnapshot[] | null = null;
 
 /** Synchronous write of the whole palace — used by the debounced save and
  * the beforeunload flush (timers don't run during unload). */
@@ -135,8 +141,12 @@ export function writePalaceSave(loci: LociGlobals): void {
       recall: loci.recallState,
     };
     // Rewind's raw material: every save appends a capped snapshot.
-    const history = [
-      ...(loadPalace()?.history ?? []),
+    // Use the in-memory cache instead of re-parsing localStorage each time.
+    if (cachedHistory == null) {
+      cachedHistory = loadPalace()?.history ?? [];
+    }
+    cachedHistory = [
+      ...cachedHistory,
       {
         at: payload.savedAt,
         notes: payload.notes,
@@ -144,7 +154,7 @@ export function writePalaceSave(loci: LociGlobals): void {
         clusterLabels: payload.clusterLabels,
       },
     ].slice(-30);
-    payload.history = history;
+    payload.history = cachedHistory;
     localStorage.setItem(KEY, JSON.stringify(payload));
   } catch (err) {
     if (err instanceof DOMException && err.name === 'QuotaExceededError') {

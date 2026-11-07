@@ -4,12 +4,13 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { KeyboardKey } from './components.js';
 import { createLabel } from './note-factory.js';
 import { getLoci } from './globals.js';
+import { GLASS, SEMANTIC } from './palette.js';
 
 const KEY_W = 0.042;
 const KEY_H = 0.034;
 const STEP = KEY_W + 0.005;
-const PANEL_POS = new Vector3(0, 1.32, -0.7);
-const ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+const PANEL_POS = new Vector3(0, 1.32, -0.85);
+const ROWS = ['1234567890', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 // Row 3 as [label, char, xSteps, widthInSteps]
 const BOTTOM_ROW: Array<[string, string, number, number]> = [
   ['.', '.', 1, 1],
@@ -85,14 +86,14 @@ export class KeyboardSystem extends createSystem({
     group.name = 'capture-keyboard';
 
     const backdrop = new Mesh(
-      new RoundedBoxGeometry(0.52, 0.26, 0.012, 2, 0.02),
+      new RoundedBoxGeometry(0.52, 0.30, 0.012, 2, 0.02),
       new MeshStandardMaterial({
-        color: 0x0e1428,
-        emissive: new Color(0x1a2440),
-        emissiveIntensity: 0.6,
-        roughness: 0.7,
+        color: GLASS.panelBody,
+        emissive: new Color(GLASS.panelEmissive),
+        emissiveIntensity: GLASS.panelEmissiveIntensity,
+        roughness: 0.65,
         transparent: true,
-        opacity: 0.97,
+        opacity: GLASS.panelOpacity,
       }),
     );
     group.add(backdrop);
@@ -108,16 +109,28 @@ export class KeyboardSystem extends createSystem({
     );
     fieldPanel.position.set(0, 0.09, 0.008);
     group.add(fieldPanel);
+    // Start with content color — the redraw closure captures the color at
+    // creation time, so we always use the content color and swap visually
+    // between placeholder text and real input in the redraw callback.
     const field = createLabel(
       this.buffer || 'type your thought…',
       0.0125,
-      this.buffer ? '#eef1ff' : '#7684ad',
+      '#eef1ff',
       0.44,
     );
     field.position.set(0, 0.09, 0.014);
     group.add(field);
     this.fieldRedraw = (text: string): void => {
-      field.userData.redraw?.(text || 'type your thought…');
+      // When buffer is empty show placeholder in dim color; createLabel's
+      // redraw uses the captured color, so we modulate opacity instead.
+      const mat = (field as Mesh).material as { opacity: number };
+      if (text) {
+        mat.opacity = 1;
+        field.userData.redraw?.(text);
+      } else {
+        mat.opacity = 0.45;
+        field.userData.redraw?.('type your thought…');
+      }
     };
 
     this.root = this.world.createTransformEntity(group);
@@ -141,10 +154,10 @@ export class KeyboardSystem extends createSystem({
           ? this.keyGeometry
           : new RoundedBoxGeometry(KEY_W * widthSteps, KEY_H, 0.008, 1, 0.008);
       const material = new MeshStandardMaterial({
-        color: 0x1c2745,
-        emissive: new Color(0x3a4b7a),
-        emissiveIntensity: 0.35,
-        roughness: 0.5,
+        color: GLASS.buttonBody,
+        emissive: new Color(GLASS.buttonEmissive),
+        emissiveIntensity: GLASS.buttonEmissiveIntensity,
+        roughness: 0.42,
       });
       const key = new Mesh(geometry, material);
       key.name = 'card';
@@ -152,7 +165,7 @@ export class KeyboardSystem extends createSystem({
       const keyLabel = createLabel(
         label,
         label.length > 2 ? 0.0075 : 0.011,
-        '#dfe6ff',
+        SEMANTIC.promptText,
         KEY_W * widthSteps * 0.95,
       );
       keyLabel.position.z = 0.007;
@@ -170,7 +183,7 @@ export class KeyboardSystem extends createSystem({
       });
     });
     BOTTOM_ROW.forEach(([label, char, xSteps, width]) => {
-      addKey(label, char, xSteps, width, 0.048 - 3 * (KEY_H + 0.005));
+      addKey(label, char, xSteps, width, 0.048 - ROWS.length * (KEY_H + 0.005));
     });
   }
 }

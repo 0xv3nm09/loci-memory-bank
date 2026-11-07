@@ -16,8 +16,8 @@ import { createStarfield } from './note-factory.js';
 import { GLASS } from './palette.js';
 import { getLoci } from './globals.js';
 
-const HOVER_SCALE = 1.04;
-const GRAB_SCALE = 1.07;
+const HOVER_SCALE = 1.08;
+const GRAB_SCALE = 1.12;
 
 /** Orb hover: slightly larger than note hover for discoverability. */
 const ORB_HOVER_SCALE = 1.15;
@@ -56,7 +56,7 @@ export class AmbientSystem extends createSystem({
   }
 
   update(delta: number, time: number): void {
-    this.starfield?.rotateY(delta * 0.006);
+    this.starfield?.rotateY(delta * 0.008);
     const loci = getLoci(this.globals);
     const feedbackAllowed = !loci.recallActive && !loci.rewindActive;
     const lerp = Math.min(1, delta * 12);
@@ -89,12 +89,12 @@ export class AmbientSystem extends createSystem({
       }
 
       if (t >= 1) {
-        // Ensure final state is clean.
+        // Ensure final state is clean — respect the card's resting opacity.
         object.scale.setScalar(1);
         if (card != null) {
           const material = card.material as MeshStandardMaterial;
-          material.opacity = 1;
-          material.transparent = false;
+          material.opacity = 0.94;
+          material.transparent = true;
           material.emissiveIntensity = GLASS.rawRimIntensity;
         }
         entity.removeComponent(SpawnAnimation);
@@ -128,7 +128,9 @@ export class AmbientSystem extends createSystem({
 
       if ((entity.getValue(Note, 'state') ?? 'raw') !== 'raw') {
         // ── Settled note subtle breathing — they're alive, just calm ──
-        if (!entity.hasComponent(SnapAnimation) && !entity.hasComponent(SpawnAnimation)) {
+        // Skip breathing when hovered/grabbed so hover feedback isn't stomped.
+        const isInteracted = entity.hasComponent(Hovered) || entity.hasComponent(Grabbed);
+        if (!entity.hasComponent(SnapAnimation) && !entity.hasComponent(SpawnAnimation) && !isInteracted) {
           const noteId = Number((entity.getValue(Note, 'id') ?? '').slice(1)) || 0;
           const breathe = 1 + Math.sin(time * 0.5 + noteId * 2.3) * 0.012;
           object.scale.setScalar(breathe);
@@ -215,8 +217,8 @@ export class AmbientSystem extends createSystem({
         const material = bud.material as MeshStandardMaterial;
         material.emissiveIntensity = 0.65 + Math.sin(time * 2.0 + object.position.x * 5) * 0.25;
       }
-      // Gentle scale breathe — more visible than just glow.
-      const pulse = 1 + Math.sin(time * 1.6 + object.position.y * 8) * 0.08;
+      // Gentle scale breathe — subtle and ambient.
+      const pulse = 1 + Math.sin(time * 1.6 + object.position.y * 8) * 0.04;
       object.scale.setScalar(pulse);
 
       // Show text bubble on hover.

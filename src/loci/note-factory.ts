@@ -91,23 +91,32 @@ export function createNote(
     color: GLASS.body,
     emissive: new Color(GLASS.rawRim),
     emissiveIntensity: GLASS.rawRimIntensity,
-    roughness: 0.42,
-    metalness: 0.12,
+    roughness: 0.38,
+    metalness: 0.15,
+    transparent: true,
+    opacity: 0.94,
   });
   const card = new Mesh(getCardGeometry(), material);
   card.name = 'card';
+  card.renderOrder = 2;
   group.add(card);
 
+  // Top accent bar — reveals on cluster assignment with a colored glow.
   const accentBar = new Mesh(
-    new BoxGeometry(CARD_W * 0.62, 0.005, 0.002),
-    new MeshBasicMaterial({ color: GLASS.rawRim }),
+    new BoxGeometry(CARD_W * 0.78, 0.006, 0.002),
+    new MeshBasicMaterial({
+      color: GLASS.rawRim,
+      transparent: true,
+      opacity: 0.85,
+    }),
   );
   accentBar.name = 'accent-bar';
-  accentBar.position.set(0, CARD_H / 2 - 0.011, CARD_D / 2 + 0.002);
+  accentBar.position.set(0, CARD_H / 2 - 0.010, CARD_D / 2 + 0.002);
+  accentBar.renderOrder = 3;
   accentBar.visible = false;
   group.add(accentBar);
 
-  const label = createTextMesh(text, 0.018, GLASS.ink);
+  const label = createTextMesh(text, 0.022, GLASS.ink);
   label.position.z = CARD_D / 2 + 0.004;
   label.name = 'label';
   group.add(label);
@@ -189,7 +198,7 @@ export function createLine(
   toId: string,
   delay: number,
 ): Entity {
-  const geometry = new CylinderGeometry(0.0028, 0.0028, 1, 6, 1, true);
+  const geometry = new CylinderGeometry(0.0022, 0.0022, 1, 6, 1, true);
   geometry.translate(0, 0.5, 0);
   const material = new MeshBasicMaterial({
     color: 0x46c8e8,
@@ -226,7 +235,7 @@ export function createSeed(
   card.scale.setScalar(0.72);
   group.add(card);
 
-  const label = createTextMesh(title, 0.0135, 0xcfe2ff);
+  const label = createTextMesh(title, 0.017, 0xcfe2ff);
   label.position.z = CARD_D / 2 + 0.002;
   group.add(label);
 
@@ -244,15 +253,19 @@ export function createOrganizeOrb(world: World, position: Vector3): Entity {
   group.name = 'organize-orb';
 
   const orb = new Mesh(
-    new SphereGeometry(0.026, 20, 14),
+    new SphereGeometry(0.026, 24, 18),
     new MeshStandardMaterial({
       color: 0x9fe8d8,
       emissive: new Color(0x2fbf9a),
       emissiveIntensity: 0.8,
-      roughness: 0.3,
+      roughness: 0.22,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.92,
     }),
   );
   orb.name = 'card';
+  orb.renderOrder = 4;
   group.add(orb);
 
   const label = createTextMesh('organize', 0.016, 0xbdf5e6);
@@ -280,15 +293,19 @@ export function createSuggestionBud(
   const isExpand = kind === 'expand';
   // 20mm radius → 40mm diameter, above Meta's 48dp min at ray distance.
   const bud = new Mesh(
-    new SphereGeometry(0.020, 16, 12),
+    new SphereGeometry(0.020, 20, 14),
     new MeshStandardMaterial({
       color: isExpand ? 0x8fe8b0 : 0xf0c98a,
       emissive: new Color(isExpand ? 0x2fbf6a : 0xbf7a2f),
       emissiveIntensity: 0.85,
-      roughness: 0.35,
+      roughness: 0.28,
+      metalness: 0.08,
+      transparent: true,
+      opacity: 0.9,
     }),
   );
   bud.name = 'card';
+  bud.renderOrder = 4;
   group.add(bud);
 
   const glyph = createTextLabel(isExpand ? '+' : '?', 0.016, { maxWidth: 0.03, color: '#06131c' });
@@ -296,7 +313,7 @@ export function createSuggestionBud(
   group.add(glyph);
 
   const bubble = createTextLabel(text, 0.0125, {
-    maxWidth: 0.4,
+    maxWidth: 0.25,
     color: isExpand ? '#c9f5da' : '#ffe4c2',
   });
   bubble.name = 'bud-text';
@@ -318,15 +335,19 @@ export function createTextScaleOrb(world: World, position: Vector3): Entity {
   group.name = 'text-scale-orb';
 
   const orb = new Mesh(
-    new SphereGeometry(0.026, 20, 14),
+    new SphereGeometry(0.026, 24, 18),
     new MeshStandardMaterial({
       color: 0xd8e8d0,
       emissive: new Color(0x5f9f6f),
       emissiveIntensity: 0.7,
-      roughness: 0.3,
+      roughness: 0.22,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.92,
     }),
   );
   orb.name = 'card';
+  orb.renderOrder = 4;
   group.add(orb);
 
   const label = createTextMesh('Aa', 0.016, '#d8f0dc');
@@ -347,15 +368,19 @@ export function createMicOrb(world: World, position: Vector3): Entity {
   group.name = 'mic-orb';
 
   const orb = new Mesh(
-    new SphereGeometry(0.026, 20, 14),
+    new SphereGeometry(0.026, 24, 18),
     new MeshStandardMaterial({
       color: 0xffc9c9,
       emissive: new Color(0xd05858),
       emissiveIntensity: 0.7,
-      roughness: 0.3,
+      roughness: 0.22,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.92,
     }),
   );
   orb.name = 'card';
+  orb.renderOrder = 4;
   group.add(orb);
 
   const label = createTextMesh('mic', 0.016, '#ffd9d9');
@@ -376,15 +401,19 @@ export function createTypeOrb(world: World, position: Vector3): Entity {
   group.name = 'type-orb';
 
   const orb = new Mesh(
-    new SphereGeometry(0.026, 20, 14),
+    new SphereGeometry(0.026, 24, 18),
     new MeshStandardMaterial({
       color: 0xaac6ff,
       emissive: new Color(0x4a6fd0),
       emissiveIntensity: 0.8,
-      roughness: 0.3,
+      roughness: 0.22,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.92,
     }),
   );
   orb.name = 'card';
+  orb.renderOrder = 4;
   group.add(orb);
 
   const label = createTextMesh('type', 0.016, '#c9d8ff');
@@ -405,15 +434,19 @@ export function createRecallOrb(world: World, position: Vector3): Entity {
   group.name = 'recall-orb';
 
   const orb = new Mesh(
-    new SphereGeometry(0.026, 20, 14),
+    new SphereGeometry(0.026, 24, 18),
     new MeshStandardMaterial({
       color: 0xcfc2ff,
       emissive: new Color(0x7a5fd0),
       emissiveIntensity: 0.8,
-      roughness: 0.3,
+      roughness: 0.22,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.92,
     }),
   );
   orb.name = 'card';
+  orb.renderOrder = 4;
   group.add(orb);
 
   const label = createTextMesh('recall', 0.016, 0xe2daff);
@@ -446,28 +479,35 @@ export function createClusterLabel(
 }
 
 export function createStarfield(world: World): Points {
-  const count = 520;
+  const count = 680;
   const positions = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
   for (let i = 0; i < count; i += 1) {
-    const radius = 3.5 + Math.random() * 5.5;
+    // Bias toward farther radii for depth.
+    const radius = 3.5 + Math.pow(Math.random(), 0.7) * 6.0;
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
     positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
     positions[i * 3 + 1] = radius * Math.cos(phi) * 0.6 + 1.2;
     positions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+    // Random size variation for sparkle depth.
+    sizes[i] = 0.007 + Math.random() * 0.009;
   }
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('size', new Float32BufferAttribute(sizes, 1));
   const material = new PointsMaterial({
-    color: 0x8a93c8,
-    size: 0.011,
+    color: 0x9aa4d4,
+    size: 0.012,
     sizeAttenuation: true,
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.5,
     depthWrite: false,
+    blending: AdditiveBlending,
   });
   const points = new Points(geometry, material);
   points.name = 'loci-starfield';
+  points.renderOrder = 0;
   world.createTransformEntity(points, { persistent: true });
   return points;
 }

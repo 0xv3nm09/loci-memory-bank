@@ -7,8 +7,8 @@ import {
   LinearFilter,
 } from 'three';
 
-const PX_PER_METER = 1024;
-const LINE_HEIGHT = 1.32;
+const PX_PER_METER = 1536;
+const LINE_HEIGHT = 1.26;
 
 // Global text scale (accessibility). Module-level: the toggle orb updates it
 // and re-scales every live label mesh via a scene traversal.
@@ -114,7 +114,7 @@ export function createTextLabel(
   const weight = options.fontWeight ?? 500;
   const useShadow = options.shadow !== false;
   const maxWidthPx = Math.round(maxWidth * PX_PER_METER);
-  const usablePx = maxWidthPx - 16;
+  const usablePx = maxWidthPx - 24;
 
   const measure = document.createElement('canvas');
   const mctx = measure.getContext('2d')!;
@@ -142,8 +142,8 @@ export function createTextLabel(
   ctx.textAlign = align === 'center' ? 'center' : 'left';
   if (useShadow) {
     ctx.shadowColor = 'rgba(2, 4, 12, 0.6)';
-    ctx.shadowBlur = drawPx * 0.16;
-    ctx.shadowOffsetY = drawPx * 0.05;
+    ctx.shadowBlur = drawPx * 0.22;
+    ctx.shadowOffsetY = drawPx * 0.06;
   }
   // Faux-bold: stroke behind fill thickens glyphs when only Regular weight is
   // loaded.  The stroke width scales with requested weight so 500 is neutral
@@ -156,7 +156,7 @@ export function createTextLabel(
   }
   lines.forEach((line, index) => {
     const y = lineHeightPx * (index + 0.5);
-    const x = align === 'center' ? canvasWidth / 2 : 8;
+    const x = align === 'center' ? canvasWidth / 2 : 12;
     if (fauxBold) { ctx.strokeText(line, x, y); }
     ctx.fillText(line, x, y);
   });
@@ -188,8 +188,8 @@ export function createTextLabel(
     ctx.textAlign = align === 'center' ? 'center' : 'left';
     if (useShadow) {
       ctx.shadowColor = 'rgba(2, 4, 12, 0.6)';
-      ctx.shadowBlur = drawPx * 0.16;
-      ctx.shadowOffsetY = drawPx * 0.05;
+      ctx.shadowBlur = drawPx * 0.22;
+      ctx.shadowOffsetY = drawPx * 0.06;
     }
     if (fauxBold) {
       ctx.strokeStyle = color;
@@ -199,7 +199,7 @@ export function createTextLabel(
     const redrawnLines = fitLines(ctx, newText, usablePx, maxLines);
     redrawnLines.forEach((line, index) => {
       const y = lineHeightPx * (index + 0.5);
-      const x = align === 'center' ? canvasWidth / 2 : 8;
+      const x = align === 'center' ? canvasWidth / 2 : 12;
       if (fauxBold) { ctx.strokeText(line, x, y); }
       ctx.fillText(line, x, y);
     });

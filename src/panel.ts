@@ -21,7 +21,9 @@ export class PanelSystem extends createSystem({}) {
       }
       const screenSpace = document.getElementById('welcome-panel');
       if (screenSpace != null) {
-        screenSpace.style.display = 'none';
+        screenSpace.style.transition = 'opacity 0.35s ease-out';
+        screenSpace.style.opacity = '0';
+        setTimeout(() => { screenSpace.style.display = 'none'; }, 360);
       }
     };
     const panel = this.world.getSceneObject<UIKitMLAsset>('welcome-panel');

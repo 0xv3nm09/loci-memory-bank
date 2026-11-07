@@ -62,10 +62,11 @@
     <!-- Keep in sync with src/loci/guide.ts (single source of truth) -->
     <!-- GENERATED from src/loci/guide.ts by scripts/sync-welcome.mjs — do not hand-edit between the markers. -->
         <!-- GENERATED from src/loci/guide.ts by scripts/sync-welcome.mjs — do not hand-edit between the markers. -->
+        <!-- GENERATED from src/loci/guide.ts by scripts/sync-welcome.mjs — do not hand-edit between the markers. -->
     <!-- SYNC:WELCOME START -->
     <div class="sub-heading">
       Capture - Type, speak, or press a seed card to spill a set.
-      Organize - Touch the glowing orb — your thoughts snap into connected clusters.
+      Organize - Tap the glowing orb — your thoughts snap into connected clusters.
       Arrange - Grab and drag any card. Your placements are never overwritten.
       Recall - The violet orb quizzes your weakest notes — answer by touch or voice.
       Rewind - Scrub the dial at the edge of the void to watch your palace grow.

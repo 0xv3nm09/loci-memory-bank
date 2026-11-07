@@ -103,7 +103,8 @@ export class OrganizeSystem extends createSystem({
         source = 'Sage';
       }
     } catch {
-      // model down, slow, or unusable — the heuristic stands
+      // Model unreachable — the heuristic stands. This is expected when
+      // offline or the Ollama endpoint is cold.
     }
     this.thinking = false;
     this.setStatus(
@@ -258,10 +259,18 @@ export class OrganizeSystem extends createSystem({
     }
 
     // Sage's offers: expand (green) / challenge (amber) buds — press to read.
+    // Use post-snap targets (not current pre-snap positions) so buds appear
+    // where cards will land, not where they took off from.
+    const targetById = new Map<string, Vector3>();
+    for (const { entity, target } of targets) {
+      const id = entity.getValue(Note, 'id') ?? '';
+      if (id !== '') {
+        targetById.set(id, target);
+      }
+    }
     for (const suggestion of result.suggestions ?? []) {
-      const noteEntity = loci.noteById.get(suggestion.noteId);
-      const object = noteEntity?.object3D;
-      if (object == null) {
+      const pos = targetById.get(suggestion.noteId);
+      if (pos == null) {
         continue;
       }
       createSuggestionBud(
@@ -269,9 +278,9 @@ export class OrganizeSystem extends createSystem({
         suggestion.kind,
         suggestion.text,
         new Vector3(
-          object.position.x + 0.11,
-          object.position.y + 0.13,
-          object.position.z + 0.04,
+          pos.x + 0.11,
+          pos.y + 0.13,
+          pos.z + 0.04,
         ),
       );
     }

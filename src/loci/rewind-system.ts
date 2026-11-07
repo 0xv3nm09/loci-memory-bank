@@ -7,6 +7,7 @@ import { getLoci } from './globals.js';
 import { loadPalace, type SavedSnapshot } from './palace-store.js';
 import { setAppStatus } from './status3d.js';
 import { agoLabel } from './time.js';
+import { GLASS, SEMANTIC } from './palette.js';
 
 const DIAL_POS = new Vector3(0.46, 1.10, -0.72);
 const TRACK_HALF = 0.14;
@@ -52,10 +53,10 @@ export class RewindSystem extends createSystem({
     const track = new Mesh(
       new RoundedBoxGeometry(TRACK_HALF * 2 + 0.04, 0.014, 0.012, 1, 0.006),
       new MeshStandardMaterial({
-        color: 0x141a2e,
-        emissive: new Color(0x3a335f),
-        emissiveIntensity: 0.5,
-        roughness: 0.6,
+        color: GLASS.panelBody,
+        emissive: new Color(GLASS.panelEmissive),
+        emissiveIntensity: 0.45,
+        roughness: 0.55,
       }),
     );
     group.add(track);
@@ -73,7 +74,7 @@ export class RewindSystem extends createSystem({
     );
     knob.name = 'card';
     knobGroup.add(knob);
-    const knobLabel = createLabel('rewind', 0.009, '#e2daff', 0.09);
+    const knobLabel = createLabel('rewind', 0.012, '#e2daff', 0.09);
     knobLabel.position.y = -0.032;
     knobGroup.add(knobLabel);
     knobGroup.position.set(DIAL_POS.x, DIAL_POS.y, DIAL_POS.z + 0.005);
@@ -94,15 +95,15 @@ export class RewindSystem extends createSystem({
     const nowOrb = new Mesh(
       new RoundedBoxGeometry(0.06, 0.026, 0.012, 1, 0.008),
       new MeshStandardMaterial({
-        color: 0x1c2745,
-        emissive: new Color(0x56639a),
-        emissiveIntensity: 0.5,
-        roughness: 0.5,
+        color: GLASS.buttonBody,
+        emissive: new Color(GLASS.buttonEmissive),
+        emissiveIntensity: GLASS.buttonEmissiveIntensity + 0.2,
+        roughness: 0.45,
       }),
     );
     nowOrb.name = 'card';
     nowGroup.add(nowOrb);
-    const nowLabel = createLabel('now', 0.009, '#dfe6ff', 0.05);
+    const nowLabel = createLabel('now', 0.009, SEMANTIC.promptText, 0.05);
     nowLabel.position.z = 0.008;
     nowGroup.add(nowLabel);
     nowGroup.position.set(DIAL_POS.x - TRACK_HALF - 0.09, DIAL_POS.y, DIAL_POS.z);
@@ -196,12 +197,15 @@ export class RewindSystem extends createSystem({
     const loci = getLoci(this.globals);
     this.setStatus(`Rewinding — ${agoLabel(snapshot.at)}.`);
 
+    // Build a lookup map so each note is O(1) instead of O(n) per find().
+    const savedById = new Map(snapshot.notes.map((n) => [n.id, n]));
+
     for (const [id, entity] of loci.noteById) {
       const object = entity.object3D;
       if (object == null) {
         continue;
       }
-      const saved = snapshot.notes.find((note) => note.id === id);
+      const saved = savedById.get(id);
       if (saved == null) {
         object.visible = false;
         continue;

@@ -206,7 +206,8 @@ export class WebcamHandSystem extends createSystem({}) {
     }
 
     // Map normalised x/y (mirrored camera, so invert x) to screen coords.
-    const rect = this.canvas!.getBoundingClientRect();
+    if (this.canvas == null) { return; }
+    const rect = this.canvas.getBoundingClientRect();
     const screenX = rect.left + (1 - indexTip.x) * rect.width;
     const screenY = rect.top + indexTip.y * rect.height;
 
