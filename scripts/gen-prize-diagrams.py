@@ -478,3 +478,192 @@ f.note("The 2,000-year-old method of loci always needed an imagined place. VR is
 f.save("boldest-collapse-flow.svg")
 
 print("done.")
+
+
+def architecture_technical():
+    """Proper technical architecture chart: two layer bands (headset runtime /
+    GPU server), file names on every component, protocol-labeled arrows."""
+    import html as _h
+    W, H = 1240, 1330
+    e = _h.escape
+
+    def box(x, y, w, h, accent, tag, title, lines, title_size=15.5):
+        s = [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="#131a30" stroke="{accent}" stroke-width="1.4"/>']
+        ty = y + 22
+        if tag:
+            s.append(f'<text x="{x+14}" y="{ty}" font-size="10" font-weight="800" fill="{accent}" letter-spacing="1">{e(tag)}</text>')
+            ty += 17
+        s.append(f'<text x="{x+14}" y="{ty}" font-size="{title_size}" font-weight="700" fill="#EDF1FA">{e(title)}</text>')
+        ty += 17
+        for line in lines:
+            s.append(f'<text x="{x+14}" y="{ty}" font-size="11.5" fill="#aeb9d9">{e(line)}</text>')
+            ty += 15.5
+        return "".join(s), h
+
+    def arrow_v(x, y1, y2, label=None):
+        s = [f'<line x1="{x}" y1="{y1}" x2="{x}" y2="{y2-7}" stroke="#6f7fb8" stroke-width="1.8" marker-end="url(#arr)"/>']
+        if label:
+            s.append(f'<text x="{x+8}" y="{(y1+y2)/2+4}" font-size="11" fill="#7f8ec4">{e(label)}</text>')
+        return "".join(s)
+
+    def arrow_h(x1, x2, y, label=None, dashed=False, above=True):
+        d = ' stroke-dasharray="6 5"' if dashed else ""
+        s = [f'<line x1="{x1}" y1="{y}" x2="{x2}" y2="{y}" stroke="#6f7fb8" stroke-width="1.8"{d} marker-end="url(#arr)"/>']
+        if label:
+            ly = y - 7 if above else y + 15
+            s.append(f'<text x="{(x1+x2)/2}" y="{ly}" font-size="11" fill="#7f8ec4" text-anchor="middle">{e(label)}</text>')
+        return "".join(s)
+
+    def elbow(pts, label=None, dashed=False):
+        d = ' stroke-dasharray="6 5"' if dashed else ""
+        pts_s = " ".join(f"{x},{yy}" for x, yy in pts)
+        s = [f'<polyline points="{pts_s}" fill="none" stroke="#6f7fb8" stroke-width="1.8"{d} marker-end="url(#arr)"/>']
+        if label:
+            mx = (pts[0][0] + pts[-1][0]) / 2
+            my = pts[-1][1] - 7
+            s.append(f'<text x="{mx}" y="{my}" font-size="11" fill="#7f8ec4" text-anchor="middle">{e(label)}</text>')
+        return "".join(s)
+
+    p = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="Inter, system-ui, sans-serif">',
+         ARROW_DEFS, f'<rect width="{W}" height="{H}" fill="#0b101f"/>',
+         f'<text x="40" y="46" font-size="23" font-weight="800" fill="#EDF1FA">Loci — technical architecture</text>',
+         f'<text x="40" y="70" font-size="13" fill="#8fa3d8">One client runtime in the headset browser · one external dependency (Sage) behind a tunnel · persistence in the browser</text>']
+
+    # Layer bands
+    p.append(f'<rect x="30" y="92" width="760" height="1180" rx="14" fill="#0d1226" stroke="#232c4d"/>')
+    p.append(f'<text x="48" y="120" font-size="12" font-weight="800" fill="#5b78e0" letter-spacing="1.2">HEADSET BROWSER — IWSDK WEBXR · 100% CLIENT-SIDE · NO DOM IN VR</text>')
+    p.append(f'<rect x="830" y="92" width="380" height="640" rx="14" fill="#0d1226" stroke="#232c4d"/>')
+    p.append(f'<text x="848" y="120" font-size="12" font-weight="800" fill="#e8b34b" letter-spacing="1.2">GPU SERVER — VIA CLOUDFLARE TUNNEL</text>')
+
+    # INPUT row (4 channels)
+    ch_w, ch_h, ch_y = 172, 74, 150
+    channels = [
+        ("MIC ORB", "Web Speech API", "desktop browsers"),
+        ("TYPE ORB", "spatial QWERTY", "capture-keyboard.ts"),
+        ("SEED CARDS", "1 touch = 5 thoughts", "curated sets"),
+        ("DESKTOP BAR", "typed + Enter", "mouse path"),
+    ]
+    for i, (tag, l1, l2) in enumerate(channels):
+        x = 50 + i * (ch_w + 12)
+        b, _ = box(x, ch_y, ch_w, ch_h, "#5b78e0", tag, "capture", [l1, l2], title_size=13)
+        p.append(b)
+
+    # arrows into gate
+    for i in range(4):
+        x = 50 + i * (ch_w + 12) + ch_w / 2
+        p.append(arrow_v(x, ch_y + ch_h, 268))
+
+    # GATE
+    b, h = box(50, 268, 340, 96, "#ea4a4a", "RUNS FIRST — EVERY CAPTURE", "Distress gate", [
+        "distress-gate.ts · 16 reviewed trigger patterns",
+        "before palace entry · before any model call",
+        "fail direction: toward resources",
+    ])
+    p.append(b)
+
+    # CRISIS branch
+    p.append(arrow_h(390, 452, 316, label="flagged", above=True))
+    b, _ = box(452, 268, 320, 96, "#ea4a4a", "SAFETY", "3D crisis panel", [
+        "crisis-panel.ts · world-space · calm tone",
+        "real resources: 988 · findahelpline.com",
+        "crisActive blocks organize/recall/capture",
+    ])
+    p.append(b)
+
+    # clear arrow down to organize
+    p.append(arrow_v(220, 364, 396, label="clear"))
+
+    # ORGANIZE: two parallel organizers
+    b, _ = box(50, 396, 345, 118, "#8a93a8", "PATH A — INSTANT", "Heuristic organizer", [
+        "clusterer.ts · overlap coefficient + union-find",
+        "deterministic · zero network · always up",
+        "result computed before the request is sent",
+    ])
+    p.append(b)
+    b, _ = box(415, 396, 345, 118, GOLD, "PATH B — MODEL", "Model client", [
+        "model-client.ts · schema-bound /api/chat call",
+        "retry ×1 @1.5s · 30s timeout · warmup @boot",
+        "sanitize: unknown ids dropped, leftovers swept",
+    ])
+    p.append(b)
+
+    # server interaction: model client <-> ollama
+    p.append(elbow([(760, 440), (805, 440), (805, 208), (840, 208)], label=None))
+    p.append(arrow_h(840, 1180 - 20, 208, label=None) if False else "")
+    p.append(f'<text x="808" y="330" font-size="10.5" fill="#7f8ec4" transform="rotate(90 808 330)" text-anchor="middle">POST /api/chat · JSON schema · GET /api/tags</text>')
+    b, _ = box(848, 150, 340, 130, GOLD, "SAGE", "Ollama on the GPU box", [
+        "qwen3:14b · 9.3 GB · pinned in model-client.ts",
+        "also: gpt-oss:20b · qwen3.5:9b · bge-m3",
+        "boot warmup: 1-token call, keep_alive 30 min",
+    ])
+    p.append(b)
+    # response back
+    p.append(elbow([(1018, 280), (1060, 280), (1060, 470), (760, 470)], label="clusters · edges · suggestions (JSON)", dashed=True))
+    # sanitize box under ollama
+    b, _ = box(848, 380, 340, 130, GOLD, "RESPONSE PIPELINE", "Sanitize + arbitrate", [
+        "JSON parse or discard · unknown ids dropped",
+        "coverage >= 60% -> model wins, else local",
+        "leftover notes -> 'Loose threads' cluster",
+        "suggestions capped: 1 expand + 1 challenge",
+    ])
+    p.append(b)
+    p.append(arrow_h(848, 760, 470, label="sanitized result", dashed=True, above=False))
+
+    # arbitration bar
+    b, _ = box(50, 540, 710, 54, GOLD, "ARBITRATION", "≥60% coverage → model wins (orb GOLD) · else local stands (orb GRAY) — the orb records who shaped the layout", [], title_size=13.5)
+    p.append(b)
+
+    p.append(arrow_v(220, 594, 630))
+    b, _ = box(50, 630, 710, 96, "#2fbf9a", "THE PAYOFF", "SnapSystem — the snap", [
+        "flights: eased arcs with particle trails (additive blending)",
+        "connection lines draw in · synthesized resolving chord",
+        "canvas type at 1536 px/m · faux-bold · zero font assets",
+    ])
+    p.append(b)
+
+    p.append(arrow_v(220, 726, 756))
+    b, _ = box(50, 756, 710, 96, "#5b78e0", "HUMAN AUTHORITY", "Arrange — cards you own", [
+        "OneHandGrabbable / pinch · drag on desktop · webcam hands optional",
+        "userPlaced = true on release → agent never reorganizes them",
+        "declump: targets relax ≥0.185 m around placements (obstacles, not victims)",
+    ])
+    p.append(b)
+
+    p.append(arrow_v(220, 852, 882))
+    b, _ = box(50, 882, 710, 108, SKY, "PERSISTENCE", "palace-store.ts — loci.palace.v1", [
+        "localStorage: notes[] · edges[] · clusterLabels[] · recall{strength,seen}",
+        "history: ≤30 snapshots {at, notes, edges} — Rewind's raw material",
+        "debounced 600ms/1800ms · beforeunload flush · skipped during scrubs · JSON export",
+    ])
+    p.append(b)
+
+    p.append(arrow_v(220, 990, 1022, label="next visit"))
+    b, _ = box(50, 1022, 340, 120, VIOLET, "RETURN + RECALL", "RecallSystem", [
+        "greeting: 'last here N ago · N thoughts due'",
+        "quiz: weakest/never-seen first · touch or voice",
+        "grading: strength 0–5 · misses resurface first",
+    ])
+    p.append(b)
+    b, _ = box(420, 1022, 340, 120, VIOLET, "REWIND", "Spatial dial", [
+        "OneHandGrabbable knob on a track",
+        "30 snapshots replay with the snap motion",
+        "scrubs never recorded as history",
+    ])
+    p.append(b)
+
+    # legend strip
+    b, _ = box(50, 1180, 710, 76, "#56639a", "LEGEND + MEASURED", "", [
+        "GOLD orb = model shaped the layout · GRAY = local fallback ran",
+        "measured: boot→interactive 1.5s · capture→organize 2.2s · snap <1s local / 6–11s warm · recall 1.1s",
+    ], title_size=13)
+    p.append(b)
+
+    svg = "".join(p) + "</svg>\n"
+    import os
+    os.makedirs(OUT, exist_ok=True)
+    with open(os.path.join(OUT, "master-system.svg"), "w") as f:
+        f.write(svg)
+    print(f"  wrote diagrams/master-system.svg ({H}px tall, technical layout)")
+
+
+architecture_technical()
