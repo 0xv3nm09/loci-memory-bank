@@ -14,7 +14,7 @@ import { organizeWithModel } from './model-client.js';
 import { setAppStatus } from './status3d.js';
 import { CLUSTER_HUES, clusterCenter, gridHalfHeight, noteOffset } from './layout.js';
 import { createClusterLabel, createLine, createSuggestionBud, setNoteTint } from './note-factory.js';
-import { playSnapChord } from './audio.js';
+import { playSnapChord, playOrganizeTone } from './audio.js';
 import { getLoci } from './globals.js';
 import { schedulePalaceSave } from './palace-store.js';
 
@@ -88,6 +88,7 @@ export class OrganizeSystem extends createSystem({
     const fallback = organize(inputs);
     this.thinking = true;
     this.setStatus('Sage is reading your thoughts…');
+    playOrganizeTone();
 
     void this.applyBest(fallback, inputs);
   }

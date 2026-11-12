@@ -20,6 +20,8 @@ import { loadLociFont } from './loci/text-label.js';
 import { warmupModel } from './loci/model-client.js';
 import { initStatus3D } from './loci/status3d.js';
 import { WebcamHandSystem } from './loci/webcam-hand-system.js';
+import { shouldOnboard, runOnboarding } from './loci/onboarding.js';
+import { startHealthIndicator } from './loci/palace-health.js';
 
 // Register the bundled Inter before any card label is drawn, so every
 // surface uses the same type from the first frame.
@@ -36,7 +38,7 @@ if (sceneContainer == null) {
 
 World.create(sceneContainer as HTMLDivElement, projectOptions).catch((err) => {
   console.error('[Loci] World.create failed:', err);
-}).then((world) => {
+}).then(async (world) => {
   if (world == null) { return; }
   (world.globals as Record<string, unknown>)['loci'] = createLociGlobals();
 
@@ -58,6 +60,25 @@ World.create(sceneContainer as HTMLDivElement, projectOptions).catch((err) => {
 
   // Preload Sage into the server's VRAM so the first Organize is warm.
   warmupModel();
+
+  // ── Splash dismiss ──
+  const splash = document.getElementById('loci-splash');
+  if (splash) {
+    splash.classList.add('fade-out');
+    splash.addEventListener('transitionend', () => splash.remove(), { once: true });
+    // Safety fallback — remove after 1.2s even if transitionend doesn't fire
+    setTimeout(() => { if (splash.parentNode) splash.remove(); }, 1200);
+  }
+
+  // ── First-time onboarding ──
+  if (shouldOnboard()) {
+    // Small delay so the world renders a frame behind the overlay
+    await new Promise(r => setTimeout(r, 400));
+    await runOnboarding();
+  }
+
+  // ── Palace health indicator ──
+  startHealthIndicator();
 
   // Quest comfort + performance targets (judging: min 60fps, seated).
   world.visibilityState.subscribe((state) => {

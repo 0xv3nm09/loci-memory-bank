@@ -15,7 +15,7 @@ import {
   setNoteGlow,
   applyNoteBaseLook,
 } from './note-factory.js';
-import { playConnectTone, playMissTone, playOrbClick, playSnapChord } from './audio.js';
+import { playConnectTone, playCorrectTone, playMissTone, playOrbClick, playSnapChord } from './audio.js';
 import { getLoci, type LociGlobals } from './globals.js';
 import {
   createRecognizer,
@@ -540,7 +540,7 @@ export class RecallSystem extends createSystem({
 
     if (chosenCorrect) {
       this.correctCount += 1;
-      playConnectTone();
+      playCorrectTone();
     } else {
       playMissTone();
     }

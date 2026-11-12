@@ -8,6 +8,7 @@ import { loadPalace, type SavedSnapshot } from './palace-store.js';
 import { setAppStatus } from './status3d.js';
 import { agoLabel } from './time.js';
 import { GLASS, SEMANTIC } from './palette.js';
+import { playRewindTick } from './audio.js';
 
 const DIAL_POS = new Vector3(0.46, 1.10, -0.72);
 const TRACK_HALF = 0.14;
@@ -186,6 +187,7 @@ export class RewindSystem extends createSystem({
       return;
     }
     this.lastIndex = index;
+    playRewindTick(fraction);
     this.apply(index);
   }
 

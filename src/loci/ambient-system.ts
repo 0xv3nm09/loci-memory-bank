@@ -1,5 +1,5 @@
 import { createSystem, Grabbed, Hovered } from '@iwsdk/core';
-import { Mesh, MeshStandardMaterial, Points } from 'three';
+import { Color, Mesh, MeshStandardMaterial, Points, PointsMaterial } from 'three';
 import {
   Note,
   MicOrb,
@@ -13,7 +13,7 @@ import {
   TypeOrb,
 } from './components.js';
 import { createStarfield } from './note-factory.js';
-import { GLASS } from './palette.js';
+import { GLASS, nebulaTint } from './palette.js';
 import { getLoci } from './globals.js';
 
 const HOVER_SCALE = 1.08;
@@ -31,8 +31,9 @@ function baseGlow(entity: import('@iwsdk/core').Entity): number {
 }
 
 /**
- * Calm life between moments: starfield drift, raw-note sway, floating seeds
- * and orbs, hover feedback on every interactable, suggestion bud pulse.
+ * Calm life between moments: nebula starfield drift, raw-note sway, floating
+ * seeds and orbs, hover feedback on every interactable, suggestion bud pulse,
+ * particle burst animation, and twinkling near-field stars.
  * Skipped during Recall (which owns the glow).
  */
 const easeOutQuart = (t: number): number => 1 - Math.pow(1 - t, 4);
@@ -48,18 +49,76 @@ export class AmbientSystem extends createSystem({
   textScaleOrbs: { required: [TextScaleOrb] },
   suggestionBuds: { required: [SuggestionBud] },
 }) {
-  private starfield: Points | null = null;
+  private starNear: Points | null = null;
+  private starFar: Points | null = null;
   private restY = new Map<import('@iwsdk/core').Entity, number>();
+  /** Tracked particle bursts for cleanup. */
+  private bursts: Points[] = [];
+  private nebulaColor = new Color();
 
   init(): void {
-    this.starfield = createStarfield(this.world);
+    const stars = createStarfield(this.world);
+    this.starNear = stars.near;
+    this.starFar = stars.far;
+  }
+
+  /** Register a particle burst for animated cleanup. */
+  addBurst(burst: Points): void {
+    this.bursts.push(burst);
   }
 
   update(delta: number, time: number): void {
-    this.starfield?.rotateY(delta * 0.008);
+    // ── Nebula color cycling on starfield ──
+    const tint = nebulaTint(time);
+    this.nebulaColor.setRGB(tint.r, tint.g, tint.b);
+    if (this.starFar != null) {
+      this.starFar.rotateY(delta * 0.006);
+      // Modulate far star opacity with slow breathe
+      const farMat = this.starFar.material as PointsMaterial;
+      farMat.opacity = 0.35 + Math.sin(time * 0.15) * 0.08;
+    }
+    if (this.starNear != null) {
+      this.starNear.rotateY(delta * 0.012); // near stars drift faster
+      // Twinkle: modulate near star opacity more aggressively
+      const nearMat = this.starNear.material as PointsMaterial;
+      nearMat.opacity = 0.55 + Math.sin(time * 0.8) * 0.12;
+    }
+
     const loci = getLoci(this.globals);
     const feedbackAllowed = !loci.recallActive && !loci.rewindActive;
     const lerp = Math.min(1, delta * 12);
+
+    // ── Particle bursts: animate and clean up ──
+    for (let i = this.bursts.length - 1; i >= 0; i--) {
+      const burst = this.bursts[i];
+      const geo = burst.geometry;
+      const life = (geo.userData.lifetime as number) + delta;
+      geo.userData.lifetime = life;
+      const maxLife = geo.userData.maxLife as number;
+      const t = Math.min(1, life / maxLife);
+      const vel = geo.userData.velocities as Float32Array;
+      const posAttr = geo.getAttribute('position');
+      const arr = posAttr.array as Float32Array;
+      const count = arr.length / 3;
+      for (let j = 0; j < count; j++) {
+        arr[j * 3] += vel[j * 3] * delta;
+        arr[j * 3 + 1] += vel[j * 3 + 1] * delta;
+        arr[j * 3 + 2] += vel[j * 3 + 2] * delta;
+        // Gravity
+        vel[j * 3 + 1] -= delta * 0.3;
+      }
+      posAttr.needsUpdate = true;
+      // Fade and shrink
+      const mat = burst.material as PointsMaterial;
+      mat.opacity = 0.8 * (1 - t);
+      mat.size = 0.014 * (1 - t * 0.5);
+      if (t >= 1) {
+        burst.removeFromParent();
+        geo.dispose();
+        mat.dispose();
+        this.bursts.splice(i, 1);
+      }
+    }
 
     // ── Spawn animation: scale 0→1 + opacity 0→1 + glow bloom ──
     for (const entity of Array.from(this.queries.spawning.entities)) {
@@ -185,9 +244,9 @@ export class AmbientSystem extends createSystem({
     // ── First-launch discovery pulse — guide new users to their first orb ──
     if (loci.firstLaunch) {
       const age = time - loci.birthTime;
-      if (age < 6) {
-        // Pulse the type and mic orbs with a warm glow that fades over 6s.
-        const fade = 1 - age / 6;
+      if (age < 8) {
+        // Pulse the type and mic orbs with a warm color-cycling glow
+        const fade = 1 - age / 8;
         const pulse = 0.5 * fade * (0.5 + 0.5 * Math.sin(time * 3));
         for (const entities of [this.queries.typeOrbs.entities, this.queries.micOrbs.entities]) {
           for (const entity of entities) {
@@ -201,7 +260,7 @@ export class AmbientSystem extends createSystem({
           }
         }
       } else {
-        // After 6s, stop pulsing — user has had time to discover the orbs.
+        // After 8s, stop pulsing — user has had time to discover the orbs.
         loci.firstLaunch = false;
       }
     }

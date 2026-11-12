@@ -36,7 +36,7 @@ import {
   TypeOrb,
 } from './components.js';
 import { createTextLabel } from './text-label.js';
-import { GLASS, accentForHue } from './palette.js';
+import { GLASS, PARTICLE, ORB_COLORS, accentForHue } from './palette.js';
 
 export const CARD_W = 0.17;
 export const CARD_H = 0.115;
@@ -248,15 +248,22 @@ export function createSeed(
   return entity;
 }
 
-export function createOrganizeOrb(world: World, position: Vector3): Entity {
+/** Helper to create an orb with consistent style. */
+function makeOrb(
+  world: World,
+  name: string,
+  colors: { body: number; emissive: number; label: string },
+  labelText: string,
+  position: Vector3,
+): { entity: Entity; group: Group } {
   const group = new Group();
-  group.name = 'organize-orb';
+  group.name = name;
 
   const orb = new Mesh(
     new SphereGeometry(0.026, 24, 18),
     new MeshStandardMaterial({
-      color: 0x9fe8d8,
-      emissive: new Color(0x2fbf9a),
+      color: colors.body,
+      emissive: new Color(colors.emissive),
       emissiveIntensity: 0.8,
       roughness: 0.22,
       metalness: 0.1,
@@ -268,7 +275,7 @@ export function createOrganizeOrb(world: World, position: Vector3): Entity {
   orb.renderOrder = 4;
   group.add(orb);
 
-  const label = createTextMesh('organize', 0.016, 0xbdf5e6);
+  const label = createTextMesh(labelText, 0.016, colors.label);
   label.position.y = -0.055;
   group.add(label);
 
@@ -276,8 +283,13 @@ export function createOrganizeOrb(world: World, position: Vector3): Entity {
   facePlayer(group);
 
   const entity = world.createTransformEntity(group);
-  entity.addComponent(OrganizeOrb);
   entity.addComponent(RayInteractable);
+  return { entity, group };
+}
+
+export function createOrganizeOrb(world: World, position: Vector3): Entity {
+  const { entity } = makeOrb(world, 'organize-orb', ORB_COLORS.organize, 'organize', position);
+  entity.addComponent(OrganizeOrb);
   return entity;
 }
 
@@ -331,134 +343,26 @@ export function createSuggestionBud(
 }
 
 export function createTextScaleOrb(world: World, position: Vector3): Entity {
-  const group = new Group();
-  group.name = 'text-scale-orb';
-
-  const orb = new Mesh(
-    new SphereGeometry(0.026, 24, 18),
-    new MeshStandardMaterial({
-      color: 0xd8e8d0,
-      emissive: new Color(0x5f9f6f),
-      emissiveIntensity: 0.7,
-      roughness: 0.22,
-      metalness: 0.1,
-      transparent: true,
-      opacity: 0.92,
-    }),
-  );
-  orb.name = 'card';
-  orb.renderOrder = 4;
-  group.add(orb);
-
-  const label = createTextMesh('Aa', 0.016, '#d8f0dc');
-  label.position.y = -0.055;
-  group.add(label);
-
-  group.position.copy(position);
-  facePlayer(group);
-
-  const entity = world.createTransformEntity(group);
+  const { entity } = makeOrb(world, 'text-scale-orb', ORB_COLORS.textScale, 'Aa', position);
   entity.addComponent(TextScaleOrb);
-  entity.addComponent(RayInteractable);
   return entity;
 }
 
 export function createMicOrb(world: World, position: Vector3): Entity {
-  const group = new Group();
-  group.name = 'mic-orb';
-
-  const orb = new Mesh(
-    new SphereGeometry(0.026, 24, 18),
-    new MeshStandardMaterial({
-      color: 0xffc9c9,
-      emissive: new Color(0xd05858),
-      emissiveIntensity: 0.7,
-      roughness: 0.22,
-      metalness: 0.1,
-      transparent: true,
-      opacity: 0.92,
-    }),
-  );
-  orb.name = 'card';
-  orb.renderOrder = 4;
-  group.add(orb);
-
-  const label = createTextMesh('mic', 0.016, '#ffd9d9');
-  label.position.y = -0.055;
-  group.add(label);
-
-  group.position.copy(position);
-  facePlayer(group);
-
-  const entity = world.createTransformEntity(group);
+  const { entity } = makeOrb(world, 'mic-orb', ORB_COLORS.mic, 'mic', position);
   entity.addComponent(MicOrb);
-  entity.addComponent(RayInteractable);
   return entity;
 }
 
 export function createTypeOrb(world: World, position: Vector3): Entity {
-  const group = new Group();
-  group.name = 'type-orb';
-
-  const orb = new Mesh(
-    new SphereGeometry(0.026, 24, 18),
-    new MeshStandardMaterial({
-      color: 0xaac6ff,
-      emissive: new Color(0x4a6fd0),
-      emissiveIntensity: 0.8,
-      roughness: 0.22,
-      metalness: 0.1,
-      transparent: true,
-      opacity: 0.92,
-    }),
-  );
-  orb.name = 'card';
-  orb.renderOrder = 4;
-  group.add(orb);
-
-  const label = createTextMesh('type', 0.016, '#c9d8ff');
-  label.position.y = -0.055;
-  group.add(label);
-
-  group.position.copy(position);
-  facePlayer(group);
-
-  const entity = world.createTransformEntity(group);
+  const { entity } = makeOrb(world, 'type-orb', ORB_COLORS.type, 'type', position);
   entity.addComponent(TypeOrb);
-  entity.addComponent(RayInteractable);
   return entity;
 }
 
 export function createRecallOrb(world: World, position: Vector3): Entity {
-  const group = new Group();
-  group.name = 'recall-orb';
-
-  const orb = new Mesh(
-    new SphereGeometry(0.026, 24, 18),
-    new MeshStandardMaterial({
-      color: 0xcfc2ff,
-      emissive: new Color(0x7a5fd0),
-      emissiveIntensity: 0.8,
-      roughness: 0.22,
-      metalness: 0.1,
-      transparent: true,
-      opacity: 0.92,
-    }),
-  );
-  orb.name = 'card';
-  orb.renderOrder = 4;
-  group.add(orb);
-
-  const label = createTextMesh('recall', 0.016, 0xe2daff);
-  label.position.y = -0.055;
-  group.add(label);
-
-  group.position.copy(position);
-  facePlayer(group);
-
-  const entity = world.createTransformEntity(group);
+  const { entity } = makeOrb(world, 'recall-orb', ORB_COLORS.recall, 'recall', position);
   entity.addComponent(RecallOrb);
-  entity.addComponent(RayInteractable);
   return entity;
 }
 
@@ -478,36 +382,125 @@ export function createClusterLabel(
   return entity;
 }
 
-export function createStarfield(world: World): Points {
-  const count = 680;
-  const positions = new Float32Array(count * 3);
-  const sizes = new Float32Array(count);
-  for (let i = 0; i < count; i += 1) {
-    // Bias toward farther radii for depth.
-    const radius = 3.5 + Math.pow(Math.random(), 0.7) * 6.0;
+/**
+ * Starfield v2 — enhanced with per-particle color variation and
+ * two size layers for depth. The nebula tint cycling is handled
+ * by ambient-system reading palette.nebulaTint() each frame.
+ */
+export function createStarfield(world: World): { near: Points; far: Points } {
+  // Far layer: many small dim stars
+  const farCount = 600;
+  const farPositions = new Float32Array(farCount * 3);
+  const farColors = new Float32Array(farCount * 3);
+  for (let i = 0; i < farCount; i += 1) {
+    const radius = 4.5 + Math.pow(Math.random(), 0.6) * 7.0;
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-    positions[i * 3 + 1] = radius * Math.cos(phi) * 0.6 + 1.2;
-    positions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
-    // Random size variation for sparkle depth.
-    sizes[i] = 0.007 + Math.random() * 0.009;
+    farPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+    farPositions[i * 3 + 1] = radius * Math.cos(phi) * 0.6 + 1.2;
+    farPositions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+    // Slight per-star color variation: cool blues to warm lavenders
+    const warmth = Math.random();
+    farColors[i * 3] = 0.55 + warmth * 0.2;     // R
+    farColors[i * 3 + 1] = 0.6 + warmth * 0.12;  // G
+    farColors[i * 3 + 2] = 0.78 + warmth * 0.15;  // B
+  }
+  const farGeometry = new BufferGeometry();
+  farGeometry.setAttribute('position', new Float32BufferAttribute(farPositions, 3));
+  farGeometry.setAttribute('color', new Float32BufferAttribute(farColors, 3));
+  const farMaterial = new PointsMaterial({
+    size: 0.008,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.4,
+    depthWrite: false,
+    blending: AdditiveBlending,
+    vertexColors: true,
+  });
+  const farPoints = new Points(farGeometry, farMaterial);
+  farPoints.name = 'loci-starfield-far';
+  farPoints.renderOrder = 0;
+  world.createTransformEntity(farPoints, { persistent: true });
+
+  // Near layer: fewer, larger, brighter stars — sparkle points
+  const nearCount = 120;
+  const nearPositions = new Float32Array(nearCount * 3);
+  const nearColors = new Float32Array(nearCount * 3);
+  for (let i = 0; i < nearCount; i += 1) {
+    const radius = 3.0 + Math.random() * 4.0;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    nearPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+    nearPositions[i * 3 + 1] = radius * Math.cos(phi) * 0.6 + 1.2;
+    nearPositions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+    // Brighter warm-to-cool variation
+    const tint = Math.random();
+    nearColors[i * 3] = 0.7 + tint * 0.25;
+    nearColors[i * 3 + 1] = 0.72 + tint * 0.15;
+    nearColors[i * 3 + 2] = 0.85 + tint * 0.15;
+  }
+  const nearGeometry = new BufferGeometry();
+  nearGeometry.setAttribute('position', new Float32BufferAttribute(nearPositions, 3));
+  nearGeometry.setAttribute('color', new Float32BufferAttribute(nearColors, 3));
+  const nearMaterial = new PointsMaterial({
+    size: 0.016,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.65,
+    depthWrite: false,
+    blending: AdditiveBlending,
+    vertexColors: true,
+  });
+  const nearPoints = new Points(nearGeometry, nearMaterial);
+  nearPoints.name = 'loci-starfield-near';
+  nearPoints.renderOrder = 1;
+  world.createTransformEntity(nearPoints, { persistent: true });
+
+  return { near: nearPoints, far: farPoints };
+}
+
+/**
+ * Particle burst — spawns a ring of AdditiveBlending particles at a position.
+ * Used for organize and snap events. Returns the Points object (auto-cleaned
+ * by ambient-system after lifetime expires).
+ */
+export function createParticleBurst(
+  world: World,
+  position: Vector3,
+  color: number,
+  count = 24,
+): Points {
+  const positions = new Float32Array(count * 3);
+  const velocities = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = position.x;
+    positions[i * 3 + 1] = position.y;
+    positions[i * 3 + 2] = position.z;
+    // Radial burst with slight upward bias
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3;
+    const speed = 0.3 + Math.random() * 0.4;
+    velocities[i * 3] = Math.cos(angle) * speed;
+    velocities[i * 3 + 1] = 0.1 + Math.random() * 0.3;
+    velocities[i * 3 + 2] = Math.sin(angle) * speed;
   }
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('size', new Float32BufferAttribute(sizes, 1));
+  geometry.userData.velocities = velocities;
+  geometry.userData.lifetime = 0;
+  geometry.userData.maxLife = 1.2;
   const material = new PointsMaterial({
-    color: 0x9aa4d4,
-    size: 0.012,
+    color,
+    size: 0.014,
     sizeAttenuation: true,
     transparent: true,
-    opacity: 0.5,
-    depthWrite: false,
+    opacity: 0.8,
     blending: AdditiveBlending,
+    depthWrite: false,
   });
   const points = new Points(geometry, material);
-  points.name = 'loci-starfield';
-  points.renderOrder = 0;
-  world.createTransformEntity(points, { persistent: true });
+  points.name = 'particle-burst';
+  points.renderOrder = 9;
+  points.frustumCulled = false;
+  world.scene.add(points);
   return points;
 }
