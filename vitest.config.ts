@@ -1,0 +1,1 @@
+export default { test: { include: ['src/loci/**/*.test.ts'], environment: 'node' } };

@@ -5,7 +5,8 @@
 
 import { VisibilityState, World } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
-import { PanelSystem } from './panel.js';
+import './styles.css';
+import { ExperienceSystem } from './loci/experience-system.js';
 import { AmbientSystem } from './loci/ambient-system.js';
 import { CaptureSystem } from './loci/capture-system.js';
 import { MouseDragSystem } from './loci/mouse-drag-system.js';
@@ -20,7 +21,7 @@ import { loadLociFont } from './loci/text-label.js';
 import { warmupModel } from './loci/model-client.js';
 import { initStatus3D } from './loci/status3d.js';
 import { WebcamHandSystem } from './loci/webcam-hand-system.js';
-import { shouldOnboard, runOnboarding } from './loci/onboarding.js';
+
 import { startHealthIndicator } from './loci/palace-health.js';
 
 // Register the bundled Inter before any card label is drawn, so every
@@ -52,7 +53,7 @@ World.create(sceneContainer as HTMLDivElement, projectOptions).catch((err) => {
   world.registerSystem(RewindSystem);
   world.registerSystem(CrisisPanelSystem);
   world.registerSystem(KeyboardSystem);
-  world.registerSystem(PanelSystem);
+  world.registerSystem(ExperienceSystem);
   world.registerSystem(WebcamHandSystem);
 
   // Sage's voice in the scene — status never depends on the DOM overlay.
@@ -71,11 +72,7 @@ World.create(sceneContainer as HTMLDivElement, projectOptions).catch((err) => {
   }
 
   // ── First-time onboarding ──
-  if (shouldOnboard()) {
-    // Small delay so the world renders a frame behind the overlay
-    await new Promise(r => setTimeout(r, 400));
-    await runOnboarding();
-  }
+  // ExperienceSystem owns the single spatial opening sequence.
 
   // ── Palace health indicator ──
   startHealthIndicator();

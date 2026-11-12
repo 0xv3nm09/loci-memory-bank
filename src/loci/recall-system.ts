@@ -38,7 +38,7 @@ interface QuizQuestion {
   options: QuizOption[];
 }
 
-const PANEL_POS = new Vector3(0, 1.34, -0.82);
+const PANEL_POS = new Vector3(0, 1.48, -0.80);
 const MAX_QUESTIONS = 5;
 
 const trunc = (text: string, max: number): string =>
@@ -92,8 +92,8 @@ export class RecallSystem extends createSystem({
   private voiceActive = false;
 
   init(): void {
-    createRecallOrb(this.world, new Vector3(0.34, 1.02, -0.72));
-    getLoci(this.globals).requestRecall = () => this.start();
+    createRecallOrb(this.world, new Vector3(0.20, 0.90, -0.95));
+    getLoci(this.globals).requestRecall = () => this.sessionActive ? this.cancel() : this.start();
     this.queries.orbPressed.subscribe('qualify', () => {
       playOrbClick();
       if (this.sessionActive) {
@@ -166,13 +166,13 @@ export class RecallSystem extends createSystem({
       }
       const material = card.material as MeshStandardMaterial;
       const hovered = entity.hasComponent(Hovered);
-      material.emissiveIntensity = hovered ? 1.1 : 0.3;
+      if (!this.waitingFeedback) material.emissiveIntensity = hovered ? 0.13 : 0.04;
     }
   }
 
   private start(): void {
     const loci = getLoci(this.globals);
-    if (this.sessionActive || loci.recallActive || loci.rewindActive || loci.crisActive) {
+    if (this.sessionActive || loci.recallActive || loci.rewindActive || loci.crisActive || loci.introActive || loci.keyboardActive || loci.helpActive) {
       return;
     }
     this.questions = this.buildQuestions(loci);
@@ -293,6 +293,7 @@ export class RecallSystem extends createSystem({
     }
     this.sessionActive = false;
     loci.recallActive = false;
+    schedulePalaceSave(loci, 100);
     this.showEndCard('Recall paused — the palace is yours.');
   }
 
@@ -322,8 +323,8 @@ export class RecallSystem extends createSystem({
       if (!neighbors.has(edge.b)) {
         neighbors.set(edge.b, new Set());
       }
-      neighbors.get(edge.a)!.add(edge.b);
-      neighbors.get(edge.b)!.add(edge.a);
+      neighbors.get(edge.a)?.add(edge.b);
+      neighbors.get(edge.b)?.add(edge.a);
     }
 
     const labels = loci.lastLabels;
@@ -336,7 +337,8 @@ export class RecallSystem extends createSystem({
       if (used.has(candidate)) {
         continue;
       }
-      const target = notes.find((n) => n.id === candidate)!;
+      const target = notes.find((n) => n.id === candidate);
+      if (target == null) continue;
 
       // Type A — cluster membership: "which thread did it join?"
       let question: QuizQuestion | null = null;
@@ -414,7 +416,7 @@ export class RecallSystem extends createSystem({
     object: Object3D,
     offsetY: number,
   ): void {
-    object.position.set(PANEL_POS.x, PANEL_POS.y + offsetY, PANEL_POS.z);
+    object.position.set(PANEL_POS.x, PANEL_POS.y + offsetY, PANEL_POS.z + (object.name === 'panel' ? 0 : 0.024));
     object.lookAt(PANEL_POS.x, PANEL_POS.y + offsetY, 0.001);
   }
 
@@ -429,6 +431,7 @@ export class RecallSystem extends createSystem({
         color: GLASS.panelBody,
         emissive: new Color(GLASS.panelEmissive),
         emissiveIntensity: GLASS.panelEmissiveIntensity,
+        toneMapped: false,
         roughness: 0.65,
         transparent: true,
         opacity: GLASS.panelOpacity,
@@ -439,8 +442,11 @@ export class RecallSystem extends createSystem({
     const backdropEntity = this.world.createTransformEntity(backdrop);
     this.quizEntities.push(backdropEntity);
 
-    const prompt = createLabel(question.prompt, 0.019, SEMANTIC.promptText, 0.74);
-    this.addPanelPiece(prompt, 0.235);
+    const progress = createLabel(`RECALL  ${this.questionIndex + 1} / ${this.questions.length}`, 0.015, SEMANTIC.calmAccent, 0.70);
+    this.addPanelPiece(progress, 0.30);
+    this.quizEntities.push(this.world.createTransformEntity(progress));
+    const prompt = createLabel(question.prompt, 0.022, SEMANTIC.promptText, 0.74);
+    this.addPanelPiece(prompt, 0.20);
     this.quizEntities.push(this.world.createTransformEntity(prompt));
 
     if (this.voiceActive) {
@@ -449,7 +455,7 @@ export class RecallSystem extends createSystem({
       this.quizEntities.push(this.world.createTransformEntity(hint));
     }
 
-    const optionYs = [0.08, -0.045, -0.17];
+    const optionYs = [0.04, -0.09, -0.22];
     question.options.forEach((option, index) => {
       const cardGroup = new Group();
       const material = new MeshStandardMaterial({
@@ -461,8 +467,9 @@ export class RecallSystem extends createSystem({
       const card = new Mesh(this.optionGeometry, material);
       card.name = 'card';
       cardGroup.add(card);
-      const label = createLabel(option.text, 0.0145, SEMANTIC.promptText, 0.62);
+      const label = createLabel(option.text, 0.020, SEMANTIC.promptText, 0.62);
       label.position.set(0, 0, 0.009);
+      label.userData.optionIndex = index;
       cardGroup.add(label);
       this.addPanelPiece(cardGroup, optionYs[index]);
 
@@ -487,7 +494,7 @@ export class RecallSystem extends createSystem({
     const doneLabel = createLabel('done', 0.013, SEMANTIC.statusText, 0.2);
     doneLabel.position.set(0, 0, 0.008);
     doneGroup.add(doneLabel);
-    this.addPanelPiece(doneGroup, -0.3);
+    this.addPanelPiece(doneGroup, -0.32);
     const doneEntity = this.world.createTransformEntity(doneGroup);
     doneEntity.addComponent(QuizDone);
     doneEntity.addComponent(RayInteractable);

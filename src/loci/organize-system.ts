@@ -16,6 +16,7 @@ import { CLUSTER_HUES, clusterCenter, gridHalfHeight, noteOffset } from './layou
 import { createClusterLabel, createLine, createSuggestionBud, setNoteTint } from './note-factory.js';
 import { playSnapChord, playOrganizeTone } from './audio.js';
 import { getLoci } from './globals.js';
+import { SEMANTIC } from './palette.js';
 import { schedulePalaceSave } from './palace-store.js';
 
 export class OrganizeSystem extends createSystem({
@@ -36,7 +37,8 @@ export class OrganizeSystem extends createSystem({
     this.queries.budsPressed.subscribe('qualify', (entity) => {
       const bubble = entity.object3D?.getObjectByName('bud-text');
       if (bubble != null) {
-        bubble.visible = !bubble.visible;
+        bubble.userData.pinned = !bubble.userData.pinned;
+        bubble.visible = bubble.userData.pinned;
       }
     });
   }
@@ -66,7 +68,7 @@ export class OrganizeSystem extends createSystem({
 
   private organize(): void {
     const loci = getLoci(this.globals);
-    if (loci.recallActive || this.thinking || loci.rewindActive || loci.crisActive) {
+    if (loci.recallActive || this.thinking || loci.rewindActive || loci.crisActive || loci.introActive || loci.keyboardActive || loci.helpActive) {
       return;
     }
     // A deliberate organize supersedes any pending auto-organize timer.
@@ -116,7 +118,7 @@ export class OrganizeSystem extends createSystem({
     // Persistent who-did-this indicator: the orb stays gold after a real
     // model organize, gray after the local fallback — visible at a glance
     // which intelligence shaped the current layout.
-    this.tintOrb(source === 'Sage' ? 0xe8b34b : 0x8a93a8, source === 'Sage' ? 1.15 : 0.5);
+    this.tintOrb(source === 'Sage' ? SEMANTIC.sage : SEMANTIC.muted, 0.08);
     this.applyResult(result);
   }
 
@@ -204,7 +206,7 @@ export class OrganizeSystem extends createSystem({
     // Phase 2 — declump: relax movable targets away from overlaps, treating
     // user-placed cards as immovable obstacles. A gentle nudge so nothing
     // visually overlaps — never a rearrangement of the user's placements.
-    const MIN_DIST = 0.185;
+    const MIN_DIST = 0.285;
     const obstacles: Vector3[] = [];
     for (const entity of this.queries.notes.entities) {
       if ((entity.getValue(Note, 'userPlaced') ?? false) && entity.object3D != null) {
@@ -226,7 +228,8 @@ export class OrganizeSystem extends createSystem({
     let flightIndex = 0;
     let maxDelay = 0;
     for (const { entity, target } of targets) {
-      const object = entity.object3D!;
+      const object = entity.object3D;
+      if (object == null) continue;
       const start = object.position;
       const delay = flightIndex * 0.045;
       maxDelay = Math.max(maxDelay, delay);
@@ -279,7 +282,7 @@ export class OrganizeSystem extends createSystem({
         suggestion.kind,
         suggestion.text,
         new Vector3(
-          pos.x + 0.11,
+          pos.x + 0.15,
           pos.y + 0.13,
           pos.z + 0.04,
         ),

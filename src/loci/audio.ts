@@ -10,13 +10,18 @@
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
+let muted = false;
+export function setAudioMuted(next: boolean): void {
+  muted = next;
+  if (master && ctx) master.gain.setTargetAtTime(next ? 0 : 0.75, ctx.currentTime, 0.08);
+}
 
 export function ensureAudio(): AudioContext | null {
   try {
     if (ctx == null) {
       ctx = new AudioContext();
       master = ctx.createGain();
-      master.gain.value = 0.75;
+      master.gain.value = muted ? 0 : 0.75;
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = 'lowpass';
       lowpass.frequency.value = 2600;

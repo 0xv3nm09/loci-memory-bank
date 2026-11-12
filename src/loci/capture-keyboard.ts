@@ -6,10 +6,10 @@ import { createLabel } from './note-factory.js';
 import { getLoci } from './globals.js';
 import { GLASS, SEMANTIC } from './palette.js';
 
-const KEY_W = 0.042;
-const KEY_H = 0.034;
+const KEY_W = 0.052;
+const KEY_H = 0.047;
 const STEP = KEY_W + 0.005;
-const PANEL_POS = new Vector3(0, 1.32, -0.85);
+const PANEL_POS = new Vector3(0, 1.42, -0.78);
 const ROWS = ['1234567890', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 // Row 3 as [label, char, xSteps, widthInSteps]
 const BOTTOM_ROW: Array<[string, string, number, number]> = [
@@ -18,7 +18,7 @@ const BOTTOM_ROW: Array<[string, string, number, number]> = [
   ['?', '?', 3, 1],
   ['space', ' ', 4.9, 3.2],
   ['⌫', '⌫', 7.4, 1.6],
-  ['✓ done', '✓', 9.2, 2.2],
+  ['Add', '✓', 9.2, 2.2],
 ];
 
 /**
@@ -46,7 +46,10 @@ export class KeyboardSystem extends createSystem({
   }
 
   private open(initial: string, commit: (text: string) => void): void {
+    const loci = getLoci(this.globals);
+    if (loci.crisActive || loci.introActive || loci.recallActive || loci.rewindActive || loci.helpActive) return;
     this.close();
+    loci.keyboardActive = true;
     this.buffer = initial;
     this.commit = commit;
     this.build();
@@ -61,11 +64,14 @@ export class KeyboardSystem extends createSystem({
       }
       this.root = null;
       this.fieldRedraw = null;
+      getLoci(this.globals).keyboardActive = false;
     }
   }
 
   private press(char: string): void {
-    if (char === '⌫') {
+    if (char === '×') {
+      this.close(); return;
+    } else if (char === '⌫') {
       this.buffer = this.buffer.slice(0, -1);
     } else if (char === '✓') {
       const text = this.buffer.trim();
@@ -86,7 +92,7 @@ export class KeyboardSystem extends createSystem({
     group.name = 'capture-keyboard';
 
     const backdrop = new Mesh(
-      new RoundedBoxGeometry(0.52, 0.30, 0.012, 2, 0.02),
+      new RoundedBoxGeometry(0.65, 0.44, 0.012, 2, 0.02),
       new MeshStandardMaterial({
         color: GLASS.panelBody,
         emissive: new Color(GLASS.panelEmissive),
@@ -99,7 +105,7 @@ export class KeyboardSystem extends createSystem({
     group.add(backdrop);
 
     const fieldPanel = new Mesh(
-      new RoundedBoxGeometry(0.46, 0.034, 0.006, 1, 0.008),
+      new RoundedBoxGeometry(0.57, 0.060, 0.006, 1, 0.008),
       new MeshStandardMaterial({
         color: 0x10162b,
         emissive: new Color(0x2a3557),
@@ -107,18 +113,18 @@ export class KeyboardSystem extends createSystem({
         roughness: 0.6,
       }),
     );
-    fieldPanel.position.set(0, 0.09, 0.008);
+    fieldPanel.position.set(0, 0.14, 0.008);
     group.add(fieldPanel);
     // Start with content color — the redraw closure captures the color at
     // creation time, so we always use the content color and swap visually
     // between placeholder text and real input in the redraw callback.
     const field = createLabel(
       this.buffer || 'type your thought…',
-      0.0125,
-      '#eef1ff',
-      0.44,
+      0.018,
+      SEMANTIC.promptText,
+      0.55,
     );
-    field.position.set(0, 0.09, 0.014);
+    field.position.set(0, 0.14, 0.017);
     group.add(field);
     this.fieldRedraw = (text: string): void => {
       // When buffer is empty show placeholder in dim color; createLabel's
@@ -164,7 +170,7 @@ export class KeyboardSystem extends createSystem({
       keyGroup.add(key);
       const keyLabel = createLabel(
         label,
-        label.length > 2 ? 0.0075 : 0.011,
+        label.length > 2 ? 0.012 : 0.020,
         SEMANTIC.promptText,
         KEY_W * widthSteps * 0.95,
       );
@@ -176,14 +182,15 @@ export class KeyboardSystem extends createSystem({
       entity.addComponent(RayInteractable);
     };
 
+    addKey('×', '×', 10, 1, 0.19);
     ROWS.forEach((rowLetters, row) => {
       const offset = (10 - rowLetters.length) / 2;
       rowLetters.split('').forEach((letter, col) => {
-        addKey(letter, letter, offset + col + 0.5, 1, 0.048 - row * (KEY_H + 0.005));
+        addKey(letter, letter, offset + col + 0.5, 1, 0.065 - row * (KEY_H + 0.009));
       });
     });
     BOTTOM_ROW.forEach(([label, char, xSteps, width]) => {
-      addKey(label, char, xSteps, width, 0.048 - ROWS.length * (KEY_H + 0.005));
+      addKey(label, char, xSteps, width, 0.065 - ROWS.length * (KEY_H + 0.009));
     });
   }
 }

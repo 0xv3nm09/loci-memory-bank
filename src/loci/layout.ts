@@ -15,8 +15,8 @@ export interface LayoutVec {
  * mapping then resolves exactly). Interleaved warm/cool for variety. */
 export const CLUSTER_HUES = [0.537, 0.102, 0.406, 0.07, 0.64, 0.003];
 
-const SPACING_X = 0.19;
-const SPACING_Y = 0.135;
+const SPACING_X = 0.29;
+const SPACING_Y = 0.19;
 
 export function gridDimensions(count: number): {
   cols: number;
@@ -35,14 +35,14 @@ export function gridDimensions(count: number): {
 }
 
 export function clusterCenter(index: number, count: number): LayoutVec {
-  const spreadDegrees = Math.min(110, 24 + count * 26);
+  const spreadDegrees = Math.min(64, 20 + count * 12);
   const t = count === 1 ? 0.5 : index / (count - 1);
   const angle = ((-spreadDegrees / 2 + spreadDegrees * t) * Math.PI) / 180;
   // Larger clusters sit a little further back so their grid stays in view.
-  const radius = 1.18 - Math.min(0.45, count * 0.02);
+  const radius = 1.40;
   return {
     x: Math.sin(angle) * radius,
-    y: 1.28 + (index % 2 === 0 ? 0.06 : -0.03),
+    y: 1.48 + (index % 2 === 0 ? 0.02 : -0.02),
     z: -Math.cos(angle) * radius,
   };
 }

@@ -100,6 +100,7 @@ export class SnapSystem extends createSystem({
   private readonly _lineScratch: import('@iwsdk/core').Entity[] = [];
 
   update(delta: number): void {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     // ── Update trail particles ──
     for (const cloud of trailClouds) {
       if (cloud.particles.length === 0) {
@@ -131,7 +132,7 @@ export class SnapSystem extends createSystem({
 
     // ── Spawn trail particles from moving cards ──
     this.trailTimer += delta;
-    const shouldSpawnTrail = this.trailTimer > 0.04; // ~25fps trail spawn rate
+    const shouldSpawnTrail = !reduced && this.trailTimer > 0.04; // ~25fps trail spawn rate
     if (shouldSpawnTrail) {
       this.trailTimer = 0;
     }
@@ -145,7 +146,7 @@ export class SnapSystem extends createSystem({
 
       const delay = entity.getValue(SnapAnimation, 'delay') ?? 0;
       const duration = entity.getValue(SnapAnimation, 'duration') ?? 0.65;
-      const t = clamp01((elapsed - delay) / duration);
+      const t = reduced ? 1 : clamp01((elapsed - delay) / duration);
       const eased = easeOutCubic(t);
 
       const object = entity.object3D;
@@ -181,7 +182,7 @@ export class SnapSystem extends createSystem({
         // lerps it back to its base over the next few frames.
         const card = object.getObjectByName('card') as Mesh | undefined;
         if (card != null) {
-          (card.material as MeshStandardMaterial).emissiveIntensity = 0.9;
+          (card.material as MeshStandardMaterial).emissiveIntensity = reduced ? 0.06 : 0.12;
         }
         entity.removeComponent(SnapAnimation);
       }
@@ -196,7 +197,7 @@ export class SnapSystem extends createSystem({
       line.setValue(ConnectionLine, 'elapsed', elapsed);
 
       const delay = line.getValue(ConnectionLine, 'delay') ?? 0;
-      if (elapsed < delay) {
+      if (!reduced && elapsed < delay) {
         continue;
       }
       if (previous < delay) {
@@ -204,7 +205,7 @@ export class SnapSystem extends createSystem({
       }
 
       const duration = line.getValue(ConnectionLine, 'duration') ?? 0.45;
-      const t = clamp01((elapsed - delay) / duration);
+      const t = reduced ? 1 : clamp01((elapsed - delay) / duration);
       const loci = getLoci(this.globals);
       const from = loci.noteById.get(line.getValue(ConnectionLine, 'fromId') ?? '');
       const to = loci.noteById.get(line.getValue(ConnectionLine, 'toId') ?? '');

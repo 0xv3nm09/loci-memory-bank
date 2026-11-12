@@ -9,12 +9,14 @@ import { SEMANTIC } from './palette.js';
  * convenience) mirrors every message.
  */
 
-const POS = { x: 0, y: 1.02, z: -0.82 };
+const POS = { x: 0, y: 1.12, z: -1.12 };
+let currentText = 'The space is calm. Drop a thought.';
 let redraw: ((text: string) => void) | null = null;
 
 export function initStatus3D(world: World): void {
   // 20px+ for comfortable VR reading at this distance.
-  const label = createLabel('The space is calm. Drop a thought.', 0.020, SEMANTIC.statusText, 0.6);
+  const label = createLabel(currentText, 0.018, SEMANTIC.statusText, 0.80);
+  label.name = 'loci-status';
   label.position.set(POS.x, POS.y, POS.z);
   label.lookAt(POS.x, POS.y, 0.001);
   world.createTransformEntity(label, { persistent: true });
@@ -23,6 +25,7 @@ export function initStatus3D(world: World): void {
 
 /** One funnel for every status message — scene label + desktop mirror. */
 export function setAppStatus(text: string): void {
+  currentText = text;
   redraw?.(text);
   const dom = document.getElementById('hud-status');
   if (dom != null) {

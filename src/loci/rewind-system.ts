@@ -7,11 +7,11 @@ import { getLoci } from './globals.js';
 import { loadPalace, type SavedSnapshot } from './palace-store.js';
 import { setAppStatus } from './status3d.js';
 import { agoLabel } from './time.js';
-import { GLASS, SEMANTIC } from './palette.js';
+import { GLASS, SEMANTIC, ORB_COLORS } from './palette.js';
 import { playRewindTick } from './audio.js';
 
-const DIAL_POS = new Vector3(0.46, 1.10, -0.72);
-const TRACK_HALF = 0.14;
+const DIAL_POS = new Vector3(0, 0.68, -0.95);
+const TRACK_HALF = 0.24;
 
 /**
  * Rewind — scrub the palace through its own history with a spatial dial at
@@ -61,22 +61,28 @@ export class RewindSystem extends createSystem({
       }),
     );
     group.add(track);
+    group.position.copy(DIAL_POS);
+    this.world.createTransformEntity(group);
+    const title = createLabel('Rewind', 0.017, ORB_COLORS.rewind.label, 0.22);
+    title.name = 'rewind-title';
+    title.position.set(DIAL_POS.x, DIAL_POS.y + 0.05, DIAL_POS.z + .02);
+    this.world.createTransformEntity(title);
 
     const knobGroup = new Group();
     knobGroup.name = 'rewind-knob';
     const knob = new Mesh(
-      new RoundedBoxGeometry(0.036, 0.036, 0.02, 1, 0.01),
+      new RoundedBoxGeometry(0.055, 0.055, 0.02, 1, 0.01),
       new MeshStandardMaterial({
-        color: 0xcfc2ff,
-        emissive: new Color(0x7a5fd0),
-        emissiveIntensity: 0.8,
+        color: ORB_COLORS.rewind.body,
+        emissive: new Color(ORB_COLORS.rewind.emissive),
+        emissiveIntensity: 0.08,
         roughness: 0.35,
       }),
     );
     knob.name = 'card';
     knobGroup.add(knob);
-    const knobLabel = createLabel('rewind', 0.012, '#e2daff', 0.09);
-    knobLabel.position.y = -0.032;
+    const knobLabel = createLabel('↶', 0.020, ORB_COLORS.rewind.label, 0.05);
+    knobLabel.position.z = 0.014;
     knobGroup.add(knobLabel);
     knobGroup.position.set(DIAL_POS.x, DIAL_POS.y, DIAL_POS.z + 0.005);
     const knobEntity = this.world.createTransformEntity(knobGroup);
@@ -94,7 +100,7 @@ export class RewindSystem extends createSystem({
     const nowGroup = new Group();
     nowGroup.name = 'rewind-now-orb';
     const nowOrb = new Mesh(
-      new RoundedBoxGeometry(0.06, 0.026, 0.012, 1, 0.008),
+      new RoundedBoxGeometry(0.10, 0.05, 0.012, 1, 0.008),
       new MeshStandardMaterial({
         color: GLASS.buttonBody,
         emissive: new Color(GLASS.buttonEmissive),
@@ -104,7 +110,7 @@ export class RewindSystem extends createSystem({
     );
     nowOrb.name = 'card';
     nowGroup.add(nowOrb);
-    const nowLabel = createLabel('now', 0.009, SEMANTIC.promptText, 0.05);
+    const nowLabel = createLabel('Now', 0.015, SEMANTIC.promptText, 0.05);
     nowLabel.position.z = 0.008;
     nowGroup.add(nowLabel);
     nowGroup.position.set(DIAL_POS.x - TRACK_HALF - 0.09, DIAL_POS.y, DIAL_POS.z);
@@ -119,7 +125,7 @@ export class RewindSystem extends createSystem({
       return;
     }
     const loci = getLoci(this.globals);
-    if (loci.recallActive || loci.crisActive) {
+    if (loci.recallActive || loci.crisActive || loci.introActive || loci.keyboardActive || loci.helpActive) {
       return;
     }
     const saved = loadPalace();

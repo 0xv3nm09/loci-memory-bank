@@ -1,5 +1,6 @@
 import { createSystem, Pressed, VisibilityState } from '@iwsdk/core';
 import { Vector3 } from 'three';
+import { canCapture } from './interaction-state.js';
 import { Note, SeedCard } from './components.js';
 import {
   applyNoteBaseLook,
@@ -95,19 +96,20 @@ export class CaptureSystem extends createSystem({
 
     // Affordances in a tight arc within ±30° of center gaze (Meta comfort
     // guideline). Primary pair centered; secondary pair flanking; seeds left.
-    createTypeOrb(this.world, new Vector3(-0.06, 1.02, -0.66));
-    createMicOrb(this.world, new Vector3(0.06, 1.02, -0.66));
-    createTextScaleOrb(this.world, new Vector3(-0.20, 1.0, -0.70));
-    createOrganizeOrb(this.world, new Vector3(0.20, 1.0, -0.70));
-    createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.38, 1.22, -0.66));
-    createSeed(this.world, 'thesis', SEED_TITLES.thesis, new Vector3(-0.38, 1.06, -0.70));
-    createSeed(this.world, 'kingdom', SEED_TITLES.kingdom, new Vector3(-0.38, 0.9, -0.66));
+    createTypeOrb(this.world, new Vector3(-0.20, 0.90, -0.95));
+    if (isSpeechSupported()) createMicOrb(this.world, new Vector3(-0.48, 0.90, -0.95));
+    createTextScaleOrb(this.world, new Vector3(0.48, 0.90, -0.95));
+    createOrganizeOrb(this.world, new Vector3(0, 0.90, -0.95));
+    createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.74, 1.08, -1.50));
+    createSeed(this.world, 'thesis', SEED_TITLES.thesis, new Vector3(-0.74, .94, -1.50));
+    createSeed(this.world, 'kingdom', SEED_TITLES.kingdom, new Vector3(-0.74, .80, -1.50));
 
     this.queries.seedsPressed.subscribe('qualify', (entity) => {
       playOrbClick();
       this.dumpSeed(entity.getValue(SeedCard, 'setKey') ?? 'exam');
     });
     this.queries.typePressed.subscribe('qualify', () => {
+      if (!canCapture(getLoci(this.globals))) return;
       playOrbClick();
       getLoci(this.globals).requestKeyboard('', (text) => {
         this.spawnRaw(text);
@@ -141,8 +143,8 @@ export class CaptureSystem extends createSystem({
       }
     };
 
-    this.restorePalace();
     this.setupBrowserHud();
+    this.restorePalace();
     primeAudioOnFirstGesture();
 
     // Ambient drone fades in after first user gesture (audio context primed).
@@ -233,7 +235,7 @@ export class CaptureSystem extends createSystem({
 
   private dumpSeed(key: string): void {
     const loci = getLoci(this.globals);
-    if (loci.recallActive || loci.rewindActive || loci.crisActive) {
+    if (!canCapture(loci)) {
       return;
     }
     const thoughts = SEED_SETS[key];
@@ -263,7 +265,7 @@ export class CaptureSystem extends createSystem({
     }
     // Don't capture during quiz or timeline scrub.
     const loci = getLoci(this.globals);
-    if (loci.recallActive || loci.rewindActive) {
+    if (!canCapture(loci)) {
       return;
     }
     // The universal gate runs before anything else sees the thought.
@@ -275,10 +277,10 @@ export class CaptureSystem extends createSystem({
     this.noteCounter += 1;
     const id = `n${this.noteCounter}`;
     const azimuth = (Math.random() - 0.5) * 1.4;
-    const radius = 0.75 + Math.random() * 0.45;
+    const radius = 1.20 + Math.random() * 0.22;
     const position = new Vector3(
       Math.sin(azimuth) * radius,
-      0.95 + Math.random() * 0.55,
+      1.28 + Math.random() * 0.40,
       -Math.cos(azimuth) * radius,
     );
     createNote(this.world, id, trimmed, position);
@@ -338,6 +340,7 @@ export class CaptureSystem extends createSystem({
         recognition?.stop();
         return;
       }
+      if (!canCapture(getLoci(this.globals))) return;
       const rec = createRecognizer();
       if (rec == null) {
         setAppStatus('Voice capture needs a desktop browser — type instead.');
@@ -345,8 +348,8 @@ export class CaptureSystem extends createSystem({
       }
       rec.onresult = (event) => {
         const result = event.results[event.results.length - 1];
-        const transcript = result[0]?.transcript?.trim() ?? '';
-        if (result.isFinal && transcript !== '') {
+        const transcript = result?.[0]?.transcript?.trim() ?? '';
+        if (result?.isFinal && transcript !== '') {
           input.value = '';
           this.spawnRaw(transcript);
           this.scheduleAutoOrganize();
@@ -391,6 +394,7 @@ export class CaptureSystem extends createSystem({
       }
     });
     const clear = (): void => {
+      if (!window.confirm('Clear every thought in this palace? Export a backup first if you want to keep it.')) return;
       this.suppressExitFlush = true;
       clearPalace();
       location.reload();
@@ -399,8 +403,13 @@ export class CaptureSystem extends createSystem({
       exportPalace();
     };
     const helpToggle = (): void => {
+      getLoci(this.globals).helpActive = !getLoci(this.globals).helpActive;
+      if (getLoci(this.globals).crisActive || getLoci(this.globals).introActive || getLoci(this.globals).recallActive) { getLoci(this.globals).helpActive = false; return; }
       if (helpOverlay != null) {
         helpOverlay.classList.toggle('visible');
+        helpOverlay.setAttribute('aria-hidden', String(!getLoci(this.globals).helpActive));
+        if (getLoci(this.globals).helpActive) (helpOverlay.querySelector('[role=dialog]') as HTMLElement | null)?.focus({ preventScroll: true });
+        else helpBtn?.focus();
       }
     };
 
@@ -439,7 +448,8 @@ export class CaptureSystem extends createSystem({
       () => input.removeEventListener('keydown', keyDown),
       this.world.visibilityState.subscribe((state) => {
         const immersive = state !== VisibilityState.NonImmersive;
-        hud.style.display = immersive ? 'none' : 'flex';
+        hud.style.display = immersive ? 'none' : '';
+        document.body.classList.toggle('immersive', immersive);
       }),
     );
 
@@ -453,6 +463,7 @@ export class CaptureSystem extends createSystem({
     if (helpData != null) {
       const exportClick = (): void => exportPalace();
       const clearClick = (): void => {
+        if (!window.confirm('Clear every thought in this palace? Export a backup first if you want to keep it.')) return;
         this.suppressExitFlush = true;
         clearPalace();
         location.reload();

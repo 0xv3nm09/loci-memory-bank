@@ -9,21 +9,21 @@
 
 /** Card surfaces — dark glass, never tinted by cluster color. */
 export const GLASS = {
-  body: 0x1b2238,
+  body: 0x182335,
   ink: '#EDF1FA',
   inkDim: '#B9C2DB',
   rawRim: 0x6b6152,
-  rawRimIntensity: 0.26,
-  clusteredRimIntensity: 0.32,
+  rawRimIntensity: 0.06,
+  clusteredRimIntensity: 0.06,
   /** Panel surfaces — slightly lighter than cards for z-depth layering. */
   panelBody: 0x0e1428,
   panelEmissive: 0x1a2440,
-  panelEmissiveIntensity: 0.55,
+  panelEmissiveIntensity: 0.04,
   panelOpacity: 0.96,
   /** Button surfaces — UI affordances on panels. */
   buttonBody: 0x1c2745,
   buttonEmissive: 0x3a4b7a,
-  buttonEmissiveIntensity: 0.3,
+  buttonEmissiveIntensity: 0.04,
   /** Correct/incorrect feedback. */
   correctBody: 0x1d4a35,
   correctGlow: 0x2fbf6a,
@@ -67,6 +67,8 @@ export function accentForHue(hue: number): number {
 
 /** Semantic colors (stable across themes). */
 export const SEMANTIC = {
+  sage: 0xe8b879,
+  muted: 0x8a93a8,
   connection: 0x46c8e8, // lines: slightly desaturated cyan
   expand: 0x43d9a3,
   challenge: 0xf0b24f,
@@ -92,7 +94,7 @@ export const NEBULA_TINTS = [
 
 /** Interpolate between nebula tints based on time (cycle = ~40s). */
 export function nebulaTint(time: number): { r: number; g: number; b: number } {
-  const cycle = time * 0.025; // full cycle ≈ 40s per tint pair
+  const cycle = Math.max(0, Number.isFinite(time) ? time : 0) * 0.025; // full cycle ≈ 40s per tint pair
   const index = Math.floor(cycle) % NEBULA_TINTS.length;
   const next = (index + 1) % NEBULA_TINTS.length;
   const t = cycle - Math.floor(cycle);

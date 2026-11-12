@@ -78,9 +78,9 @@ export class WebcamHandSystem extends createSystem({}) {
       this.buildUI();
       void this.bootMediaPipe();
     };
-    window.addEventListener('pointerdown', startOnGesture, { once: true });
+    document.getElementById('webcam-toggle')?.addEventListener('click', startOnGesture, { once: true });
     this.cleanupFuncs.push(() => {
-      window.removeEventListener('pointerdown', startOnGesture);
+      document.getElementById('webcam-toggle')?.removeEventListener('click', startOnGesture);
       this.teardown();
     });
   }

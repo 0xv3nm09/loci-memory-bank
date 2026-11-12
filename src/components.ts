@@ -1,5 +1,6 @@
 import { defineComponents } from '@iwsdk/core';
 import {
+  ExperienceAction,
   AnswerCard,
   ClusterLabel,
   ConnectionLine,
@@ -21,6 +22,7 @@ import {
 } from './loci/components.js';
 
 export default defineComponents([
+  ExperienceAction,
   Note,
   SnapAnimation,
   SpawnAnimation,

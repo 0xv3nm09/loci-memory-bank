@@ -1,5 +1,7 @@
 import { createComponent, Types } from '@iwsdk/core';
 
+export const ExperienceAction = createComponent('ExperienceAction', { action: { type: Types.String, default: '' } });
+
 /** A single thought card in the palace. */
 export const Note = createComponent('Note', {
   id: { type: Types.String, default: '' },

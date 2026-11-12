@@ -3,40 +3,48 @@
   "units": "meters",
   "components": {
     "com.iwsdk.components.DomeGradient": {
-      "sky": [0.012, 0.016, 0.045, 1],
-      "equator": [0.045, 0.055, 0.13, 1],
-      "ground": [0.008, 0.01, 0.03, 1],
+      "sky": [
+        0.012,
+        0.016,
+        0.045,
+        1
+      ],
+      "equator": [
+        0.045,
+        0.055,
+        0.13,
+        1
+      ],
+      "ground": [
+        0.008,
+        0.01,
+        0.03,
+        1
+      ],
       "intensity": 1
     },
     "com.iwsdk.components.IBLGradient": {
-      "sky": [0.09, 0.1, 0.21, 1],
-      "equator": [0.11, 0.12, 0.24, 1],
-      "ground": [0.04, 0.045, 0.1, 1],
+      "sky": [
+        0.09,
+        0.1,
+        0.21,
+        1
+      ],
+      "equator": [
+        0.11,
+        0.12,
+        0.24,
+        1
+      ],
+      "ground": [
+        0.04,
+        0.045,
+        0.1,
+        1
+      ],
       "intensity": 1
     }
   },
   "resources": {},
-  "nodes": [
-    {
-      "id": "welcome-panel",
-      "name": "Welcome Panel",
-      "content": {
-        "type": "asset",
-        "asset": "welcome-panel"
-      },
-      "transform": {
-        "position": [0, 1.75, -1.25],
-        "scale": 0.32
-      },
-      "components": {
-        "RayInteractable": {},
-        "ScreenSpace": {
-          "top": "20px",
-          "left": "20px",
-          "width": "25vw",
-          "height": "40%"
-        }
-      }
-    }
-  ]
+  "nodes": []
 }

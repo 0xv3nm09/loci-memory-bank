@@ -12,6 +12,7 @@ import {
   Object3D,
   Points,
   PointsMaterial,
+  TorusGeometry,
   SphereGeometry,
   Vector3,
 } from 'three';
@@ -36,10 +37,10 @@ import {
   TypeOrb,
 } from './components.js';
 import { createTextLabel } from './text-label.js';
-import { GLASS, PARTICLE, ORB_COLORS, accentForHue } from './palette.js';
+import { GLASS, PARTICLE, ORB_COLORS, SEMANTIC, accentForHue } from './palette.js';
 
-export const CARD_W = 0.17;
-export const CARD_H = 0.115;
+export const CARD_W = 0.25;
+export const CARD_H = 0.15;
 const CARD_D = 0.012;
 
 let cardGeometry: RoundedBoxGeometry | null = null;
@@ -91,6 +92,7 @@ export function createNote(
     color: GLASS.body,
     emissive: new Color(GLASS.rawRim),
     emissiveIntensity: GLASS.rawRimIntensity,
+    toneMapped: false,
     roughness: 0.38,
     metalness: 0.15,
     transparent: true,
@@ -116,7 +118,7 @@ export function createNote(
   accentBar.visible = false;
   group.add(accentBar);
 
-  const label = createTextMesh(text, 0.022, GLASS.ink);
+  const label = createTextMesh(text, 0.020, GLASS.ink);
   label.position.z = CARD_D / 2 + 0.004;
   label.name = 'label';
   group.add(label);
@@ -153,8 +155,8 @@ export function setNoteTint(entity: Entity, hue: number, intensity: number): voi
   const material = card.material as MeshStandardMaterial;
   // Cluster color lives in the glow and the accent bar — never the body.
   const accent = accentForHue(hue);
-  material.emissive.set(accent);
-  material.emissiveIntensity = intensity;
+  material.emissive.set(GLASS.body);
+  material.emissiveIntensity = 0.02;
   const bar = entity.object3D?.getObjectByName('accent-bar') as Mesh | undefined;
   if (bar != null) {
     bar.visible = true;
@@ -201,13 +203,14 @@ export function createLine(
   const geometry = new CylinderGeometry(0.0022, 0.0022, 1, 6, 1, true);
   geometry.translate(0, 0.5, 0);
   const material = new MeshBasicMaterial({
-    color: 0x46c8e8,
+    color: SEMANTIC.connection,
     transparent: true,
     opacity: 0,
     blending: AdditiveBlending,
     depthWrite: false,
   });
   const mesh = new Mesh(geometry, material);
+  mesh.name = 'loci-connection';
   mesh.scale.set(1, 0.0001, 1);
   const entity = world.createTransformEntity(mesh);
   entity.addComponent(ConnectionLine, { fromId, toId, delay });
@@ -224,18 +227,18 @@ export function createSeed(
   group.name = `seed-${key}`;
 
   const material = new MeshStandardMaterial({
-    color: 0x2a3050,
-    emissive: new Color(0x3d5a8f),
-    emissiveIntensity: 0.35,
+    color: GLASS.buttonBody,
+    emissive: new Color(GLASS.buttonEmissive),
+    emissiveIntensity: 0.04,
     roughness: 0.5,
     metalness: 0.1,
   });
   const card = new Mesh(getCardGeometry(), material);
   card.name = 'card';
-  card.scale.setScalar(0.72);
+  card.scale.set(0.90, 0.55, 1);
   group.add(card);
 
-  const label = createTextMesh(title, 0.017, 0xcfe2ff);
+  const label = createTextMesh(title, 0.016, GLASS.inkDim);
   label.position.z = CARD_D / 2 + 0.002;
   group.add(label);
 
@@ -260,11 +263,12 @@ function makeOrb(
   group.name = name;
 
   const orb = new Mesh(
-    new SphereGeometry(0.026, 24, 18),
+    new SphereGeometry(0.031, 20, 14),
     new MeshStandardMaterial({
       color: colors.body,
       emissive: new Color(colors.emissive),
-      emissiveIntensity: 0.8,
+      emissiveIntensity: 0.08,
+      toneMapped: false,
       roughness: 0.22,
       metalness: 0.1,
       transparent: true,
@@ -274,9 +278,11 @@ function makeOrb(
   orb.name = 'card';
   orb.renderOrder = 4;
   group.add(orb);
+  const ring = new Mesh(new TorusGeometry(0.047, 0.0012, 6, 40), new MeshBasicMaterial({ color: colors.emissive, toneMapped: false }));
+  group.add(ring);
 
   const label = createTextMesh(labelText, 0.016, colors.label);
-  label.position.y = -0.055;
+  label.position.set(0, -0.074, 0.018);
   group.add(label);
 
   group.position.copy(position);
@@ -288,7 +294,7 @@ function makeOrb(
 }
 
 export function createOrganizeOrb(world: World, position: Vector3): Entity {
-  const { entity } = makeOrb(world, 'organize-orb', ORB_COLORS.organize, 'organize', position);
+  const { entity } = makeOrb(world, 'organize-orb', ORB_COLORS.organize, 'Organize', position);
   entity.addComponent(OrganizeOrb);
   return entity;
 }
@@ -320,7 +326,7 @@ export function createSuggestionBud(
   bud.renderOrder = 4;
   group.add(bud);
 
-  const glyph = createTextLabel(isExpand ? '+' : '?', 0.016, { maxWidth: 0.03, color: '#06131c' });
+  const glyph = createTextLabel(isExpand ? '+' : '!', 0.016, { maxWidth: 0.03, color: '#06131c' });
   glyph.position.z = 0.013;
   group.add(glyph);
 
@@ -329,6 +335,7 @@ export function createSuggestionBud(
     color: isExpand ? '#c9f5da' : '#ffe4c2',
   });
   bubble.name = 'bud-text';
+  bubble.userData.pinned = false;
   bubble.position.set(0, 0.09, 0.01);
   bubble.visible = false;
   group.add(bubble);
@@ -349,19 +356,19 @@ export function createTextScaleOrb(world: World, position: Vector3): Entity {
 }
 
 export function createMicOrb(world: World, position: Vector3): Entity {
-  const { entity } = makeOrb(world, 'mic-orb', ORB_COLORS.mic, 'mic', position);
+  const { entity } = makeOrb(world, 'mic-orb', ORB_COLORS.mic, 'Voice', position);
   entity.addComponent(MicOrb);
   return entity;
 }
 
 export function createTypeOrb(world: World, position: Vector3): Entity {
-  const { entity } = makeOrb(world, 'type-orb', ORB_COLORS.type, 'type', position);
+  const { entity } = makeOrb(world, 'type-orb', ORB_COLORS.type, 'Capture', position);
   entity.addComponent(TypeOrb);
   return entity;
 }
 
 export function createRecallOrb(world: World, position: Vector3): Entity {
-  const { entity } = makeOrb(world, 'recall-orb', ORB_COLORS.recall, 'recall', position);
+  const { entity } = makeOrb(world, 'recall-orb', ORB_COLORS.recall, 'Recall', position);
   entity.addComponent(RecallOrb);
   return entity;
 }
@@ -373,7 +380,7 @@ export function createClusterLabel(
   position: Vector3,
   clusterIndex: number,
 ): Entity {
-  const label = createTextMesh(text, 0.028, new Color(accentForHue(hue)).getStyle());
+  const label = createLabel(text, 0.023, new Color(accentForHue(hue)).getStyle(), 0.42);
   label.name = 'cluster-label';
   label.position.copy(position);
   facePlayer(label);

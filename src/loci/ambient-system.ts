@@ -21,7 +21,7 @@ const GRAB_SCALE = 1.12;
 
 /** Orb hover: slightly larger than note hover for discoverability. */
 const ORB_HOVER_SCALE = 1.15;
-const ORB_HOVER_GLOW_BOOST = 0.35;
+const ORB_HOVER_GLOW_BOOST = 0.08;
 
 /** Base glow for a note from its own state — hover/grab add on top. */
 function baseGlow(entity: import('@iwsdk/core').Entity): number {
@@ -68,24 +68,27 @@ export class AmbientSystem extends createSystem({
   }
 
   update(delta: number, time: number): void {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) time = 0;
     // ── Nebula color cycling on starfield ──
     const tint = nebulaTint(time);
     this.nebulaColor.setRGB(tint.r, tint.g, tint.b);
     if (this.starFar != null) {
-      this.starFar.rotateY(delta * 0.006);
+      this.starFar.rotateY(reduced ? 0 : delta * 0.006);
       // Modulate far star opacity with slow breathe
       const farMat = this.starFar.material as PointsMaterial;
       farMat.opacity = 0.35 + Math.sin(time * 0.15) * 0.08;
     }
     if (this.starNear != null) {
-      this.starNear.rotateY(delta * 0.012); // near stars drift faster
+      this.starNear.rotateY(reduced ? 0 : delta * 0.012); // near stars drift faster
       // Twinkle: modulate near star opacity more aggressively
       const nearMat = this.starNear.material as PointsMaterial;
       nearMat.opacity = 0.55 + Math.sin(time * 0.8) * 0.12;
     }
 
     const loci = getLoci(this.globals);
-    const feedbackAllowed = !loci.recallActive && !loci.rewindActive;
+    const feedbackAllowed = !loci.recallActive && !loci.rewindActive && !loci.crisActive && !loci.introActive;
+    if (reduced) time = 0;
     const lerp = Math.min(1, delta * 12);
 
     // ── Particle bursts: animate and clean up ──
@@ -125,7 +128,7 @@ export class AmbientSystem extends createSystem({
       const elapsed = (entity.getValue(SpawnAnimation, 'elapsed') ?? 0) + delta;
       entity.setValue(SpawnAnimation, 'elapsed', elapsed);
       const duration = entity.getValue(SpawnAnimation, 'duration') ?? 0.45;
-      const t = Math.min(1, elapsed / duration);
+      const t = reduced ? 1 : Math.min(1, elapsed / duration);
       const eased = easeOutQuart(t);
       const object = entity.object3D;
       if (object == null) {
@@ -179,7 +182,7 @@ export class AmbientSystem extends createSystem({
         if (card != null) {
           const material = card.material as MeshStandardMaterial;
           const target =
-            baseGlow(entity) + (grabbed ? 0.45 : hovered ? 0.25 : 0);
+            baseGlow(entity) + (grabbed ? 0.09 : hovered ? 0.04 : 0);
           material.emissiveIntensity +=
             (target - material.emissiveIntensity) * lerp;
         }
@@ -228,7 +231,7 @@ export class AmbientSystem extends createSystem({
       const card = entity.object3D?.getObjectByName('card') as Mesh | undefined;
       if (card != null) {
         const material = card.material as MeshStandardMaterial;
-        material.emissiveIntensity = 0.3 + Math.sin(time * 1.4) * 0.12;
+        material.emissiveIntensity = 0.04;
       }
     }
 
@@ -284,7 +287,7 @@ export class AmbientSystem extends createSystem({
       const hovered = entity.hasComponent(Hovered);
       const bubble = object.getObjectByName('bud-text');
       if (bubble != null) {
-        bubble.visible = hovered;
+        bubble.visible = hovered || bubble.userData.pinned === true;
       }
     }
   }

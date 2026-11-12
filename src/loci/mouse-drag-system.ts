@@ -1,6 +1,6 @@
 import { createSystem, VisibilityState, type Entity } from '@iwsdk/core';
 import { Mesh, MeshStandardMaterial, Object3D, Plane, Raycaster, Vector3, Vector2 } from 'three';
-import { Note, SnapAnimation } from './components.js';
+import { Note, SnapAnimation, RewindHandle } from './components.js';
 import { playPlaceClick } from './audio.js';
 import { getLoci } from './globals.js';
 import { schedulePalaceSave } from './palace-store.js';
@@ -18,6 +18,7 @@ export class MouseDragSystem extends createSystem({}) {
   private hitPoint = new Vector3();
   private grabOffset = new Vector3();
   private dragEntity: Entity | null = null;
+  private draggingRewind = false;
 
   init(): void {
     const canvas = this.renderer.domElement;
@@ -27,13 +28,14 @@ export class MouseDragSystem extends createSystem({}) {
         return;
       }
       const loci = getLoci(this.globals);
-      if (loci.rewindActive) {
+      if (loci.recallActive || loci.crisActive || loci.introActive || loci.keyboardActive || loci.helpActive) {
         return;
       }
       if (this.world.visibilityState.peek() !== VisibilityState.NonImmersive) {
         return;
       }
-      const entity = this.pickNote(event);
+      const entity = loci.rewindActive ? this.pickRewind(event) : this.pickNote(event);
+      this.draggingRewind = loci.rewindActive;
       const object = entity?.object3D;
       if (entity == null || object == null) {
         return;
@@ -65,6 +67,7 @@ export class MouseDragSystem extends createSystem({}) {
         if (object == null) {
           return;
         }
+        if (this.draggingRewind) { object.position.x = Math.max(-.24, Math.min(.24, this.hitPoint.x + this.grabOffset.x)); return; }
         object.position.copy(this.hitPoint).add(this.grabOffset);
         object.lookAt(0, object.position.y, 0.001);
       }
@@ -93,7 +96,7 @@ export class MouseDragSystem extends createSystem({}) {
           this.dragEntity.removeComponent(SnapAnimation);
         }
         playPlaceClick();
-        schedulePalaceSave(getLoci(this.globals));
+        if (!this.draggingRewind) schedulePalaceSave(getLoci(this.globals));
       } catch {
         // Entity destroyed mid-drag.
       }
@@ -123,13 +126,29 @@ export class MouseDragSystem extends createSystem({}) {
     );
   }
 
+  private pickRewind(event: PointerEvent): Entity | null {
+    this.updatePointer(event);
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const knob = this.world.scene.getObjectByName('rewind-knob');
+    if (!knob) return null;
+    const hit = this.raycaster.intersectObject(knob, true)[0];
+    if (!hit) return null;
+    this.hitPoint.copy(hit.point);
+    for (const system of this.world.getSystems()) {
+      for (const query of Object.values(system.queries)) {
+        for (const entity of query.entities) if (entity.hasComponent(RewindHandle)) return entity;
+      }
+    }
+    return null;
+  }
+
   private pickNote(event: PointerEvent): Entity | null {
     this.updatePointer(event);
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const loci = getLoci(this.globals);
     const roots: Object3D[] = [];
     for (const entity of loci.noteById.values()) {
-      if (entity.object3D != null) {
+      if (entity.object3D != null && entity.object3D.visible) {
         roots.push(entity.object3D);
       }
     }

@@ -6,6 +6,7 @@ import {
   SRGBColorSpace,
   LinearFilter,
 } from 'three';
+import { GLASS } from './palette.js';
 
 const PX_PER_METER = 1536;
 const LINE_HEIGHT = 1.26;
@@ -109,15 +110,16 @@ export function createTextLabel(
   fontSize: number,
   options: TextLabelOptions,
 ): Mesh {
-  const { maxWidth, maxLines = 4, color = '#eef1ff', align = 'center' } = options;
+  const { maxWidth, maxLines = 4, color = GLASS.ink, align = 'center' } = options;
   const px = Math.max(12, Math.round(fontSize * PX_PER_METER));
   const weight = options.fontWeight ?? 500;
-  const useShadow = options.shadow !== false;
+  const useShadow = options.shadow === true;
   const maxWidthPx = Math.round(maxWidth * PX_PER_METER);
   const usablePx = maxWidthPx - 24;
 
   const measure = document.createElement('canvas');
-  const mctx = measure.getContext('2d')!;
+  const mctx = measure.getContext('2d');
+  if (mctx == null) throw new Error('Text canvas unavailable');
   mctx.font = fontSpec(px, weight);
   const lines = fitLines(mctx, text, usablePx, maxLines);
 
@@ -131,11 +133,12 @@ export function createTextLabel(
   const lineHeightPx = Math.round(drawPx * LINE_HEIGHT);
 
   const canvasWidth = maxWidthPx;
-  const canvasHeight = Math.max(lineHeightPx, lines.length * lineHeightPx);
+  const canvasHeight = Math.max(lineHeightPx, maxLines * lineHeightPx);
   const canvas = document.createElement('canvas');
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d');
+  if (ctx == null) throw new Error('Text canvas unavailable');
   ctx.font = fontSpec(drawPx, weight);
   ctx.fillStyle = color;
   ctx.textBaseline = 'middle';
@@ -148,14 +151,14 @@ export function createTextLabel(
   // Faux-bold: stroke behind fill thickens glyphs when only Regular weight is
   // loaded.  The stroke width scales with requested weight so 500 is neutral
   // and 600–700 adds visible heft.
-  const fauxBold = weight > 400;
+  const fauxBold = false;
   if (fauxBold) {
     ctx.strokeStyle = color;
     ctx.lineWidth = Math.max(0.5, drawPx * (weight - 400) / 600);
     ctx.lineJoin = 'round';
   }
   lines.forEach((line, index) => {
-    const y = lineHeightPx * (index + 0.5);
+    const y = (canvasHeight - lines.length * lineHeightPx) / 2 + lineHeightPx * (index + 0.5);
     const x = align === 'center' ? canvasWidth / 2 : 12;
     if (fauxBold) { ctx.strokeText(line, x, y); }
     ctx.fillText(line, x, y);
@@ -174,13 +177,16 @@ export function createTextLabel(
       map: texture,
       transparent: true,
       depthWrite: false,
+      toneMapped: false,
     }),
   );
   mesh.renderOrder = 5;
+  mesh.userData.labelText = text;
   mesh.userData.isLociLabel = true;
   mesh.scale.setScalar(getTextScale());
   // Dynamic labels (e.g. the keyboard input field) redraw in place.
   mesh.userData.redraw = (newText: string): void => {
+    mesh.userData.labelText = newText;
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     ctx.font = fontSpec(drawPx, weight);
     ctx.fillStyle = color;
@@ -198,7 +204,7 @@ export function createTextLabel(
     }
     const redrawnLines = fitLines(ctx, newText, usablePx, maxLines);
     redrawnLines.forEach((line, index) => {
-      const y = lineHeightPx * (index + 0.5);
+      const y = (canvasHeight - redrawnLines.length * lineHeightPx) / 2 + lineHeightPx * (index + 0.5);
       const x = align === 'center' ? canvasWidth / 2 : 12;
       if (fauxBold) { ctx.strokeText(line, x, y); }
       ctx.fillText(line, x, y);

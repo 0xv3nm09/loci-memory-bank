@@ -31,6 +31,7 @@ export class CrisisPanelSystem extends createSystem({
     }
     const loci = getLoci(this.globals);
     loci.crisActive = true;
+    loci.cancelAutoOrganize();
 
     // Calm audio cue — presence and care, never an alarm.
     playCalmTone();
@@ -56,7 +57,7 @@ export class CrisisPanelSystem extends createSystem({
       group.add(object);
     };
 
-    place(createLabel('That sounds really heavy.', 0.022, SEMANTIC.promptText, 0.8), 0.27);
+    place(createLabel('You are not alone.', 0.029, SEMANTIC.promptText, 0.8), 0.27);
     place(
       createLabel(
         'You do not have to carry this alone, and nothing here needs to be organized right now. Please reach out to a real person:',
@@ -64,12 +65,12 @@ export class CrisisPanelSystem extends createSystem({
         SEMANTIC.hintText,
         0.8,
       ),
-      0.19,
+      0.17,
     );
-    place(createLabel('findahelpline.com - free, confidential helplines in your country', 0.014, SEMANTIC.promptText, 0.8), 0.09);
-    place(createLabel('US & Canada: call or text 988 (Suicide & Crisis Lifeline)', 0.018, '#ffffff', 0.8), 0.045);
-    place(createLabel('In immediate danger? Contact your local emergency services.', 0.014, SEMANTIC.promptText, 0.8), 0.0);
-    place(createLabel('Tell someone you trust. You matter.', 0.014, SEMANTIC.calmAccent, 0.8), -0.045);
+    place(createLabel('findahelpline.com - free, confidential helplines in your country', 0.014, SEMANTIC.promptText, 0.8), 0.07);
+    place(createLabel('US & Canada: call or text 988', 0.022, SEMANTIC.promptText, 0.8), 0.02);
+    place(createLabel('In immediate danger? Contact your local emergency services.', 0.014, SEMANTIC.promptText, 0.8), -0.05);
+    place(createLabel('Tell someone you trust. You matter.', 0.014, SEMANTIC.calmAccent, 0.8), -0.12);
 
     const dismissGroup = new Group();
     const button = new Mesh(
@@ -83,14 +84,15 @@ export class CrisisPanelSystem extends createSystem({
     );
     button.name = 'card';
     dismissGroup.add(button);
-    const buttonLabel = createLabel("I'm okay — continue", 0.0135, '#dfe6ff', 0.27);
+    const buttonLabel = createLabel('Back to palace', 0.018, SEMANTIC.promptText, 0.27);
     buttonLabel.position.z = 0.008;
     dismissGroup.add(buttonLabel);
     place(dismissGroup, -0.27);
 
-    group.position.set(0, 1.42, -0.8);
+    group.position.set(0, 1.48, -0.68);
     group.lookAt(0, 1.42, 0.001);
     this.panelEntity = this.world.createTransformEntity(group);
+    group.remove(dismissGroup);
     // Dismiss via the button only — not the whole panel.
     const dismissEntity = this.world.createTransformEntity(dismissGroup, { parent: this.panelEntity });
     dismissEntity.addComponent(CrisisDismiss);

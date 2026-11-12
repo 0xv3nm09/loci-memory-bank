@@ -10,6 +10,9 @@ export interface LociGlobals {
   requestKeyboard: (text: string, commit: (text: string) => void) => void;
   cancelAutoOrganize: () => void;
   hideWelcome: () => void;
+  introActive: boolean;
+  keyboardActive: boolean;
+  helpActive: boolean;
   recallActive: boolean;
   rewindActive: boolean;
   crisActive: boolean;
@@ -31,6 +34,9 @@ export function createLociGlobals(): LociGlobals {
     requestKeyboard: () => {},
     cancelAutoOrganize: () => {},
     hideWelcome: () => {},
+    introActive: false,
+    keyboardActive: false,
+    helpActive: false,
     recallActive: false,
     rewindActive: false,
     crisActive: false,
