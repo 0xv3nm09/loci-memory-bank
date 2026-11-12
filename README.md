@@ -22,6 +22,7 @@ session.
 **Docs:** [Architecture & data flow](docs/ARCHITECTURE.md) ·
 [Diagram set](docs/DIAGRAMS.md) · [Evidence map](docs/EVIDENCE.md) (criteria →
 proof) · [Sage model card](docs/MODEL_CARD.md) · [Safety design](docs/SAFETY.md) ·
+[How AI was used](docs/AI.md) (in the product + in the build) ·
 [Build feedback](docs/FEEDBACK.md) (every issue faced and its fix) ·
 [Prize-targeting notes](prizes/README.md)
 
