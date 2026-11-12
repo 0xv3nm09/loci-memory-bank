@@ -24,6 +24,8 @@ export const GLASS = {
   buttonBody: 0x1c2745,
   buttonEmissive: 0x3a4b7a,
   buttonEmissiveIntensity: 0.04,
+  border: 0x536078,
+  recallBorder: 0xb8a4ee,
   /** Correct/incorrect feedback. */
   correctBody: 0x1d4a35,
   correctGlow: 0x2fbf6a,
@@ -117,7 +119,7 @@ export const ORB_COLORS = {
   type:     { body: 0xaac6ff, emissive: 0x4a6fd0, label: '#c9d8ff' },
   mic:      { body: 0xffc9c9, emissive: 0xd05858, label: '#ffd9d9' },
   textScale:{ body: 0xd8e8d0, emissive: 0x5f9f6f, label: '#d8f0dc' },
-  rewind:   { body: 0xcfc2ff, emissive: 0x7a5fd0, label: '#e2daff' },
+  rewind:   { body: 0x9cbff1, emissive: 0x4a6fd0, label: '#c9d8ff' },
 } as const;
 
 /* ── HUD gradient pairs — CSS gradient stops for buttons ── */

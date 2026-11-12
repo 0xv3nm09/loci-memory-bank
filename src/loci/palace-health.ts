@@ -27,7 +27,7 @@ function refresh(): void {
   }
 
   const noteIds = palace.notes.map(n => n.id);
-  const due = palace.recall ? countDue(palace.recall, noteIds) : 0;
+  const due = countDue(palace.recall ?? {}, noteIds);
 
   notesEl.textContent = `${total} note${total !== 1 ? 's' : ''}`;
 

@@ -1,7 +1,8 @@
 import type { LociGlobals } from './globals.js';
 import { Note } from './components.js';
+import { currentMode, palaceKey } from './modes.js';
 
-const KEY = 'loci.palace.v1';
+const KEY = palaceKey(currentMode());
 
 export interface SavedNote {
   id: string;
@@ -96,7 +97,7 @@ export function exportPalace(): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `loci-palace-${new Date().toISOString().slice(0, 10)}.json`;
+  anchor.download = `loci-${currentMode()}-palace-${new Date().toISOString().slice(0, 10)}.json`;
   anchor.click();
   URL.revokeObjectURL(url);
 }

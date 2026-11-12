@@ -4,11 +4,11 @@ import {
   MeshBasicMaterial,
   PlaneGeometry,
   SRGBColorSpace,
-  LinearFilter,
+  LinearFilter, LinearMipmapLinearFilter,
 } from 'three';
 import { GLASS } from './palette.js';
 
-const PX_PER_METER = 1536;
+const PX_PER_METER = 2048;
 const LINE_HEIGHT = 1.26;
 
 // Global text scale (accessibility). Module-level: the toggle orb updates it
@@ -166,8 +166,9 @@ export function createTextLabel(
 
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
-  texture.minFilter = LinearFilter;
-  texture.generateMipmaps = false;
+  texture.magFilter = LinearFilter;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
 
   const worldW = maxWidth;
   const worldH = canvasHeight / PX_PER_METER;

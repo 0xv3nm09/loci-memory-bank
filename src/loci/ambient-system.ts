@@ -277,7 +277,7 @@ export class AmbientSystem extends createSystem({
       const bud = object.getObjectByName('card') as Mesh | undefined;
       if (bud != null) {
         const material = bud.material as MeshStandardMaterial;
-        material.emissiveIntensity = 0.65 + Math.sin(time * 2.0 + object.position.x * 5) * 0.25;
+        material.emissiveIntensity = 0.08;
       }
       // Gentle scale breathe — subtle and ambient.
       const pulse = 1 + Math.sin(time * 1.6 + object.position.y * 8) * 0.04;

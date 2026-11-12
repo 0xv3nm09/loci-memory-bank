@@ -100,7 +100,7 @@ export class RewindSystem extends createSystem({
     const nowGroup = new Group();
     nowGroup.name = 'rewind-now-orb';
     const nowOrb = new Mesh(
-      new RoundedBoxGeometry(0.10, 0.05, 0.012, 1, 0.008),
+      new RoundedBoxGeometry(0.18, 0.055, 0.012, 1, 0.008),
       new MeshStandardMaterial({
         color: GLASS.buttonBody,
         emissive: new Color(GLASS.buttonEmissive),
@@ -110,10 +110,10 @@ export class RewindSystem extends createSystem({
     );
     nowOrb.name = 'card';
     nowGroup.add(nowOrb);
-    const nowLabel = createLabel('Now', 0.015, SEMANTIC.promptText, 0.05);
+    const nowLabel = createLabel('Back to now', 0.015, SEMANTIC.promptText, 0.16);
     nowLabel.position.z = 0.008;
     nowGroup.add(nowLabel);
-    nowGroup.position.set(DIAL_POS.x - TRACK_HALF - 0.09, DIAL_POS.y, DIAL_POS.z);
+    nowGroup.position.set(DIAL_POS.x - TRACK_HALF - 0.14, DIAL_POS.y, DIAL_POS.z);
     const nowEntity = this.world.createTransformEntity(nowGroup);
     nowEntity.addComponent(RewindNow);
     nowEntity.addComponent(RayInteractable);
@@ -203,7 +203,7 @@ export class RewindSystem extends createSystem({
       return;
     }
     const loci = getLoci(this.globals);
-    this.setStatus(`Rewinding — ${agoLabel(snapshot.at)}.`);
+    this.setStatus(`History ${index+1} / ${this.history.length} · ${agoLabel(snapshot.at)}.`);
 
     // Build a lookup map so each note is O(1) instead of O(n) per find().
     const savedById = new Map(snapshot.notes.map((n) => [n.id, n]));

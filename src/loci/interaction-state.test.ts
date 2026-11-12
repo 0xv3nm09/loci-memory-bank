@@ -6,5 +6,6 @@ describe('capture locks', () => {
   it('blocks notes during Recall', () => expect(canCapture({ ...free, recallActive: true })).toBe(false));
   it('blocks notes during Rewind', () => expect(canCapture({ ...free, rewindActive: true })).toBe(false));
   it('blocks notes during the opening story', () => expect(canCapture({ ...free, introActive: true })).toBe(false));
+  it('blocks notes while help is open', () => expect(canCapture({ ...free, helpActive: true })).toBe(false));
   it('admits notes in the ordinary palace', () => expect(canCapture(free)).toBe(true));
 });

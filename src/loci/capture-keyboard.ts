@@ -5,6 +5,7 @@ import { KeyboardKey } from './components.js';
 import { createLabel } from './note-factory.js';
 import { getLoci } from './globals.js';
 import { GLASS, SEMANTIC } from './palette.js';
+import { frame } from './spatial-ui.js';
 
 const KEY_W = 0.052;
 const KEY_H = 0.047;
@@ -103,13 +104,15 @@ export class KeyboardSystem extends createSystem({
       }),
     );
     group.add(backdrop);
+    group.add(frame(.65,.44,SEMANTIC.connection));
 
     const fieldPanel = new Mesh(
       new RoundedBoxGeometry(0.57, 0.060, 0.006, 1, 0.008),
       new MeshStandardMaterial({
-        color: 0x10162b,
-        emissive: new Color(0x2a3557),
-        emissiveIntensity: 0.5,
+        color: GLASS.panelBody,
+        emissive: new Color(GLASS.panelEmissive),
+        emissiveIntensity: GLASS.panelEmissiveIntensity,
+        toneMapped: false,
         roughness: 0.6,
       }),
     );
@@ -160,14 +163,16 @@ export class KeyboardSystem extends createSystem({
           ? this.keyGeometry
           : new RoundedBoxGeometry(KEY_W * widthSteps, KEY_H, 0.008, 1, 0.008);
       const material = new MeshStandardMaterial({
-        color: GLASS.buttonBody,
+        color: char==='✓' ? GLASS.correctBody : GLASS.buttonBody,
         emissive: new Color(GLASS.buttonEmissive),
         emissiveIntensity: GLASS.buttonEmissiveIntensity,
         roughness: 0.42,
+        toneMapped: false,
       });
       const key = new Mesh(geometry, material);
       key.name = 'card';
       keyGroup.add(key);
+      keyGroup.add(frame(KEY_W*widthSteps,KEY_H,char==='✓' ? SEMANTIC.expand : GLASS.border));
       const keyLabel = createLabel(
         label,
         label.length > 2 ? 0.012 : 0.020,

@@ -12,7 +12,7 @@ npm test
 npm run build
 ```
 
-The Quest app stays separate from `web/`. Its existing single-palace browser storage, clustering fallback and strength-based Recall rules are preserved; this redesign does not add the companion's three modes or date-based spaced repetition.
+The Quest app stays separate from `web/`. Think preserves the original saved palace. Grow and Imagine have independent saved notes, clusters, Recall records and history. Switching modes saves and reloads the isolated Quest runtime. The original clustering fallback and strength-based Recall rules are preserved; date-based spaced repetition has not been added.
 
 ## Verified
 - Desktop clicks through Begin, story, capture, local grouping, Recall answers/results, keyboard opening, help/export, text-size controls and reload.
@@ -21,7 +21,9 @@ The Quest app stays separate from `web/`. Its existing single-palace browser sto
 - Rewind toggles and actual mouse dragging work, including reduced-motion mode.
 - Phone opening checked at 390 × 844; returning browser shell checked at 320 × 568, 390 × 844 and 1280 × 900.
 - Genuine immersive emulator entry and exit; no old white welcome panel or uncaught page errors.
-- Five capture-lock tests, companion regression tests and standalone production compilation pass.
+- Thirteen Quest mode/capture-lock tests, companion regression tests and standalone production compilation pass.
+- Grouped cards now have semantic colored borders; Recall uses numbered choices, low-glow feedback and explicit correct/try-again symbols. Keyboard, help, crisis and results surfaces use consistent frames.
+- Small-text fragmentation was reproduced on a phone viewport, then improved with mipmapped text textures, higher resolution, a sharper browser render and larger opening labels.
 
 ## Still requires external verification
 Physical Quest comfort, controller/hand targeting, actual microphone recognition, audible quality and headset performance. Voice uses Web Speech where available, with typing on unsupported Quest browsers. The existing remote model currently falls back to local grouping in the tested browser due to CORS. Hosting/deployment is separate and not repaired by this source update. IWSDK production chunks remain large.

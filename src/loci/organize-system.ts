@@ -253,7 +253,7 @@ export class OrganizeSystem extends createSystem({
         this.world,
         meta.label,
         meta.hue,
-        new Vector3(meta.center.x, meta.center.y + gridHalfHeight(meta.count) + 0.1, meta.center.z + 0.02),
+        new Vector3(meta.center.x, meta.center.y + gridHalfHeight(meta.count) + 0.14, meta.center.z + 0.02),
         clusterIndex,
       );
     });

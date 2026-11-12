@@ -37,6 +37,7 @@ import {
   TypeOrb,
 } from './components.js';
 import { createTextLabel } from './text-label.js';
+import { frame, surface } from './spatial-ui.js';
 import { GLASS, PARTICLE, ORB_COLORS, SEMANTIC, accentForHue } from './palette.js';
 
 export const CARD_W = 0.25;
@@ -103,6 +104,7 @@ export function createNote(
   card.renderOrder = 2;
   group.add(card);
 
+  group.add(frame(CARD_W, CARD_H));
   // Top accent bar — reveals on cluster assignment with a colored glow.
   const accentBar = new Mesh(
     new BoxGeometry(CARD_W * 0.78, 0.006, 0.002),
@@ -157,6 +159,8 @@ export function setNoteTint(entity: Entity, hue: number, intensity: number): voi
   const accent = accentForHue(hue);
   material.emissive.set(GLASS.body);
   material.emissiveIntensity = 0.02;
+  const border = entity.object3D?.getObjectByName('surface-border') as Mesh | undefined;
+  if (border) (border.material as MeshBasicMaterial).color.set(accent);
   const bar = entity.object3D?.getObjectByName('accent-bar') as Mesh | undefined;
   if (bar != null) {
     bar.visible = true;
@@ -187,6 +191,8 @@ export function applyNoteBaseLook(entity: Entity): void {
     material.emissive.set(GLASS.rawRim);
     material.emissiveIntensity = GLASS.rawRimIntensity;
     material.color.set(GLASS.body);
+    const border=entity.object3D?.getObjectByName('surface-border') as Mesh | undefined;
+    if (border) (border.material as MeshBasicMaterial).color.set(GLASS.border);
     const bar = entity.object3D?.getObjectByName('accent-bar') as Mesh | undefined;
     if (bar != null) {
       bar.visible = false;
@@ -313,9 +319,9 @@ export function createSuggestionBud(
   const bud = new Mesh(
     new SphereGeometry(0.020, 20, 14),
     new MeshStandardMaterial({
-      color: isExpand ? 0x8fe8b0 : 0xf0c98a,
-      emissive: new Color(isExpand ? 0x2fbf6a : 0xbf7a2f),
-      emissiveIntensity: 0.85,
+      color: isExpand ? SEMANTIC.expand : SEMANTIC.challenge,
+      emissive: new Color(isExpand ? SEMANTIC.expand : SEMANTIC.challenge),
+      emissiveIntensity: 0.08,
       roughness: 0.28,
       metalness: 0.08,
       transparent: true,
@@ -330,13 +336,15 @@ export function createSuggestionBud(
   glyph.position.z = 0.013;
   group.add(glyph);
 
-  const bubble = createTextLabel(text, 0.0125, {
-    maxWidth: 0.25,
-    color: isExpand ? '#c9f5da' : '#ffe4c2',
-  });
+  const bubble = new Group();
+  bubble.add(frame(.34, .16, isExpand ? SEMANTIC.expand : SEMANTIC.challenge));
+  bubble.add(surface(.34, .16));
+  const bubbleText = createLabel(`${isExpand ? '+ Suggestion' : '! Challenge'}\n${text}`, .016, GLASS.ink, .30);
+  bubbleText.position.z = .014;
+  bubble.add(bubbleText);
   bubble.name = 'bud-text';
   bubble.userData.pinned = false;
-  bubble.position.set(0, 0.09, 0.01);
+  bubble.position.set(0, 0.12, 0.03);
   bubble.visible = false;
   group.add(bubble);
 
@@ -380,7 +388,7 @@ export function createClusterLabel(
   position: Vector3,
   clusterIndex: number,
 ): Entity {
-  const label = createLabel(text, 0.023, new Color(accentForHue(hue)).getStyle(), 0.42);
+  const label = createLabel(text, 0.024, new Color(accentForHue(hue)).getStyle(), 0.42);
   label.name = 'cluster-label';
   label.position.copy(position);
   facePlayer(label);

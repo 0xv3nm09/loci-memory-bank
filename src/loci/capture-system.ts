@@ -1,6 +1,7 @@
 import { createSystem, Pressed, VisibilityState } from '@iwsdk/core';
 import { Vector3 } from 'three';
 import { canCapture } from './interaction-state.js';
+import { currentMode, MODES, parseMode } from './modes.js';
 import { Note, SeedCard } from './components.js';
 import {
   applyNoteBaseLook,
@@ -35,6 +36,7 @@ import {
 } from './palace-store.js';
 
 export const SEED_SETS: Record<string, string[]> = {
+  grow: ['A short morning walk helps me reset', 'Make room for a daily walk', 'Practice one small act of kindness', 'I can try again with patience', 'Notice one thing I am grateful for'],
   exam: [
     'Review the photosynthesis equations for biology',
     'The Krebs cycle biology steps still confuse me',
@@ -62,6 +64,7 @@ const SEED_TITLES: Record<string, string> = {
   exam: 'Exam tomorrow',
   thesis: 'Thesis chaos',
   kingdom: 'A kingdom',
+  grow: 'Small steps',
 };
 
 export class CaptureSystem extends createSystem({
@@ -101,7 +104,7 @@ export class CaptureSystem extends createSystem({
     createTextScaleOrb(this.world, new Vector3(0.48, 0.90, -0.95));
     createOrganizeOrb(this.world, new Vector3(0, 0.90, -0.95));
     createSeed(this.world, 'exam', SEED_TITLES.exam, new Vector3(-0.74, 1.08, -1.50));
-    createSeed(this.world, 'thesis', SEED_TITLES.thesis, new Vector3(-0.74, .94, -1.50));
+    createSeed(this.world, 'grow', SEED_TITLES.grow, new Vector3(-0.74, .94, -1.50));
     createSeed(this.world, 'kingdom', SEED_TITLES.kingdom, new Vector3(-0.74, .80, -1.50));
 
     this.queries.seedsPressed.subscribe('qualify', (entity) => {
@@ -145,6 +148,21 @@ export class CaptureSystem extends createSystem({
 
     this.setupBrowserHud();
     this.restorePalace();
+    const mode=currentMode();
+    const input=document.getElementById('note-input') as HTMLInputElement | null;
+    if (input) input.placeholder=MODES[mode].prompt;
+    document.body.dataset.mode=mode;
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-palace-mode]')) {
+      button.setAttribute('aria-pressed',String(button.dataset.palaceMode===mode));
+      const switchMode=()=>{
+        const next=parseMode(button.dataset.palaceMode ?? null);
+        if (next===mode || !canCapture(loci) || loci.keyboardActive) return;
+        loci.cancelAutoOrganize();writePalaceSave(loci);this.suppressExitFlush=true;
+        localStorage.setItem('loci.quest.mode',next);location.reload();
+      };
+      button.addEventListener('click',switchMode);
+      this.cleanupFuncs.push(()=>button.removeEventListener('click',switchMode));
+    }
     primeAudioOnFirstGesture();
 
     // Ambient drone fades in after first user gesture (audio context primed).
@@ -404,7 +422,7 @@ export class CaptureSystem extends createSystem({
     };
     const helpToggle = (): void => {
       getLoci(this.globals).helpActive = !getLoci(this.globals).helpActive;
-      if (getLoci(this.globals).crisActive || getLoci(this.globals).introActive || getLoci(this.globals).recallActive) { getLoci(this.globals).helpActive = false; return; }
+      if (getLoci(this.globals).crisActive || getLoci(this.globals).introActive || getLoci(this.globals).recallActive || getLoci(this.globals).keyboardActive || getLoci(this.globals).rewindActive) { getLoci(this.globals).helpActive = false; return; }
       if (helpOverlay != null) {
         helpOverlay.classList.toggle('visible');
         helpOverlay.setAttribute('aria-hidden', String(!getLoci(this.globals).helpActive));

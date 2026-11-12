@@ -6,6 +6,7 @@ import { getLoci } from './globals.js';
 import { createLabel } from './note-factory.js';
 import { playCalmTone } from './audio.js';
 import { GLASS, SEMANTIC } from './palette.js';
+import { frame } from './spatial-ui.js';
 
 /**
  * The 3D crisis surface — the one feature that must exist in-headset.
@@ -51,6 +52,7 @@ export class CrisisPanelSystem extends createSystem({
       }),
     );
     group.add(backdrop);
+    group.add(frame(.92,.72,SEMANTIC.sage));
 
     const place = (object: import('three').Object3D, y: number): void => {
       object.position.set(0, y, 0.012);

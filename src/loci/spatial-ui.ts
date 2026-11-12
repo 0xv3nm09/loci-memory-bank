@@ -4,6 +4,14 @@ import { RayInteractable, type Entity, type World } from '@iwsdk/core';
 import { GLASS, SEMANTIC } from './palette.js';
 import { createTextLabel } from './text-label.js';
 
+/** A thin rounded perimeter, shared by spatial cards and modal surfaces. */
+export function frame(width: number, height: number, color = GLASS.border): Mesh {
+  const outline = surface(width + 0.004, height + 0.004, color);
+  outline.name = 'surface-border';
+  outline.position.z = -0.008;
+  return outline;
+}
+
 /** All spatial surfaces share a low-emission, legible material. */
 export function surface(width: number, height: number, color = GLASS.panelBody): Mesh {
   const mesh = new Mesh(new RoundedBoxGeometry(width, height, 0.012, 2, 0.012), new MeshBasicMaterial({ color, toneMapped: false }));
@@ -17,6 +25,7 @@ export function text(value: string, width: number, size = 0.022, color = SEMANTI
 
 export function spatialButton(world: World, label: string, position: Vector3, width = 0.18, color = GLASS.buttonBody, parent?: Entity): Entity {
   const group = new Group();
+  group.add(frame(width, 0.065));
   group.add(surface(width, 0.065, color));
   const caption = text(label, width - 0.018, 0.018);
   caption.position.z = 0.013;

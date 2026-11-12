@@ -26,6 +26,7 @@ import type { RecallState } from './palace-store.js';
 import { schedulePalaceSave } from './palace-store.js';
 import { setAppStatus } from './status3d.js';
 import { GLASS, SEMANTIC } from './palette.js';
+import { frame, surface } from './spatial-ui.js';
 
 interface QuizOption {
   text: string;
@@ -86,6 +87,7 @@ export class RecallSystem extends createSystem({
   private doneGeometry = new RoundedBoxGeometry(0.24, 0.055, 0.01, 2, 0.018);
   private feedbackTimer = 0;
   private waitingFeedback = false;
+  private feedbackLabel: Mesh | null = null;
   private endEntity: Entity | null = null;
   private endTimer = 0;
   private recognition: SpeechRecognitionLike | null = null;
@@ -442,7 +444,11 @@ export class RecallSystem extends createSystem({
     const backdropEntity = this.world.createTransformEntity(backdrop);
     this.quizEntities.push(backdropEntity);
 
-    const progress = createLabel(`RECALL  ${this.questionIndex + 1} / ${this.questions.length}`, 0.015, SEMANTIC.calmAccent, 0.70);
+    const panelFrame = frame(.84,.70,GLASS.recallBorder);
+    this.addPanelPiece(panelFrame,0);
+    panelFrame.position.z=PANEL_POS.z-.012;
+    this.quizEntities.push(this.world.createTransformEntity(panelFrame));
+    const progress = createLabel(`RECALL  ${this.questionIndex + 1} / ${this.questions.length}`, 0.017, SEMANTIC.calmAccent, 0.70);
     this.addPanelPiece(progress, 0.30);
     this.quizEntities.push(this.world.createTransformEntity(progress));
     const prompt = createLabel(question.prompt, 0.022, SEMANTIC.promptText, 0.74);
@@ -462,12 +468,17 @@ export class RecallSystem extends createSystem({
         color: GLASS.buttonBody,
         emissive: new Color(GLASS.buttonEmissive),
         emissiveIntensity: GLASS.buttonEmissiveIntensity,
+        toneMapped: false,
         roughness: 0.45,
       });
       const card = new Mesh(this.optionGeometry, material);
       card.name = 'card';
       cardGroup.add(card);
-      const label = createLabel(option.text, 0.020, SEMANTIC.promptText, 0.62);
+      const optionFrame=frame(.72,.105,GLASS.border);
+      cardGroup.add(optionFrame);
+      const label = createLabel(`${index+1}. ${option.text}`, 0.020, SEMANTIC.promptText, 0.62);
+      label.name='answer-label';
+      label.userData.answerText=option.text;
       label.position.set(0, 0, 0.009);
       label.userData.optionIndex = index;
       cardGroup.add(label);
@@ -491,7 +502,7 @@ export class RecallSystem extends createSystem({
     );
     doneMesh.name = 'card';
     doneGroup.add(doneMesh);
-    const doneLabel = createLabel('done', 0.013, SEMANTIC.statusText, 0.2);
+    const doneLabel = createLabel('End Recall', 0.016, SEMANTIC.statusText, 0.2);
     doneLabel.position.set(0, 0, 0.008);
     doneGroup.add(doneLabel);
     this.addPanelPiece(doneGroup, -0.32);
@@ -500,6 +511,12 @@ export class RecallSystem extends createSystem({
     doneEntity.addComponent(RayInteractable);
     this.quizEntities.push(doneEntity);
 
+    this.feedbackLabel=createLabel('',.018,SEMANTIC.calmAccent,.70);
+    this.addPanelPiece(this.feedbackLabel,-.32);
+    this.feedbackLabel.position.x=.22;
+    this.feedbackLabel.scale.setScalar(.75);
+    this.quizEntities.push(this.world.createTransformEntity(this.feedbackLabel));
+    doneGroup.position.x=-.25;
     // Spotlight: the target glows, everything else rests.
     for (const [id, entity] of loci.noteById) {
       setNoteGlow(entity, id === question.targetId ? 0.9 : 0.07);
@@ -537,13 +554,18 @@ export class RecallSystem extends createSystem({
       if (isCorrect) {
         material.color.set(GLASS.correctBody);
         material.emissive.set(GLASS.correctGlow);
-        material.emissiveIntensity = 1.2;
+        material.emissiveIntensity = 0.12;
       } else if (quizEntity === entity && !chosenCorrect) {
         material.color.set(GLASS.incorrectBody);
         material.emissive.set(GLASS.incorrectGlow);
-        material.emissiveIntensity = 1.2;
+        material.emissiveIntensity = 0.12;
       }
+      const label=quizEntity.object3D.getObjectByName('answer-label');
+      if (label && (isCorrect || quizEntity===entity)) label.userData.redraw?.(`${isCorrect ? '✓' : '↻'} ${label.userData.answerText}`);
+      const border=quizEntity.object3D.getObjectByName('surface-border') as Mesh | undefined;
+      if (border && (isCorrect || quizEntity===entity)) (border.material as import('three').MeshBasicMaterial).color.set(isCorrect ? SEMANTIC.expand : SEMANTIC.challenge);
     }
+    this.feedbackLabel?.userData.redraw?.(chosenCorrect ? 'Remembered.' : 'Another chance next time.');
 
     if (chosenCorrect) {
       this.correctCount += 1;
@@ -585,9 +607,13 @@ export class RecallSystem extends createSystem({
     if (this.endEntity != null) {
       this.trash.push(this.endEntity);
     }
-    const label = createLabel(message, 0.021, SEMANTIC.calmAccent, 0.74);
-    this.addPanelPiece(label, 0.06);
-    this.endEntity = this.world.createTransformEntity(label);
+    const result = new Group();
+    result.name='recall-result';
+    result.add(frame(.84,.24,GLASS.recallBorder));result.add(surface(.84,.24));
+    const label = createLabel(message, 0.022, SEMANTIC.calmAccent, 0.74);
+    label.position.z=.014;result.add(label);
+    this.addPanelPiece(result, -0.24);
+    this.endEntity = this.world.createTransformEntity(result);
     this.endTimer = 3.2;
     setAppStatus(message);
   }
