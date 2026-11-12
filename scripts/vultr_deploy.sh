@@ -18,7 +18,9 @@ SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
 
 echo "→ syncing Loci Quest build to $HOST (https://$HOSTNAME_ARG)"
 
-tar czf /tmp/loci-dist.tgz -C "$ROOT/dist" .
+# COPYFILE_DISABLE=1 — macOS bsdtar otherwise packs AppleDouble '._' metadata
+# files into the archive, which Linux extracts as real junk files.
+COPYFILE_DISABLE=1 tar czf /tmp/loci-dist.tgz --exclude='._*' -C "$ROOT/dist" .
 scp -q "${SSH_OPTS[@]}" /tmp/loci-dist.tgz "$HOST:/tmp/loci-dist.tgz"
 
 ssh "${SSH_OPTS[@]}" "$HOST" 'bash -s' -- "$HOSTNAME_ARG" <<'REMOTE'
@@ -28,8 +30,9 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y caddy ufw
 
+rm -rf /opt/loci/dist
 mkdir -p /opt/loci/dist
-tar xzf /tmp/loci-dist.tgz -C /opt/loci/dist
+tar xzf /tmp/loci-dist.tgz --no-same-owner --exclude='._*' -C /opt/loci/dist
 
 ufw allow OpenSSH && ufw allow 80/tcp && ufw allow 443/tcp && ufw --force enable
 
