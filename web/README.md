@@ -1,9 +1,13 @@
 # Loci — web version
 
-A phone and desktop web companion to the Quest app: the opening story,
-per-mode palaces, the safety gate, Recall, Rewind, settings and synthesized
-audio. The Quest / IWSDK app at the repository root is the primary
-experience and is unchanged by this folder.
+The **Lovable-designed** phone and desktop web companion to the Quest app:
+the opening story, per-mode palaces, the safety gate, Recall, Rewind,
+settings and synthesized audio — the same capture → organize → arrange →
+recall loop on a flat screen.
+
+The Quest / IWSDK app at the repository root is the primary experience and
+is unchanged by this folder. See the [root README](../README.md) for the
+full picture.
 
 ## Run
 
@@ -23,3 +27,6 @@ browser support, permission and HTTPS (or localhost).
 bun run build     # production build (Nitro output)
 bun run test      # vitest suite
 ```
+
+The design originates from [Lovable](https://lovable.dev); this repository
+holds a synced snapshot of it and is the source of truth going forward.

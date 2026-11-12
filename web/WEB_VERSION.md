@@ -2,7 +2,9 @@
 
 This folder contains the phone and desktop web app from Lovable, including the opening story, per-mode palaces, safety gate, recall, rewind, settings and synthesized audio.
 
-The Quest / IWSDK app at the repository root is unchanged.
+The Quest / IWSDK app at the repository root is unchanged — see the
+[root README](../README.md) for the primary experience. The design
+originates from [Lovable](https://lovable.dev).
 
 ## Run
 

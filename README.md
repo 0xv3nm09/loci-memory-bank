@@ -9,6 +9,17 @@ Built with the [Immersive Web SDK](https://developers.meta.com/vr/documentation/
 (Three.js + ECS) for Meta Quest browsers and desktop. Hands-first and
 mouse-friendly, seated, under ten minutes a session.
 
+## Two surfaces, one idea
+
+| Surface | What it is | Where |
+| --- | --- | --- |
+| **Quest app** (primary) | The full hands-first VR experience — this repository's root, deployed to GitHub Pages | this folder |
+| **Web companion** | The phone/desktop **Lovable-designed** web version: opening story, per-mode palaces, Recall, Rewind, safety gate — same loop, flat screen | [`web/`](web/README.md) |
+
+The web companion was designed in [Lovable](https://lovable.dev) and lives in
+[`web/`](web/README.md) — see its README to run it (Bun) and
+[`web/WEB_VERSION.md`](web/WEB_VERSION.md) for how it relates to the Quest app.
+
 ## The loop
 
 1. **Capture** — type a thought, speak it, or press a seed card to spill a curated set.
