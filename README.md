@@ -125,7 +125,10 @@ cd web && bun install && bun run test   # web companion suite (16 tests)
 ```
 
 Deployed to GitHub Pages on every push to `main` (`.github/workflows/deploy.yml`).
-The `web/` companion is not auto-deployed.
+The `web/` companion is not auto-deployed. A self-hosted mirror of the Quest
+build runs on a Vultr VM with Caddy auto-HTTPS:
+**https://139-84-174-127.sslip.io** — deploy/update with
+`bash scripts/vultr_deploy.sh` (runbook: [docs/DEPLOY-VULTR.md](docs/DEPLOY-VULTR.md)).
 
 ## Roadmap
 
