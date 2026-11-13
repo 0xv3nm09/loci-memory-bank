@@ -28,7 +28,7 @@ session.
 proof) · [Sage model card](docs/MODEL_CARD.md) · [Safety design](docs/SAFETY.md) ·
 [How AI was used](docs/AI.md) (in the product + in the build) ·
 [Build feedback](docs/FEEDBACK.md) (every issue faced and its fix) ·
-[Competition strategy](COMPETITION_STRATEGY.md) · diagrams in [prizes/diagrams/](prizes/diagrams/)
+[Competition strategy](COMPETITION_STRATEGY.md) · diagrams in [docs/diagrams/](docs/diagrams/)
 
 ## How the system connects
 
@@ -44,7 +44,7 @@ organizer built into the app answers instantly and the organize orb turns
 gray: **the agent degrades; the product doesn't.**
 
 <p align="center">
-  <img src="prizes/diagrams/master-system.svg" alt="Master system map: capture (mic orb, type orb, seed cards) → distress gate → organize (heuristic held ready, schema-bound model call with retry) → snap → grabbable cards → localStorage palace with 30 snapshots → return greeting → recall quiz → rewind dial" width="820">
+  <img src="docs/diagrams/master-system.svg" alt="Master system map: capture (mic orb, type orb, seed cards) → distress gate → organize (heuristic held ready, schema-bound model call with retry) → snap → grabbable cards → localStorage palace with 30 snapshots → return greeting → recall quiz → rewind dial" width="820">
 </p>
 
 | Capability | How Loci does it |
@@ -119,7 +119,7 @@ src/
     palette           design tokens incl. the verified CVD accents
 public/               bundled Inter font (OFL), generated welcome panel
 COMPETITION_STRATEGY.md  per-category competition strategy
-prizes/diagrams/         SVG flow diagrams (system, sequences)
+docs/diagrams/         SVG flow diagrams (system, sequences)
 docs/                 architecture, evidence map, model card, safety, feedback
 ```
 

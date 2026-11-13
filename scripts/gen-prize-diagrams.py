@@ -17,7 +17,7 @@ Out:  prizes/diagrams/*.svg
 import os
 import html
 
-OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "prizes", "diagrams")
+OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "diagrams")
 
 W = 940
 COL_X = 50
