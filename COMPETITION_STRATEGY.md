@@ -1,4 +1,4 @@
-# Loci — Competition Strategy & Category Coverage
+# Loci — Competition Strategy & Technical Architecture
 
 Meta VR Start Developer Competition 2026. Track: **Productivity** ·
 Division: **New Experience**. One entry, judged on four equally weighted
@@ -7,8 +7,9 @@ Implementation, Polish & Presentation) and eligible for the special awards
 below.
 
 Each category documents: what the judges reward, how Loci is built for it
-(with implementation references), the on-camera flow, and its diagram. All
-listed strengthening features are **implemented and shipped**.
+(with implementation references), the full system flow, and its diagram.
+All listed features are **implemented and shipped** — verified on the built
+app at `https://139-84-174-127.sslip.io`.
 
 ---
 
@@ -30,19 +31,83 @@ spatial keyboard, seed sets) · model-first organize with instant fallback
 particle trails (`snap-system.ts`) · hand arranging (`mouse-drag-system.ts`,
 `OneHandGrabbable`) · persistence + export (`palace-store.ts`).
 
-**On-camera flow:**
+### System flow — full pipeline
 
 ```mermaid
-flowchart LR
-  A["Sit — the void greets you"] --> B["Dump thoughts (voice/type/seeds)"]
-  B --> C["Tap organize — Sage clusters"]
-  C --> D["THE SNAP"]
-  D --> E["Grab and rearrange"]
-  E --> F["Close — palace persists"]
-  F --> G["Return — Recall reschedules"]
+flowchart TB
+  subgraph BOOT["App Bootstrap"]
+    B1["Font preload (Inter OFL)"] --> B2["World.create — IWSDK runtime"]
+    B2 --> B3["Register 12 systems on globals bus"]
+    B3 --> B4["initStatus3D — in-scene status line"]
+    B4 --> B5["warmupModel — preload qwen3:14b into VRAM"]
+    B5 --> B6["Splash fade → startHealthIndicator (30s pill)"]
+  end
+
+  subgraph CAPTURE["Capture Layer — 4 equal paths"]
+    direction LR
+    C1["Typed input — Enter key"] --> C4
+    C2["Mic orb — Web Speech API"] --> C4
+    C3["Seed cards — curated 5-note sets"] --> C4
+    C4["spawnRaw → distress gate → SpawnAnimation component"]
+  end
+
+  subgraph ORGANIZE["Organize Pipeline — dual-intelligence arbitration"]
+    direction TB
+    D1["capture-system: scheduleAutoOrganize 2.2s"] --> D2["organize-system: organize()"]
+    D2 --> D3["clusterer.ts: deterministic heuristic — instant"]
+    D2 --> D4["model-client.ts: POST /api/chat → qwen3:14b"]
+    D4 --> D5{"coverage ≥ 60%?"}
+    D5 -- "yes" --> D6["use model result — orb GOLD"]
+    D5 -- "no / timeout / error" --> D7["use heuristic — orb GRAY"]
+    D6 --> D8["applyResult: declump → labels → edges → buds"]
+    D7 --> D8
+    D8 --> D9["schedulePalaceSave 1.8s"]
+  end
+
+  subgraph SNAP["Snap Animation"]
+    S1["SnapAnimation component: eased arcs"] --> S2["particle trails (additive blending)"]
+    S2 --> S3["connection lines draw in"]
+    S3 --> S4["chord resolves (WebAudio)"]
+  end
+
+  subgraph ARRANGE["Human Authority Layer"]
+    A1["OneHandGrabbable (VR pinch)"] --> A2["MouseDragSystem (desktop drag)"]
+    A2 --> A3["GrabWatchSystem: userPlaced = true on release"]
+  end
+
+  subgraph PERSIST["Palace Store — loci.palace.v1"]
+    P1["notes[] · edges[] · clusterLabels[]"]
+    P2["recall: {id: {strength 0-5, seen}}"]
+    P3["history: ≤30 snapshots"]
+    P4["beforeunload flush · JSON export"]
+  end
+
+  BOOT --> CAPTURE
+  CAPTURE --> ORGANIZE
+  ORGANIZE --> SNAP
+  SNAP --> ARRANGE
+  ARRANGE --> PERSIST
 ```
 
-Detailed demo flow: [prizes/productivity-track.md](prizes/productivity-track.md)
+### Return-visit loop
+
+```mermaid
+sequenceDiagram
+  participant U as User (Quest / desktop)
+  participant App as Loci runtime
+  participant Store as Palace localStorage
+  participant Sage as Sage (qwen3:14b)
+  U->>App: open the link
+  App->>Store: loadPalace() — restore notes, clusters, strengths
+  App-->>U: welcome back — last here 3 hr ago, 4 thoughts due
+  U->>App: dump 3 more thoughts (voice)
+  App->>Sage: schema-bound organize (existing notes + 3 new)
+  Sage-->>App: declumped cluster layout
+  App-->>U: snap — all 8 cards reorganize
+  U->>App: Recall quiz — weakest 2 first
+  App-->>U: correct: strength+1 — miss: reset to 0
+  App->>Store: writePalaceSave — strengths + layout + snapshot
+```
 
 ---
 
@@ -68,28 +133,66 @@ context-aware assistance, autonomous analysis, transparent agent behavior.
 `organize-system.ts` (`applyBest`, `tintOrb`), `recall-system.ts`
 (`answerByVoice`).
 
-**On-camera flow (including the resilience beat):**
+### Dual-path arbitration — full sequence
 
 ```mermaid
 sequenceDiagram
   participant P as Player
-  participant C as Loci
-  participant S as Sage
-  participant HB as Heuristic fallback
-  P->>C: dump thoughts
-  C->>HB: instant local result (held ready)
-  C->>S: schema-bound organize request
-  alt Sage answers
-    S-->>C: clusters + edges + suggestions
-    C->>P: SNAP + GOLD orb + suggestion buds
-  else Sage unreachable
-    HB-->>C: instant local layout
-    C->>P: SNAP + GRAY orb — same experience
+  participant OS as OrganizeSystem
+  participant HB as Heuristic (clusterer.ts)
+  participant MC as ModelClient
+  participant OLL as Ollama qwen3:14b
+  participant ST as PalaceStore
+
+  P->>OS: dump 5 thoughts (any capture path)
+  OS->>HB: organize() — token overlap + union-find — instant
+  HB-->>OS: heuristic result (held ready)
+  OS->>MC: organizeWithModel(notes[])
+  MC->>OLL: POST /api/chat { format: JSON_schema, temp: 0.2 }
+
+  alt model answers — covers ≥ 60%
+    OLL-->>MC: clusters + edges + suggestions
+    MC->>MC: sanitize — unknown ids dropped, leftovers → "Loose threads"
+    MC-->>OS: validated ModelOrganizeResult
+    OS->>P: SNAP — orb GOLD — suggestion buds appear
+    OS->>ST: schedulePalaceSave 1800ms
+  else model fails or times out (30s)
+    OS->>P: SNAP with heuristic result — orb GRAY
+    Note over OS: product never stumbles — same experience
   end
-  P->>C: grabs a card — userPlaced, agent never reorganizes
+
+  P->>OS: grabs one card by pinch
+  Note over OS: GrabWatchSystem: userPlaced = true — agent never reorganizes
+  OS->>ST: schedulePalaceSave — placement recorded
 ```
 
-Detailed demo flow: [prizes/best-agentic-interaction.md](prizes/best-agentic-interaction.md)
+### Agentic decision tree
+
+```mermaid
+flowchart TD
+  START["Organize triggered — orb press / auto / voice"] --> GUARD{"recallActive?
+  rewindActive?
+  crisActive?
+  thinking?"}
+  GUARD -- "any true" --> SKIP["return — blocked"]
+  GUARD -- "all clear" --> COLLECT["collect movable notes
+  (userPlaced excluded)"]
+  COLLECT --> HEUR["Heuristic: token overlap coefficient
+  + union-find — MERGE 0.2, MAX_EDGES 6"]
+  COLLECT --> MODEL["ModelClient: POST /api/chat
+  format: JSON schema · retry ×1"]
+  MODEL --> VALIDATE{"JSON parses?
+  clusters non-empty?"}
+  VALIDATE -- "no" --> USE_H
+  VALIDATE -- "yes" --> SANITIZE["drop unknown ids · sweep leftovers"]
+  SANITIZE --> COVERAGE{"covers ≥ 60%?"}
+  COVERAGE -- "yes" --> TINT_GOLD["tintOrb GOLD · suggestions → buds"]
+  COVERAGE -- "no" --> USE_H
+  USE_H["use heuristic result · tintOrb GRAY"]
+  TINT_GOLD --> APPLY
+  USE_H --> APPLY
+  APPLY["applyResult: declump 5-pass → flights → lines → labels → save"]
+```
 
 ---
 
@@ -108,19 +211,32 @@ interactive **1.5 s**, recall panel open **1.1 s**.
 (seed sets + auto-organize), `recall-system.ts` (quiz panel), `layout.ts`
 (declump so nothing overlaps).
 
-**On-camera flow:**
+### Timed opening sequence
 
 ```mermaid
 flowchart LR
-  A["0s: open the link"] --> B["1.5s: interactive"]
-  B --> C["One touch: seed card spills 5 thoughts"]
+  A["0.0s: open the link"] --> B["1.5s: interactive — guide + orbs + seeds"]
+  B --> C["First touch: seed card spills 5 thoughts"]
   C --> D["2.2s: auto-organize fires"]
   D --> E["THE SNAP — payoff before minute two"]
   E --> F["Grab a card — zero instructions"]
-  F --> G["Violet orb — quiz in 1.1s"]
+  F --> G["Violet orb — quiz opens in 1.1s"]
 ```
 
-Detailed demo flow: [prizes/best-first-five-minutes.md](prizes/best-first-five-minutes.md)
+### Discovery mechanics
+
+```mermaid
+flowchart TD
+  subgraph FIRST_LAUNCH["First launch — palace empty"]
+    FL1["ExperienceSystem: 4-phase spatial intro"] --> FL2
+    FL2["AmbientSystem: type + mic orbs pulse
+    warm glow for 8 seconds"] --> FL3["Seed cards visible with labels"]
+  end
+  subgraph RETURNING["Returning visit — palace restored"]
+    R1["restorePalace: notes + clusters + greeting"] --> R2["health pill: N notes · M due"]
+  end
+  FIRST_LAUNCH -->|"first interaction"| RETURNING
+```
 
 ---
 
@@ -137,7 +253,7 @@ Rewind scrubs that growth backward through physical space.
 **Implementation:** `palace-store.ts` (`RecallState`, 30-snapshot history),
 `recall-system.ts` (`pickOrder`, grading), `rewind-system.ts` (spatial dial).
 
-**On-camera flow:**
+### Cross-session retention loop
 
 ```mermaid
 sequenceDiagram
@@ -159,7 +275,18 @@ sequenceDiagram
   L->>K: strengths saved — next visit scheduled
 ```
 
-Detailed demo flow: [prizes/best-reason-to-come-back.md](prizes/best-reason-to-come-back.md)
+### Retention state machine
+
+```mermaid
+stateDiagram-v2
+  [*] --> NeverSeen: note created
+  NeverSeen --> Due: first Recall session
+  Due --> Strong: correct answer (strength +1)
+  Due --> Weak: wrong answer (strength = 0)
+  Strong --> Stronger: correct again (up to 5)
+  Stronger --> Weak: miss (reset to 0)
+  Weak --> Due: next session — pickOrder sorts weakest first
+```
 
 ---
 
@@ -189,7 +316,29 @@ modes, or experiences inclusive by default.
 (reduced motion), `speech.ts` + `capture-keyboard.ts` (voice/typed),
 `crisis-panel.ts` (calm tone), `styles.css` (HC styles).
 
-Detailed notes: [prizes/best-accessibility-forward.md](prizes/best-accessibility-forward.md)
+### Accessibility input/output matrix
+
+```mermaid
+flowchart LR
+  subgraph INPUTS["Input — every channel works alone"]
+    I1["Voice: mic orb (desktop)"]
+    I2["Hands: pinch-grab (Quest)"]
+    I3["Typed: type orb → spatial keyboard"]
+    I4["One finger: seed cards + orbs"]
+    I5["Mouse: drag + click (desktop)"]
+  end
+  INPUTS --> GATE["Distress gate → Organize pipeline"]
+  GATE --> OUTPUTS
+  subgraph OUTPUTS["Output — every signal redundant"]
+    O1["Color: CVD-verified palette"]
+    O2["Glyphs: + and ? marks on buds"]
+    O3["Audio: chord, ping, calm tone"]
+    O4["Text scale: Aa orb 100-150%"]
+    O5["HC mode: pure black/white"]
+  end
+  OUTPUTS --> USER["Same experience regardless of
+  which channel or ability"]
+```
 
 ---
 
@@ -202,15 +351,25 @@ spatial depth, or hands — one that would fall apart on any other platform.
 
 ```mermaid
 flowchart LR
-  subgraph FLAT["On a flat screen"]
-    N1["Notes app = a list"] --> N2["Anki = a schedule"]
-    N2 --> N3["Mind map = a diagram"]
-    N3 --> N4["History = a changelog"]
+  subgraph FLAT["On a flat screen — what every rival is"]
+    direction LR
+    N1["Notes app
+    = a list"] --> N2["Anki
+    = a schedule"]
+    N2 --> N3["Mind map
+    = a diagram"]
+    N3 --> N4["History
+    = a changelog"]
   end
-  subgraph VR["Loci in VR"]
-    L1["Thoughts have a PLACE around you"] --> L2["Understanding is physical: move meaning"]
-    L2 --> L3["Memory has a ROOM: the palace persists and grows"]
-    L3 --> L4["History has a DIAL: scrub your mind's past"]
+  subgraph VR["Loci in VR — what only presence enables"]
+    direction LR
+    L1["Thoughts have a PLACE
+    around you in 3D"] --> L2["Understanding is PHYSICAL:
+    grab and move meaning"]
+    L2 --> L3["Memory has a ROOM:
+    the palace persists and grows"]
+    L3 --> L4["History has a DIAL:
+    scrub your mind's past"]
   end
   FLAT -.->|"no presence · no depth · no body"| VR
 ```
@@ -220,13 +379,22 @@ an imagined place. VR is the first medium where the place is real — and the
 Rewind dial (scrubbing your own mind's history through physical space) is
 the beat no flat screen can imitate.
 
-Detailed notes: [prizes/boldest-original-concept.md](prizes/boldest-original-concept.md)
-
 ---
 
-## Judge's Choice
+## 7. Judge's Choice
 
 The wildcard. Loci's angle: genuine cognitive science (method of loci,
 spaced repetition), ethical AI (distress gate, transparent gold/gray agent
 status), and craft (zero-asset synthesized audio, canvas-rendered type,
 hand-built Three.js). No specific changes — polish is the vehicle.
+
+---
+
+## Documented limits
+
+| Limit | Why it's accepted |
+| --- | --- |
+| Voice capture desktop-only | Quest browsers have no Web Speech API; the spatial keyboard is the equal path there |
+| Streaks rejected | Conflicts with the no-guilt design principle — Recall scheduling does the work instead |
+| Web companion not deployed | Repo-only context for now; the Quest app is the submission |
+| Foveation 0.8 | Peripheral softness is the performance trade for 72fps |
