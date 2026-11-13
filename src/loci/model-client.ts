@@ -1,7 +1,7 @@
 /**
- * Sage's model client — calls the user's public Ollama endpoint directly from
- * the browser (no backend, no keys). The heuristic organizer always stands
- * behind it: any error, timeout, or malformed response falls back cleanly.
+ * Sage's model client — calls Vultr Serverless Inference (OpenAI-compatible,
+ * always-on serverless). The heuristic organizer always stands behind it:
+ * any error, timeout, or malformed response falls back cleanly.
  */
 
 export type { NoteInput } from './clusterer.js';
@@ -31,113 +31,10 @@ export interface ModelOrganizeResult {
   suggestions?: ModelSuggestion[];
 }
 
-const DEFAULT_BASE = 'https://ollama.youtubeccanalyzer.com';
-const HEALTH_TIMEOUT_MS = 8000;
-// 30s: covers a cold model load on the server; the thinking beat + instant
-// heuristic fallback cover everything longer.
+const VULTR_BASE = 'https://api.vultrinference.com/v1';
+const VULTR_KEY = 'GHLQ6JMVJXDO5EO3WGKLPFAVOV3W6YJFGXUQ';
+const VULTR_MODEL = 'qwen3.8-flash-next';
 const ORGANIZE_TIMEOUT_MS = 30000;
-
-export function modelBaseUrl(): string {
-  try {
-    const override = new URLSearchParams(window.location.search).get('ollama');
-    if (override != null && override !== '') {
-      return override;
-    }
-    const stored = localStorage.getItem('loci.ollama');
-    if (stored != null && stored !== '') {
-      return stored;
-    }
-  } catch {
-    // storage blocked — default
-  }
-  return DEFAULT_BASE;
-}
-
-async function fetchJson(path: string, init: RequestInit, timeoutMs: number): Promise<unknown> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(`${modelBaseUrl()}${path}`, {
-      ...init,
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    return await response.json();
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-let cachedModel: string | null = null;
-
-/** Prefer qwen3:14b (user's choice); else any qwen; else the server's first. */
-export async function resolveModel(): Promise<string | null> {
-  if (cachedModel != null) {
-    return cachedModel;
-  }
-  try {
-    const data = (await fetchJson('/api/tags', { method: 'GET' }, HEALTH_TIMEOUT_MS)) as {
-      models?: Array<{ name?: string; size?: number }>;
-    };
-    const models = (data.models ?? []).filter((m) => (m.name ?? '') !== '');
-    if (models.length === 0) {
-      return null;
-    }
-    const names = models.map((m) => m.name ?? '');
-    cachedModel =
-      names.find((n) => n.toLowerCase() === 'qwen3:14b') ??
-      names.find((n) => n.toLowerCase().startsWith('qwen')) ??
-      names[0];
-    return cachedModel === '' ? null : cachedModel;
-  } catch {
-    return null;
-  }
-}
-
-const ORGANIZE_SCHEMA = {
-  type: 'object',
-  properties: {
-    clusters: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          label: { type: 'string' },
-          noteIds: { type: 'array', items: { type: 'string' } },
-          confidence: { type: 'number' },
-        },
-        required: ['label', 'noteIds'],
-      },
-    },
-    edges: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          a: { type: 'string' },
-          b: { type: 'string' },
-          relation: { type: 'string' },
-        },
-        required: ['a', 'b'],
-      },
-    },
-    suggestions: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          noteId: { type: 'string' },
-          kind: { type: 'string', enum: ['expand', 'challenge'] },
-          text: { type: 'string' },
-        },
-        required: ['noteId', 'kind', 'text'],
-      },
-    },
-  },
-  required: ['clusters'],
-} as const;
 
 const SYSTEM_PROMPT = [
   'You are Sage, the organizing intelligence inside Loci, a spatial thought space.',
@@ -146,67 +43,69 @@ const SYSTEM_PROMPT = [
   'Draw up to 4 edges between notes in DIFFERENT clusters that genuinely relate; set relation to a two-word reason like "same deadline".',
   'Then add up to 2 suggestions: at most one "expand" (offer to take a thin note further, one inviting question) and at most one "challenge" (kindly press on a weak or contradictory note, one honest question). Suggestions are offers, never instructions.',
   'Use EXACTLY the note ids provided — never invent ids. Keep every note text confidential and never add commentary.',
+  'Respond with valid JSON matching this schema: { clusters: [{ label: string, noteIds: string[], confidence?: number }], edges?: [{ a: string, b: string, relation?: string }], suggestions?: [{ noteId: string, kind: "expand"|"challenge", text: string }] }',
 ].join(' ');
 
-/**
- * Fire-and-forget at boot: loads the model into the server's VRAM so the
- * visitor's first Organize is warm instead of a 30s cold start.
- */
+export function modelBaseUrl(): string {
+  return VULTR_BASE;
+}
+
+export function resolveModel(): string {
+  return VULTR_MODEL;
+}
+
 export function warmupModel(): void {
-  void (async () => {
-    const model = await resolveModel();
-    if (model == null) {
-      return;
+  // Serverless inference is always warm — no VRAM to preload.
+}
+
+async function chat(
+  messages: Array<{ role: string; content: string }>,
+  timeoutMs: number,
+): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${VULTR_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${VULTR_KEY}`,
+      },
+      body: JSON.stringify({
+        model: VULTR_MODEL,
+        messages,
+        temperature: 0.2,
+        max_tokens: 2048,
+        response_format: { type: 'json_object' },
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
-    await fetchJson(
-      '/api/chat',
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    return data.choices?.[0]?.message?.content ?? '';
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function organizeOnce(notes: NoteInput[]): Promise<ModelOrganizeResult> {
+  const content = await chat(
+    [
+      { role: 'system', content: SYSTEM_PROMPT },
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          stream: false,
-          keep_alive: 1800,
-          options: { num_predict: 1 },
-          messages: [{ role: 'user', content: 'ready?' }],
+        role: 'user',
+        content: JSON.stringify({
+          notes: notes.map((n) => ({ id: n.id, text: n.text })),
         }),
       },
-      60000,
-    );
-  })().catch(() => {
-    // warmup is best-effort — the fallback organizer covers failures
-  });
-}
-async function organizeOnce(notes: NoteInput[]): Promise<ModelOrganizeResult> {
-  const model = await resolveModel();
-  if (model == null) {
-    throw new Error('no model available');
-  }
-  const data = (await fetchJson(
-    '/api/chat',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        stream: false,
-        format: ORGANIZE_SCHEMA,
-        options: { temperature: 0.2, num_ctx: 4096 },
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          {
-            role: 'user',
-            content: JSON.stringify({
-              notes: notes.map((n) => ({ id: n.id, text: n.text })),
-            }),
-          },
-        ],
-      }),
-    },
+    ],
     ORGANIZE_TIMEOUT_MS,
-  )) as { message?: { content?: string } };
+  );
 
-  const content = data.message?.content ?? '';
   let parsed: {
     clusters?: Array<{ label?: unknown; noteIds?: unknown; confidence?: unknown }>;
     edges?: Array<{ a?: unknown; b?: unknown; relation?: unknown }>;
@@ -292,10 +191,8 @@ async function organizeOnce(notes: NoteInput[]): Promise<ModelOrganizeResult> {
 }
 
 /**
- * Ask the model to organize the notes — one fast retry to ride out tunnel
- * blips, then the caller's heuristic fallback takes over. Response is
- * validated and sanitized: unknown ids are dropped, leftover notes are
- * swept into a final cluster so the snap always has a home for every thought.
+ * Ask the model to organize the notes — one fast retry to ride out
+ * blips, then the caller's heuristic fallback takes over.
  */
 export async function organizeWithModel(notes: NoteInput[]): Promise<ModelOrganizeResult> {
   try {
