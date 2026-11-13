@@ -13,6 +13,19 @@ app at `https://139-84-174-127.sslip.io`.
 
 ---
 
+## Table of Contents
+
+- [1. Best New Productivity Experience](#1-best-new-productivity-experience)
+- [2. Best Agentic Interaction](#2-best-agentic-interaction)
+- [3. Best First Five Minutes](#3-best-first-five-minutes)
+- [4. Best Reason to Come Back](#4-best-reason-to-come-back)
+- [5. Best Accessibility Forward Experience](#5-best-accessibility-forward-experience)
+- [6. Boldest Original Concept](#6-boldest-original-concept)
+- [7. Judge's Choice](#7-judges-choice)
+- [8. Documented Limits](#8-documented-limits)
+
+---
+
 ## 1. Best New Productivity Experience
 
 **What the category rewards:** tools designed around a recurring daily
@@ -390,7 +403,7 @@ hand-built Three.js). No specific changes — polish is the vehicle.
 
 ---
 
-## Documented limits
+## 8. Documented Limits
 
 | Limit | Why it's accepted |
 | --- | --- |
