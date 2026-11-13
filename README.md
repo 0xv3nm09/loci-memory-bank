@@ -13,6 +13,10 @@ your own mind's history**. Come back tomorrow: the palace persists exactly as
 you left it, and Recall quizzes your weakest notes with spaced repetition so
 the ideas actually stick.
 
+<p align="center">
+  <img src="docs/media/loci-wide-poster.jpg" alt="Loci — One space. One mind. Capture scattered thoughts. Find their structure. Build a place you can return to. A spatial experience for Quest, with a phone and desktop companion." width="860">
+</p>
+
 Entry for the **Meta VR Start Developer Competition 2026** — Productivity track,
 New Experience division. Built with the
 [Immersive Web SDK](https://developers.meta.com/vr/documentation/iwsdk/guides/overview)
@@ -27,6 +31,10 @@ proof) · [Sage model card](docs/MODEL_CARD.md) · [Safety design](docs/SAFETY.m
 [Competition strategy](COMPETITION_STRATEGY.md) · diagrams in [prizes/diagrams/](prizes/diagrams/)
 
 ## How the system connects
+
+<p align="center">
+  <img src="docs/media/loci-technical-poster.jpg" alt="Loci technical poster — Thoughts become places. Structure becomes memory. Two independent runtimes (Quest/WebXR + phone/desktop), one interaction loop (capture → safety → organize → arrange → recall → save → rewind), local-first intelligence, interaction and safety, verified scope and limits" width="860">
+</p>
 
 One TypeScript app runs entirely inside the headset's browser. The only
 external dependency is **Sage** — a qwen3:14b model served from the
