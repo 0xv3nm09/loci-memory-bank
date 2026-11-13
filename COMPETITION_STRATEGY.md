@@ -1,107 +1,232 @@
-# Loci — Competition Strategy & Category Targeting
+# Loci — Competition Strategy & Category Coverage
 
-Meta VR Start Developer Competition 2026. Submission deadline: Nov 18, 2026.
+Meta VR Start Developer Competition 2026. Track: **Productivity** ·
+Division: **New Experience**. One entry, judged on four equally weighted
+criteria (Innovation & Creativity, Experience Design, Technical
+Implementation, Polish & Presentation) and eligible for the special awards
+below.
 
----
-
-## Best-Fit Categories (Ranked by Win Probability)
-
-### Tier 1 — Primary Targets
-
-**1. Best New Productivity Experience — $70,000**
-This is Loci's home category. A spatial memory palace for capturing, organizing, and recalling thoughts is textbook productivity. What we have: voice/text/keyboard capture, AI-powered clustering, spaced-repetition recall, persistent palace across sessions, rewind history, three cognitive modes (Think/Grow/Imagine). What makes us stand out: the entire experience is designed around how memory actually works (method of loci, spaced repetition) rather than being a flat task list ported to VR.
-
-**2. Best Agentic Interaction — $25,000**
-Sage is a genuine AI agent, not a chatbot overlay. It analyzes the semantic content of captured thoughts, clusters them into meaningful threads, draws cross-cluster connections, and offers suggestions (expand thin ideas, challenge weak ones). The heuristic fallback ensures the agent experience never breaks. The gold/gray orb glow communicates which intelligence organized — transparent agentic behavior. To strengthen: make Sage's reasoning visible (brief "I grouped these because..." labels), and add a second agentic moment (e.g., Sage proactively suggests recall when notes are aging).
-
-**3. Best First Five Minutes — $25,000**
-The 4-phase animated intro ("Let it all out" → "Find the threads" → "Scattered thoughts..." → "Your palace is waiting") is a narrative onboarding, not a tutorial. Users capture their first thought within 30 seconds. The spatial affordances (orbs, seeds) are discoverable through the first-launch pulse animation. Help panel is always one tap away. To strengthen: ensure the demo seeds (exam/thesis/kingdom) immediately showcase organize + recall so the first 5 minutes demonstrate the full loop.
-
-**4. Best Reason to Come Back — $25,000**
-Spaced-repetition recall system literally defines "reason to come back" — notes decay in strength and the health indicator shows "X due for review." Palace persistence across sessions means your thought space grows over time. Three modes give variety. Rewind lets you revisit your thinking history. To strengthen: add a "welcome back" moment that shows what changed since last visit and which thoughts need attention.
-
-### Tier 2 — Strong Secondary Targets
-
-**5. Best Accessibility Forward Experience — $25,000**
-Already implemented: colorblind-safe palette (verified under 3 CVD simulations), text scaling (3 sizes: 100%/125%/150%), prefers-reduced-motion support, voice input as primary capture, webcam hand tracking for users without controllers, keyboard as fallback, crisis panel with real helpline resources. To strengthen: add high-contrast mode toggle, ensure all interactive elements have sufficient hit targets for hand tracking (IWSDK minimum 44px equivalent).
-
-**6. Boldest Original Concept — $25,000**
-A VR memory palace that uses the ancient method of loci — placing ideas in spatial locations to aid recall — combined with AI-powered organization and spaced repetition. No existing VR app does this. The concept maps naturally to VR's spatial strengths rather than porting a 2D paradigm. The distress gate + crisis panel shows the concept addresses real human needs with care.
-
-**7. Judge's Choice — $20,000 x2 winners**
-This is the wildcard. Judges pick what impresses them personally. Loci's combination of genuine cognitive science (method of loci, spaced repetition), ethical AI (distress gate, transparent Sage vs heuristic feedback), and polished craft (synthesized audio, particle systems, glass-morphism) could catch a judge's eye.
-
-### Tier 3 — Possible But Not Primary
-
-**8. Best Social & Multiplayer Experience — $25,000**
-Not currently implemented. Would require: shared palaces, collaborative organizing, multiplayer recall quizzes. This is a stretch for 5 days but could be a "future work" mention in the submission.
+Each category documents: what the judges reward, how Loci is built for it
+(with implementation references), the on-camera flow, and its diagram. All
+listed strengthening features are **implemented and shipped**.
 
 ---
 
-## Feature → Category Matrix
+## 1. Best New Productivity Experience
 
-| Feature | Productivity | Agentic | First 5 Min | Come Back | Accessibility | Boldest | Judge's |
-|---|---|---|---|---|---|---|---|
-| Voice/text/keyboard capture | ✓ | | ✓ | | ✓ | | |
-| AI clustering (Sage) | ✓ | ✓✓ | | | | ✓ | ✓ |
-| Heuristic fallback | ✓ | ✓ | | | | | ✓ |
-| Spaced-rep recall | ✓ | | | ✓✓ | | ✓ | |
-| Rewind history | ✓ | | | ✓ | | ✓ | |
-| 3 cognitive modes | ✓ | | | ✓ | | ✓ | |
-| 4-phase intro | | | ✓✓ | | | | ✓ |
-| Distress gate + crisis panel | | | | | ✓ | ✓ | ✓✓ |
-| Colorblind-safe palette | | | | | ✓✓ | | |
-| Text scaling | | | | | ✓ | | |
-| Reduced motion | | | | | ✓ | | |
-| Webcam hand tracking | | | | | ✓ | ✓ | ✓ |
-| Zero-asset audio | | | ✓ | | | | ✓ |
-| Palace persistence | ✓ | | | ✓✓ | | | |
-| Suggestion buds | ✓ | ✓✓ | | | | | |
-| Spatial keyboard | ✓ | | | | ✓ | | |
+**What the category rewards:** tools designed around a recurring daily
+moment — task management, creative tools, habits tied to a recurring
+context. Hands-first implementation required.
 
----
+**How Loci covers it:** the entire experience is a recurring ritual — dump
+scattered thoughts, watch Sage snap them into a constellation, arrange by
+hand, return the next day for Recall. Not a task list ported to VR: a
+thinking environment designed around how memory actually works (method of
+loci, spaced repetition).
 
-## What to Emphasize in Submission (Per Category)
+**Implementation:** capture pipeline (`capture-system.ts` — typed, voice,
+spatial keyboard, seed sets) · model-first organize with instant fallback
+(`organize-system.ts`, `model-client.ts`, `clusterer.ts`) · snap with
+particle trails (`snap-system.ts`) · hand arranging (`mouse-drag-system.ts`,
+`OneHandGrabbable`) · persistence + export (`palace-store.ts`).
 
-**Productivity**: Full cognitive loop — capture → organize → arrange → recall → rewind. Not a whiteboard, not a task list: a thinking environment that respects how memory works.
+**On-camera flow:**
 
-**Agentic**: Sage analyzes content semantically, clusters autonomously, draws cross-cluster connections, and offers expand/challenge suggestions. Gold glow = AI, gray = heuristic — transparent about what the agent did. Heuristic fallback means the agent never breaks the experience.
+```mermaid
+flowchart LR
+  A["Sit — the void greets you"] --> B["Dump thoughts (voice/type/seeds)"]
+  B --> C["Tap organize — Sage clusters"]
+  C --> D["THE SNAP"]
+  D --> E["Grab and rearrange"]
+  E --> F["Close — palace persists"]
+  F --> G["Return — Recall reschedules"]
+```
 
-**First 5 Min**: Narrative opening (not a tutorial), first thought captured in <30s, seeds demonstrate organize+recall immediately, help accessible but not intrusive, onboarding pulse guides without blocking.
-
-**Come Back**: Spaced-repetition decay creates natural return cadence. Health pill shows due count. Welcome-back greeting. Palace grows across sessions. Three modes for different cognitive needs. Rewind lets you revisit evolution.
-
-**Accessibility**: Colorblind-safe (CVD-verified), text scaling, reduced-motion, voice-first capture, webcam hand tracking, spatial keyboard, crisis resources.
-
-**Boldest**: Ancient method of loci + modern AI + VR spatiality. Distress-gate shows responsible innovation. No other VR app does this.
+Detailed demo flow: [prizes/productivity-track.md](prizes/productivity-track.md)
 
 ---
 
-## Quick Wins for Last 5 Days
+## 2. Best Agentic Interaction
 
-These are small changes that meaningfully strengthen category positioning:
+**What the category rewards:** AI as a core part of the experience —
+context-aware assistance, autonomous analysis, transparent agent behavior.
 
-1. **Add a PWA manifest + icons** — Required for Quest distribution, also shows polish. (~1 hour)
-2. **"Sage is thinking..." status during AI call** — Agentic category needs visible agent activity. (~30 min)
-3. **Welcome-back message** — "You captured 12 thoughts last time. 3 are due for recall." Strengthens Come Back. (~1 hour)
-4. **Export palace as shareable JSON** — Already implemented. Make it prominent in the help panel.
-5. **Record a 2-minute demo video** — Required for submission. Script: boot → capture 3 thoughts → organize → show connections → recall quiz → rewind → mode switch.
-6. **Submission write-up** — Focus on the "why" (cognitive science, ethical AI, accessibility) not just the "what."
+**How Loci covers it:**
+
+- Sage is a schema-constrained model call (qwen3:14b) — clusters,
+  cross-cluster edges, and expand/challenge suggestions
+- **Model-exclusive evidence:** suggestion buds can only come from the model
+  (the fallback organizer has no suggestions field), so every bud on screen
+  is visible proof of agency
+- **The gold/gray orb** records which intelligence organized the current
+  layout — gold = model, gray = local fallback
+- **Retry-then-fallback:** heuristic result is held ready before the request;
+  the model must cover ≥60% of notes to win — the product never stumbles
+- **Voice answering** in Recall (`answerByVoice()`)
+
+**Implementation:** `model-client.ts` (schema + retry + sanitization),
+`organize-system.ts` (`applyBest`, `tintOrb`), `recall-system.ts`
+(`answerByVoice`).
+
+**On-camera flow (including the resilience beat):**
+
+```mermaid
+sequenceDiagram
+  participant P as Player
+  participant C as Loci
+  participant S as Sage
+  participant HB as Heuristic fallback
+  P->>C: dump thoughts
+  C->>HB: instant local result (held ready)
+  C->>S: schema-bound organize request
+  alt Sage answers
+    S-->>C: clusters + edges + suggestions
+    C->>P: SNAP + GOLD orb + suggestion buds
+  else Sage unreachable
+    HB-->>C: instant local layout
+    C->>P: SNAP + GRAY orb — same experience
+  end
+  P->>C: grabs a card — userPlaced, agent never reorganizes
+```
+
+Detailed demo flow: [prizes/best-agentic-interaction.md](prizes/best-agentic-interaction.md)
 
 ---
 
-## Total Prize Potential
+## 3. Best First Five Minutes
 
-If Loci places in its strongest categories:
+**What the category rewards:** how fast the experience explains itself,
+teaches interaction without a wall of text, and delivers a payoff.
 
-| Category | Prize | Probability |
-|---|---|---|
-| Best New Productivity Experience | $70,000 | High — direct fit |
-| Best Agentic Interaction | $25,000 | High — Sage is genuine |
-| Best First Five Minutes | $25,000 | Medium-High — polished intro |
-| Best Reason to Come Back | $25,000 | Medium-High — spaced rep |
-| Best Accessibility Forward | $25,000 | Medium — strong features |
-| Boldest Original Concept | $25,000 | Medium — unique concept |
-| Judge's Choice | $20,000 | Unknown — wildcard |
+**How Loci covers it:** narrative intro (four phases, not a tutorial),
+first capture within one touch of landing, auto-organize 2.2 s after
+capture, snap completes in under a second locally (6–11 s with Sage warm,
+covered by the thinking beat). Measured on the built app: boot to
+interactive **1.5 s**, recall panel open **1.1 s**.
 
-Runner-up in productivity alone ($35,000) would still be significant. The strategy is: nail Productivity as the anchor, and let Agentic + First 5 Min + Come Back stack on top.
+**Implementation:** `experience-system.ts` (spatial intro), `capture-system.ts`
+(seed sets + auto-organize), `recall-system.ts` (quiz panel), `layout.ts`
+(declump so nothing overlaps).
+
+**On-camera flow:**
+
+```mermaid
+flowchart LR
+  A["0s: open the link"] --> B["1.5s: interactive"]
+  B --> C["One touch: seed card spills 5 thoughts"]
+  C --> D["2.2s: auto-organize fires"]
+  D --> E["THE SNAP — payoff before minute two"]
+  E --> F["Grab a card — zero instructions"]
+  F --> G["Violet orb — quiz in 1.1s"]
+```
+
+Detailed demo flow: [prizes/best-first-five-minutes.md](prizes/best-first-five-minutes.md)
+
+---
+
+## 4. Best Reason to Come Back
+
+**What the category rewards:** visible growth between sessions and a loop
+that pulls the user back tomorrow.
+
+**How Loci covers it:** per-note memory strength (0–5) persisted in the
+palace; Recall serves the weakest first; misses resurface first — the
+schedule is built from performance, not guilt. The palace itself grows, and
+Rewind scrubs that growth backward through physical space.
+
+**Implementation:** `palace-store.ts` (`RecallState`, 30-snapshot history),
+`recall-system.ts` (`pickOrder`, grading), `rewind-system.ts` (spatial dial).
+
+**On-camera flow:**
+
+```mermaid
+sequenceDiagram
+  participant U as You
+  participant L as Loci
+  participant K as Palace storage
+  Note over U,K: Session N — dump, organize, arrange
+  U->>L: close the app
+  Note over U,K: time passes — nothing nags
+  U->>L: reopen
+  L-->>U: welcome back — N thoughts due for Recall
+  L->>U: Recall quiz — weakest notes first
+  U->>L: answer by touch or voice
+  alt correct
+    L-->>U: strength +1 — returns less often
+  else miss
+    L-->>U: strength reset — resurfaces first
+  end
+  L->>K: strengths saved — next visit scheduled
+```
+
+Detailed demo flow: [prizes/best-reason-to-come-back.md](prizes/best-reason-to-come-back.md)
+
+---
+
+## 5. Best Accessibility Forward Experience
+
+**What the category rewards:** voice alternatives for hands, high-contrast
+modes, or experiences inclusive by default.
+
+**How Loci covers it:**
+
+- **Colorblind-safe palette — verified, not claimed:** the six accents were
+  searched under Viénot deutan/protan/tritan simulation (worst pair
+  distance 72.2; the original palette collapsed to 1.4 under protanopia)
+- **Text scaling, live:** the Aa orb cycles 100/125/150% across every label
+  in the scene
+- **Reduced motion respected:** animations skip when the OS asks
+- **Voice alternative to hands:** mic orb + spoken quiz answers
+- **Hands alternative to voice:** spatial keyboard — works everywhere,
+  including Quest browsers (which lack speech recognition — documented)
+- **Safety that reaches everyone:** the crisis panel pairs its message with
+  a calm audio tone
+- **High-contrast mode:** HC button switches HUD and overlays to
+  pure black/white
+- **One hand, seated:** all affordances within a two-foot arc, no locomotion
+
+**Implementation:** `palette.ts` (verified accents), `media-queries.ts`
+(reduced motion), `speech.ts` + `capture-keyboard.ts` (voice/typed),
+`crisis-panel.ts` (calm tone), `styles.css` (HC styles).
+
+Detailed notes: [prizes/best-accessibility-forward.md](prizes/best-accessibility-forward.md)
+
+---
+
+## 6. Boldest Original Concept
+
+**What the category rewards:** an idea whose core loop depends on presence,
+spatial depth, or hands — one that would fall apart on any other platform.
+
+**The claim, drawn:**
+
+```mermaid
+flowchart LR
+  subgraph FLAT["On a flat screen"]
+    N1["Notes app = a list"] --> N2["Anki = a schedule"]
+    N2 --> N3["Mind map = a diagram"]
+    N3 --> N4["History = a changelog"]
+  end
+  subgraph VR["Loci in VR"]
+    L1["Thoughts have a PLACE around you"] --> L2["Understanding is physical: move meaning"]
+    L2 --> L3["Memory has a ROOM: the palace persists and grows"]
+    L3 --> L4["History has a DIAL: scrub your mind's past"]
+  end
+  FLAT -.->|"no presence · no depth · no body"| VR
+```
+
+The method of loci is a 2,000-year-old memory technique that always needed
+an imagined place. VR is the first medium where the place is real — and the
+Rewind dial (scrubbing your own mind's history through physical space) is
+the beat no flat screen can imitate.
+
+Detailed notes: [prizes/boldest-original-concept.md](prizes/boldest-original-concept.md)
+
+---
+
+## Judge's Choice
+
+The wildcard. Loci's angle: genuine cognitive science (method of loci,
+spaced repetition), ethical AI (distress gate, transparent gold/gray agent
+status), and craft (zero-asset synthesized audio, canvas-rendered type,
+hand-built Three.js). No specific changes — polish is the vehicle.
