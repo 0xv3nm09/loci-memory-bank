@@ -2,8 +2,9 @@
 
 [![CI](https://github.com/0xv3nm09/loci-memory-bank/actions/workflows/deploy.yml/badge.svg)](https://github.com/0xv3nm09/loci-memory-bank/actions/workflows/deploy.yml)
 ![hands-first](https://img.shields.io/badge/interaction-hands%E2%80%91first-success)
-![text](https://img.shields.io/badge/CVD%20palette-verified%2072.2-blue)
+![CVD palette](https://img.shields.io/badge/CVD%20palette-verified%2072.2-blue)
 ![web tests](https://img.shields.io/badge/web%20tests-16%2F16-brightgreen)
+![quest tests](https://img.shields.io/badge/quest%20tests-7%2F7-brightgreen)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
 **Loci is a memory palace you build with your hands.** Dump scattered thoughts
@@ -30,55 +31,233 @@ proof) · [Sage model card](docs/MODEL_CARD.md) · [Safety design](docs/SAFETY.m
 [Build feedback](docs/FEEDBACK.md) (every issue faced and its fix) ·
 [Competition strategy](COMPETITION_STRATEGY.md) · diagrams in [docs/diagrams/](docs/diagrams/)
 
-## How the system connects
+## Technical architecture — full system flow
 
-<p align="center">
-  <img src="docs/media/loci-technical-poster.jpg" alt="Loci technical poster — Thoughts become places. Structure becomes memory. Two independent runtimes (Quest/WebXR + phone/desktop), one interaction loop (capture → safety → organize → arrange → recall → save → rewind), local-first intelligence, interaction and safety, verified scope and limits" width="860">
-</p>
+The entire app runs client-side in the headset's browser. One external
+dependency (Sage) is called directly from the client — no backend, no keys in
+the repo, no cloud platform.
 
-One TypeScript app runs entirely inside the headset's browser. The only
-external dependency is **Sage** — a qwen3:14b model served from the
-developer's own GPU box over an HTTPS tunnel, called directly with a
-JSON-schema-constrained contract. If that box is unreachable, a deterministic
-organizer built into the app answers instantly and the organize orb turns
-gray: **the agent degrades; the product doesn't.**
+```mermaid
+flowchart TB
+  subgraph BOOT["Bootstrap"]
+    direction LR
+    FONT["Load Inter font (OFL)"] --> WORLD["World.create — IWSDK runtime"]
+    WORLD --> REG["Register 15 systems"]
+    REG --> STATUS["initStatus3D — in-scene status"]
+    REG --> WARM["warmupModel — preload inference"]
+    REG --> HEALTH["startHealthIndicator — 30s pill"]
+    REG --> SPLASH["Splash fade"]
+  end
 
-<p align="center">
-  <img src="docs/diagrams/master-system.svg" alt="Master system map: capture (mic orb, type orb, seed cards) → distress gate → organize (heuristic held ready, schema-bound model call with retry) → snap → grabbable cards → localStorage palace with 30 snapshots → return greeting → recall quiz → rewind dial" width="820">
-</p>
+  subgraph CAPTURE_LAYER["Capture — four equal paths"]
+    direction LR
+    VOICE["🎤 Voice
+    Web Speech API
+    (desktop only)"] --> RAW
+    TYPE["⌨ Type
+    desktop bar
+    or spatial keyboard"] --> RAW
+    SEED["🃏 Seed cards
+    3 curated sets × 5"] --> RAW
+    RAW["spawnRaw()"] --> GATE{"Distress gate
+    16 trigger patterns"}
+  end
 
-| Capability | How Loci does it |
+  GATE -- "flagged" --> CRISIS["🛡 Crisis Panel
+  3D world-space · calm tone
+  real resources: 988 · findahelpline
+  crisActive blocks organize/recall/capture"]
+  GATE -- "clear" --> SPAWN["Note created
+  SpawnAnimation: scale 0→1
+  + opacity fade + glow bloom
+  + spawn shimmer tone"]
+  SPAWN --> RAWPOOL["Note pool (in-memory)"]
+
+  subgraph ORG_PIPE["Organize Pipeline — dual-intelligence arbitration"]
+    direction TB
+    TRIGGER["Organize triggered
+    orb press / HUD button / auto-timer 2.2s"] --> GUARD{"Blocked?
+    recall · rewind · crisis · intro · keyboard?"}
+    GUARD -- "yes" --> SKIP["return"]
+    GUARD -- "no" --> HEUR["Path A: Heuristic organizer
+    clusterer.ts — token overlap coefficient
+    + union-find — instant · deterministic"]
+    GUARD --> MODEL["Path B: Model client
+    model-client.ts — POST /chat/completions
+    Vultr Serverless Inference · response_format: json_object"]
+    MODEL --> SANITIZE["Sanitize: unknown ids dropped
+    leftovers → Loose threads cluster"]
+    SANITIZE --> CHECK{"covers ≥ 60%?"}
+    CHECK -- "yes" --> WIN["model result wins"]
+    CHECK -- "no" --> HWIN["heuristic result wins"]
+    WIN --> DECLUMP
+    HWIN --> DECLUMP
+    HEUR --> HWIN
+  end
+
+  subgraph DECLUMP["Declump — 5-pass relaxation"]
+    direction LR
+    D1["movable targets separate
+    ≥ 0.185m from each other"] --> D2["user-placed cards
+    = immovable obstacles"]
+  end
+
+  subgraph SNAP["THE SNAP"]
+    direction LR
+    S1["flights: eased arcs 0.65s"] --> S2["particle trails (additive)"]
+    S2 --> S3["connection lines draw in"]
+    S3 --> S4["chord resolves"]
+  end
+
+  DECLUMP --> SNAP
+  SNAP --> TINT["Orb tint: GOLD = model · GRAY = local"]
+
+  subgraph ARRANGE_LAYER["Arrange"]
+    direction LR
+    VR["Pinch-grab (Quest)"] --> WATCH["GrabWatchSystem
+    userPlaced = true on release"]
+    MOUSE["Mouse drag (desktop)"] --> WATCH
+    WATCH --> SAVE
+  end
+
+  subgraph PERSIST["Palace persistence — localStorage loci.palace.v1"]
+    direction LR
+    P1["notes[] · edges[] · clusterLabels[]"] --> P2["recall: {strength 0-5, seen}"]
+    P2 --> P3["history: ≤30 snapshots"]
+    P3 --> P4["beforeunload flush · JSON export"]
+  end
+
+  subgraph RETURN["Return visit"]
+    direction LR
+    R1["restorePalace — notes + clusters + greeting"] --> R2["health pill: N notes · M due"]
+    R2 --> R3["Sage nudge: 'N fading — try Recall' (if ≥3)"]
+  end
+
+  subgraph RECALL["Recall — quiz panel + voice"]
+    direction LR
+    Q1["pickOrder: weakest / never-seen first"] --> Q2["quiz panel: 1 question, 3 bars"]
+    Q2 --> Q3["answer: touch / voice / click"]
+    Q3 --> Q4{"correct?"}
+    Q4 -- "yes" --> Q5["strength +1 · green glow · rising ping"]
+    Q4 -- "no" --> Q6["strength → 0 · amber · soft tone"]
+  end
+
+  subgraph REWIND_LAYER["Rewind"]
+    direction LR
+    RWD1["grabbable knob on track"] --> RWD2["scrub ≤30 snapshots"]
+    RWD2 --> RWD3["cards reflow with snap motion"]
+    RWD3 --> RWD4["scrubs never recorded as history"]
+  end
+```
+
+*Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system inventory,
+component table, deferred-trash disposal pattern, organize data flow,
+save schema, rendering notes.*
+
+---
+
+## Capability matrix
+
+Every capability, how it works, which files implement it, and what makes it
+notable. This is the depth a judge should find when they open the source.
+
+### Capture
+
+| | Detail |
 | --- | --- |
-| **Capture** | Four equal paths: speak (mic orb, Web Speech), type (spatial QWERTY keyboard in-headset), seed cards (one touch spills a set), or the desktop bar |
-| **Organize** | Sage clusters notes and returns clusters, cross-cluster edges and up to two expand/challenge suggestions — schema-enforced, retried once, sanitized; a deterministic organizer answers instantly on any failure |
-| **The snap** | Cards arc into clusters with particle trails, connection lines draw in, a synthesized chord resolves — no audio assets, all WebAudio |
-| **Arrange** | Pinch-grab (VR) or drag (desktop); `userPlaced` cards are never reorganized by the agent |
-| **Persist** | Autosaved palace in localStorage: layout, per-note memory strength, 30 history snapshots; JSON export |
-| **Recall** | Quiz panel generated from real palace data, weakest notes first; answers by touch or voice; strengths reschedule tomorrow |
-| **Rewind** | A grabbable dial scrubs the palace through its own history with the snap animation |
-| **Safety** | A reviewed trigger list gates every capture before the model or the palace; flagged captures open a 3D crisis panel with real resources and a calm tone |
+| **Typed** | Desktop bar → `keydown` listener → `spawnRaw(text)` → distress gate → note entity + spawn animation. Works everywhere. |
+| **Voice** | Mic orb → Web Speech API (Webkit-prefixed) → final transcript → `spawnRaw(text)`. Desktop-only (Quest browsers have no speech recognition — the mic orb auto-hides). |
+| **Seed cards** | Three curated sets (Exam, Thesis, Kingdom) as 3D grabbable cards. One press spills 5 themed notes and triggers auto-organize after 2.2s. |
+| **Spatial keyboard** | QWERTY panel at seated eye height (works on Quest where speech is unavailable). Number row, punctuation, backspace, done. |
+| **Safety gate** | All four paths pass through `checkDistress()` before `spawnRaw()` creates anything. Flagged captures are discarded — they never enter the palace, the save, or the model. |
 
-Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (systems, data flow,
-sequences) · [docs/MODEL_CARD.md](docs/MODEL_CARD.md) (Sage: contract, measured
-latencies, limits) · [docs/SAFETY.md](docs/SAFETY.md) (the gate and the panel).
+### Organize
 
-## Two surfaces, one idea
+| | Detail |
+| --- | --- |
+| **Heuristic (Path A)** | `clusterer.ts`: token overlap coefficient + greedy union-find. Stopword filtering, naive stemming. Deterministic — same input always produces the same clusters. Instant, no network. |
+| **Model (Path B)** | `model-client.ts`: POST to Vultr Serverless Inference (`qwen3.8-flash-next`) with `response_format: json_object`. Schema-enforced, sanitised, retried ×1 @1.5s. |
+| **Arbitration** | Model result wins only if it covers ≥60% of notes. Otherwise the heuristic result stands. The organize orb turns **gold** (model) or **gray** (local) so you always know which ran. |
+| **Suggestion buds** | Model-exclusive — the heuristic structurally cannot produce them. Up to 2 per organize: one **expand** (green +, inviting question) and one **challenge** (amber ?, honest question). Press to read the bubble. |
+| **Declump** | 5-pass relaxation: movable targets separate to ≥0.185m from each other AND from user-placed cards (treated as immovable obstacles). Grid + relaxation keeps cards readable at any count. |
 
-| Surface | What it is | Where |
-| --- | --- | --- |
-| **Quest app** (primary) | The full hands-first VR experience — this repository's root, deployed to GitHub Pages | this folder |
-| **Web companion** | The phone/desktop **Lovable-designed** web version: opening story, per-mode palaces, Recall, Rewind, safety gate — same loop, flat screen | [`web/`](web/README.md) |
+### Snap animation
 
-The web companion's design originates from [Lovable](https://lovable.dev) and
-lives in [`web/`](web/README.md) — see its README to run it (Bun) and
-[`web/WEB_VERSION.md`](web/WEB_VERSION.md) for how it relates to the Quest app.
+| | Detail |
+| --- | --- |
+| **Flights** | Eased arcs (0.65s) from current position to target, with scale overshoot and per-card stagger (0.045s apart). |
+| **Particle trails** | 6 particles per flight (additive blending, 0.7s life, pooled cloud — no per-flight allocation). |
+| **Connection lines** | Cylinder geometry between cluster-crossing pairs, opacity tracks progress. |
+| **Chord** | Synthesized 4-note resolving chord (A major). No audio files. |
+
+### Arrange
+
+| | Detail |
+| --- | --- |
+| **VR** | `OneHandGrabbable` — pinch to grab, hand to move. `GrabWatchSystem` marks `userPlaced = true` on release; `organize()` excludes user-placed cards from reorganization. |
+| **Desktop** | `MouseDragSystem` — camera-facing plane drag with offset preservation. |
+| **Spawn animation** | Scale 0→1 with overshoot, opacity fade, glow bloom — skipped for restored notes (they appear settled). |
+
+### Recall
+
+| | Detail |
+| --- | --- |
+| **Quiz panel** | Dark backdrop + question + 3 wide answer bars. Generated from real palace data, weakest notes first. |
+| **Question types** | Type A: "which thread did this join?" (cluster membership). Type B: "which thought was closest?" (association via edges or same-cluster peers). |
+| **Voice answering** | Spoken transcript fuzzy-matched to closest option bar (substring + word-overlap scoring). Desktop only. |
+| **Grading** | Correct → green bar, strength +1 (cap 5), rising ping. Wrong → amber bar, strength → 0, soft tone. No failure buzz. |
+| **Scheduling** | `pickOrder()` sorts weakest / never-seen first. Strength 0–5; correct +1; miss → 0. Persisted in the palace save. |
+
+### Rewind
+
+| | Detail |
+| --- | --- |
+| **Dial** | Grabbable knob on a track at the void's edge (OneHandGrabbable, X-constrained). "Now" button returns to latest. |
+| **Snapshots** | ≤30 in the save. Each scrub re-positions cards to historical layout with snap animation. |
+| **Scrubs never recorded** | `schedulePalaceSave` refuses during `rewindActive` — scrubbing is never mistaken for a real save. |
+
+### Safety
+
+| | Detail |
+| --- | --- |
+| **Gate** | `distress-gate.ts`: 16 reviewed trigger patterns. Runs on every capture before anything else. |
+| **Panel** | 3D world-space crisis panel: acknowledgment, real resources (findahelpline.com, 988, local emergency), closing human line, "I'm okay — continue" button. |
+| **Blocks** | `crisActive` gates organize, recall, capture, and rewind while open. |
+| **Fail direction** | Toward resources. False positive = one dismissible panel. False negative = unacceptable. |
+
+### Persistence
+
+| | Detail |
+| --- | --- |
+| **Save schema** | Versioned `loci.palace.v1`: notes, edges, cluster labels, recall state, ≤30 history snapshots. |
+| **Debounce** | 600ms min (1.8s after organize so flights land before the snapshot). |
+| **Beforeunload** | Synchronous flush — typed-but-unorganized thoughts survive tab close. |
+| **Clear** | Suppresses the beforeunload flush, wipes storage, reloads. |
+| **Export** | JSON download of the entire palace from the ? menu. |
+
+---
+
+## Accessibility
+
+| Feature | Implementation |
+| --- | --- |
+| CVD-verified palette | 6 accents searched under Viénot deutan/protan/tritan simulation (worst pair 72.2) |
+| Never color-only | Every state carries a glyph, shape, or label |
+| Global text scale | Aa orb: 100/125/150%, applied live via scene traversal |
+| Reduced motion | `prefersReducedMotion()` cached in `media-queries.ts` |
+| High-contrast mode | HC button: HUD + overlay → pure black/white |
+| Crisis panel audio | Calm tone (low, slow — presence, not alarm) |
+| One hand, seated | All affordances within a two-foot arc; no locomotion |
+| Spatial keyboard | Works on Quest (no speech API there) — full QWERTY |
+
+---
 
 ## For judges — run it in 60 seconds
 
 The submitted experience is the **Quest app**. Three ways in:
 
-1. **Quest browser (the real thing):** open the GitHub Pages URL from the
-   submission form — hands-first, pinch to grab, orbs to organize.
+1. **Quest browser (the real thing):** open the live URL — hands-first,
+   pinch to grab, orbs to organize, Enter VR for full immersion.
 2. **Desktop with VR emulation:** `npm install && npm run dev` → the IWSDK dev
    window opens with Meta's IWER emulator — controllers map to WASD/mouse.
 3. **Desktop, mouse or webcam hands:** any static server on `dist/` — the HUD,
@@ -87,56 +266,94 @@ The submitted experience is the **Quest app**. Three ways in:
 
 All three run the same build. No keys, no accounts, no cloud signup.
 
+---
+
 ## At a glance
 
 - ✅ **Hands-first end to end** — every interaction is pinch, grab, gaze or touch; controllers optional
-- ✅ **Real model with a safety net** — schema-constrained qwen3:14b, one retry, instant local fallback; the orb's gold/gray glow says which ran
+- ✅ **Real model with a safety net** — schema-constrained qwen3.8-flash-next, one retry, instant local fallback; the orb's gold/gray glow says which ran
 - ✅ **Verified colorblind-safe palette** — searched under deutan/protan/tritan simulation; worst pair distance 72.2 (the previous palette collapsed to 1.4)
 - ✅ **Spaced repetition + persistent palace + 30-snapshot Rewind** — the return loop is mechanics, not notifications
 - ✅ **Safety gate before everything** — flagged captures never reach the model or the palace
 - ✅ **Zero runtime assets** — canvas-rendered type, synthesized audio, bundled OFL font; loads fast on Quest
+- ✅ **Web companion** — TanStack Start + React, same loop, flat screen
+- ✅ **Self-hosted MediaPipe** — WASM + model bundled, no CDN dependency
+- ✅ **PWA installable** — manifest + icons for Quest home screen
+- ✅ **In-app guide** — ? button opens a themed walkthrough
+- ✅ **First-launch onboarding** — spatial 4-phase intro, not a tutorial
+- ✅ **3 cognitive modes** — Think / Grow / Imagine, per-mode palaces
 - ⚠️ **Voice capture is desktop-only** — Quest browsers have no Web Speech API; typed capture and the spatial keyboard are the equal first-class paths (documented, not hidden)
+
+---
 
 ## Layout
 
 ```
 src/
-  index.ts            World bootstrap, system registration, 72fps/foveation
+  index.ts              World bootstrap, system registration, 72fps/foveation
   loci/
-    capture-system    capture paths, seed sets, HUD wiring
-    organize-system   model-first arbitration, declump, cluster labels, buds
-    snap-system       flights, particle trails, connection lines
-    recall-system     quiz panel generation, voice answers, grading
-    rewind-system     spatial dial, snapshot scrubbing
-    crisis-panel      3D safety surface (blocks everything while open)
-    capture-keyboard  spatial QWERTY for in-headset typing
-    webcam-hand-sys   MediaPipe hand tracking for desktop testing
-    model-client      schema-bound Ollama client, retry, warmup
-    clusterer         deterministic fallback organizer
-    distress-gate     reviewed trigger list (runs before everything)
-    palace-store      versioned save schema, snapshots, export
-    text-label        canvas-rendered type (1536px/m, faux-bold)
-    palette           design tokens incl. the verified CVD accents
-public/               bundled Inter font (OFL), generated welcome panel
+    capture-system      capture paths, seed sets, HUD wiring
+    organize-system     model-first arbitration, declump, cluster labels, buds
+    snap-system         flights, particle trails, connection lines
+    recall-system       quiz panel generation, voice answers, grading
+    rewind-system       spatial dial, snapshot scrubbing
+    crisis-panel        3D safety surface (blocks everything while open)
+    capture-keyboard    spatial QWERTY for in-headset typing
+    webcam-hand-sys     MediaPipe hand tracking for desktop testing
+    model-client        schema-bound inference client, retry, warmup
+    clusterer           deterministic fallback organizer
+    distress-gate       reviewed trigger list (runs before everything)
+    palace-store        versioned save schema, snapshots, export
+    palace-health       notes + due-for-review pill (30s refresh)
+    experience-system   4-phase spatial intro
+    onboarding          first-launch walkthrough (localStorage-gated)
+    interaction-state   shared guards (canCapture, etc.)
+    modes               Think / Grow / Imagine helpers + storage keys
+    text-label          canvas-rendered type (2048px/m, mipmap, faux-bold)
+    palette             design tokens incl. the verified CVD accents
+    media-queries       cached matchMedia (reduced motion)
+    speech              shared Web Speech helper
+    status3d            in-world status label + desktop DOM mirror
+    spatial-ui          frame / surface / text / spatialButton factories
+    time                agoLabel helper
+    audio               synthesized WebAudio cues
+    layout              arc placement, grid layout, declump relaxation
+    globals             shared bus: requests + state flags
+    components          ECS component definitions (15 registered)
+  panel.ts              welcome panel lifecycle
+styles.css              global styles, HUD, overlays, high-contrast mode
+public/
+  fonts/                Inter (OFL)
+  mediapipe/            self-hosted WASM + hand-landmarker model
+  icons/                PWA icons (192/512) + SVG source
+  manifest.json         PWA manifest
+  scenes/               IWSDK scene
+  ui/                   welcome.uikitml (generated from guide.ts)
 COMPETITION_STRATEGY.md  per-category competition strategy
-docs/diagrams/         SVG flow diagrams (system, sequences)
-docs/                 architecture, evidence map, model card, safety, feedback
+docs/                    architecture, evidence map, model card, safety, AI, feedback, deploy, diagrams
+prizes/diagrams/         SVG flow diagrams (system, sequences)
+scripts/                 deploy + welcome-sync generators
+web/                     Lovable-designed web companion (TanStack + React)
 ```
 
 ## Development
 
 ```bash
 npm install
-npm run dev        # IWSDK dev server + in-browser XR emulation (IWER)
-npm run build      # production build → dist/
-npm run typecheck
+npm run dev           # IWSDK dev server + in-browser XR emulation (IWER)
+npm run build         # production build → dist/
+npm run typecheck     # TypeScript strict check
+npm run sync:welcome  # regenerate welcome panel from guide.ts
 cd web && bun install && bun run test   # web companion suite (16 tests)
 ```
 
-Deployed to GitHub Pages on every push to `main` (`.github/workflows/deploy.yml`).
+## Deployment
+
+Deployed to the Vultr VM on every push to `main` (`.github/workflows/deploy.yml`).
+Live at: **https://139-84-174-127.sslip.io**
+
 The `web/` companion is not auto-deployed. A self-hosted mirror of the Quest
-build runs on a Vultr VM with Caddy auto-HTTPS:
-**https://139-84-174-127.sslip.io** — deploy/update with
+build runs on a Vultr VM with Caddy auto-HTTPS — deploy/update with
 `bash scripts/vultr_deploy.sh` (runbook: [docs/DEPLOY-VULTR.md](docs/DEPLOY-VULTR.md)).
 
 ## Roadmap
@@ -145,13 +362,17 @@ build runs on a Vultr VM with Caddy auto-HTTPS:
 - Cloud palace sync across devices
 - Rewind across weeks with month-level grain
 - Voice capture on Quest via Meta's Voice SDK (Quest browsers lack Web Speech)
+- Multiple palaces per mode
+- Shared palaces for collaborative thinking
+- Cross-mode connections (Think ↔ Grow ↔ Imagine)
 
-## Privacy note
+## Privacy
 
-Thoughts are processed on your device and, for AI organizing, by a small model
-on the developer's own server — nothing stored, nothing shared. Optional webcam
-hand tracking processes frames entirely on-device via MediaPipe. The palace
-lives only in your browser; export it anytime.
+Thoughts are processed on your device and, for AI organizing, by a small
+model on the developer's own server — nothing stored server-side, nothing
+shared with third parties. Optional webcam hand tracking processes frames
+entirely on-device via MediaPipe. The palace lives only in your browser;
+export it anytime with the Export button.
 
 ## License
 
