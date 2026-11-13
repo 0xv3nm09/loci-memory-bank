@@ -56,6 +56,7 @@ export class AmbientSystem extends createSystem({
   /** Tracked particle bursts for cleanup. */
   private bursts: Points[] = [];
   private nebulaColor = new Color();
+  private readonly _spawnScratch: import('@iwsdk/core').Entity[] = [];
 
   init(): void {
     const stars = createStarfield(this.world);
@@ -125,7 +126,10 @@ export class AmbientSystem extends createSystem({
     }
 
     // ── Spawn animation: scale 0→1 + opacity 0→1 + glow bloom ──
-    for (const entity of Array.from(this.queries.spawning.entities)) {
+    const spawning = this._spawnScratch;
+    spawning.length = 0;
+    for (const e of this.queries.spawning.entities) { spawning.push(e); }
+    for (const entity of spawning) {
       const elapsed = (entity.getValue(SpawnAnimation, 'elapsed') ?? 0) + delta;
       entity.setValue(SpawnAnimation, 'elapsed', elapsed);
       const duration = entity.getValue(SpawnAnimation, 'duration') ?? 0.45;

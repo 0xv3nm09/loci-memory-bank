@@ -323,6 +323,7 @@ export class CaptureSystem extends createSystem({
     const clearBtn = document.getElementById('clear-btn');
     const exportBtn = document.getElementById('export-btn');
     const helpBtn = document.getElementById('help-btn');
+    const contrastBtn = document.getElementById('contrast-btn');
     const helpOverlay = document.getElementById('loci-help');
     const helpClose = document.getElementById('help-close');
     if (hud == null || input == null) {
@@ -420,6 +421,13 @@ export class CaptureSystem extends createSystem({
     const exportJson = (): void => {
       exportPalace();
     };
+    const toggleContrast = (): void => {
+      document.body.classList.toggle('high-contrast');
+      contrastBtn?.setAttribute(
+        'aria-pressed',
+        String(document.body.classList.contains('high-contrast')),
+      );
+    };
     const helpToggle = (): void => {
       getLoci(this.globals).helpActive = !getLoci(this.globals).helpActive;
       if (getLoci(this.globals).crisActive || getLoci(this.globals).introActive || getLoci(this.globals).recallActive || getLoci(this.globals).keyboardActive || getLoci(this.globals).rewindActive) { getLoci(this.globals).helpActive = false; return; }
@@ -451,6 +459,7 @@ export class CaptureSystem extends createSystem({
     clearBtn?.addEventListener('click', clearClick);
     exportBtn?.addEventListener('click', exportClick);
     helpBtn?.addEventListener('click', helpClick);
+    contrastBtn?.addEventListener('click', toggleContrast);
     helpClose?.addEventListener('click', helpCloseClick);
     input.addEventListener('keydown', keyDown);
 
@@ -462,6 +471,7 @@ export class CaptureSystem extends createSystem({
       () => clearBtn?.removeEventListener('click', clearClick),
       () => exportBtn?.removeEventListener('click', exportClick),
       () => helpBtn?.removeEventListener('click', helpClick),
+      () => contrastBtn?.removeEventListener('click', toggleContrast),
       () => helpClose?.removeEventListener('click', helpCloseClick),
       () => input.removeEventListener('keydown', keyDown),
       this.world.visibilityState.subscribe((state) => {

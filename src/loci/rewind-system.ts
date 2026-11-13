@@ -10,8 +10,8 @@ import { agoLabel } from './time.js';
 import { GLASS, SEMANTIC, ORB_COLORS } from './palette.js';
 import { playRewindTick } from './audio.js';
 
-const DIAL_POS = new Vector3(0, 0.68, -0.95);
-const TRACK_HALF = 0.24;
+export const DIAL_POS = new Vector3(0, 0.68, -0.95);
+export const TRACK_HALF = 0.24;
 
 /**
  * Rewind — scrub the palace through its own history with a spatial dial at

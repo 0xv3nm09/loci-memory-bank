@@ -3,6 +3,7 @@ import { Mesh, MeshStandardMaterial, Object3D, Plane, Raycaster, Vector3, Vector
 import { Note, SnapAnimation, RewindHandle } from './components.js';
 import { playPlaceClick } from './audio.js';
 import { getLoci } from './globals.js';
+import { DIAL_POS, TRACK_HALF } from './rewind-system.js';
 import { schedulePalaceSave } from './palace-store.js';
 
 /**
@@ -67,7 +68,7 @@ export class MouseDragSystem extends createSystem({}) {
         if (object == null) {
           return;
         }
-        if (this.draggingRewind) { object.position.x = Math.max(-.24, Math.min(.24, this.hitPoint.x + this.grabOffset.x)); return; }
+        if (this.draggingRewind) { object.position.x = Math.max(DIAL_POS.x - TRACK_HALF, Math.min(DIAL_POS.x + TRACK_HALF, this.hitPoint.x + this.grabOffset.x)); return; }
         object.position.copy(this.hitPoint).add(this.grabOffset);
         object.lookAt(0, object.position.y, 0.001);
       }
