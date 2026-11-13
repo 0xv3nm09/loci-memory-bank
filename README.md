@@ -24,7 +24,7 @@ session.
 proof) · [Sage model card](docs/MODEL_CARD.md) · [Safety design](docs/SAFETY.md) ·
 [How AI was used](docs/AI.md) (in the product + in the build) ·
 [Build feedback](docs/FEEDBACK.md) (every issue faced and its fix) ·
-[Prize-targeting notes](prizes/README.md)
+[Competition strategy](COMPETITION_STRATEGY.md) · diagrams in [prizes/diagrams/](prizes/diagrams/)
 
 ## How the system connects
 
@@ -110,7 +110,8 @@ src/
     text-label        canvas-rendered type (1536px/m, faux-bold)
     palette           design tokens incl. the verified CVD accents
 public/               bundled Inter font (OFL), generated welcome panel
-prizes/               per-category competition notes + SVG diagram set
+COMPETITION_STRATEGY.md  per-category competition strategy
+prizes/diagrams/         SVG flow diagrams (system, sequences)
 docs/                 architecture, evidence map, model card, safety, feedback
 ```
 
