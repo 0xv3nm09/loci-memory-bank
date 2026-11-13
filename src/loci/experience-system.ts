@@ -228,12 +228,16 @@ export class ExperienceSystem extends createSystem({ actions: { required: [Exper
       this.world.scene.traverse(object => {
         if (/^(seed-|.*-orb$|rewind-dial$|rewind-knob$|rewind-now-orb$|rewind-title$|loci-status$|cluster-label$|loci-connection$|experience-help$|experience-sound$)/.test(object.name)) this.uiObjects.push(object);
       });
-      for (const object of this.uiObjects) object.visible = !modal;
+    }
+    for (const object of this.uiObjects) {
+      // Flat browser views already have the bottom bar; keep the spatial dock for VR.
+      const browserWorld = !/^(.*-orb$|rewind-|experience-|loci-status$)/.test(object.name);
+      object.visible = !modal && (immersive || browserWorld);
     }
     const xrControl = this.world.scene.getObjectByName('experience-xr');
     if (xrControl) xrControl.visible = immersive;
     for (const object of this.world.scene.children) {
-      if (object.name === 'loci-brand' || object.name === 'loci-subtitle') object.visible=!modal && (immersive || window.innerWidth >= 680);
+      if (object.name === 'loci-brand' || object.name === 'loci-subtitle') object.visible=!modal && immersive; // browser header already shows the name and mode
     }
     if (!this.intro || !this.running) return;
     this.elapsed += delta;
