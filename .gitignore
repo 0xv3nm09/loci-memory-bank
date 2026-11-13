@@ -46,3 +46,11 @@ pids/
 
 # Dev audit screenshots
 artifacts/
+
+# Private planning/strategy docs — between developer and assistant, not for the public repo
+COMPETITION_STRATEGY.md
+TASKS.md
+TECHNICAL_IMPLEMENTATION_GUIDE.md
+VULTR_INFERENCE_GUIDE.md
+QUEST_REDESIGN.md
+CODE_REVIEW.md
