@@ -61,18 +61,39 @@ export interface SavedPalace {
   history?: SavedSnapshot[];
 }
 
+// Session cache — loadPalace() is called by several systems (health
+// indicator every 30s, organize, recall, rewind) and parsing the full
+// document each time is wasteful. Invalidated on any write, on Clear,
+// and when another tab writes (the `storage` event).
+let cachedDoc: SavedPalace | null | undefined; // undefined = not loaded yet
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === KEY || event.key == null) {
+      cachedDoc = undefined;
+    }
+  });
+}
+
 export function loadPalace(): SavedPalace | null {
+  if (cachedDoc !== undefined) {
+    return cachedDoc;
+  }
   try {
     const raw = localStorage.getItem(KEY);
     if (raw == null) {
+      cachedDoc = null;
       return null;
     }
     const data = JSON.parse(raw) as SavedPalace;
     if (data.version !== 1 || !Array.isArray(data.notes)) {
+      cachedDoc = null;
       return null;
     }
+    cachedDoc = data;
     return data;
   } catch (err) {
+    cachedDoc = null;
     return null;
   }
 }
@@ -81,6 +102,7 @@ export function clearPalace(): void {
   try {
     localStorage.removeItem(KEY);
     cachedHistory = null;
+    cachedDoc = null;
   } catch (err) {
     // nothing to clear
   }
@@ -156,6 +178,7 @@ export function writePalaceSave(loci: LociGlobals): void {
       },
     ].slice(-30);
     payload.history = cachedHistory;
+    cachedDoc = payload;
     localStorage.setItem(KEY, JSON.stringify(payload));
   } catch (err) {
     if (err instanceof DOMException && err.name === 'QuotaExceededError') {

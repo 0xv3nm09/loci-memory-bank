@@ -15,6 +15,7 @@ import {
 import { createStarfield } from './note-factory.js';
 import { GLASS, nebulaTint } from './palette.js';
 import { getLoci } from './globals.js';
+import { prefersReducedMotion } from './media-queries.js';
 
 const HOVER_SCALE = 1.08;
 const GRAB_SCALE = 1.12;
@@ -68,7 +69,7 @@ export class AmbientSystem extends createSystem({
   }
 
   update(delta: number, time: number): void {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = prefersReducedMotion();
     if (reduced) time = 0;
     // ── Nebula color cycling on starfield ──
     const tint = nebulaTint(time);

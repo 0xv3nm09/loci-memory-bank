@@ -14,6 +14,7 @@ import { ConnectionLine, Note, SnapAnimation } from './components.js';
 import { playConnectTone, playPlaceClick } from './audio.js';
 import { getLoci } from './globals.js';
 import { schedulePalaceSave } from './palace-store.js';
+import { prefersReducedMotion } from './media-queries.js';
 
 const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
 const clamp01 = (t: number): number => Math.min(1, Math.max(0, t));
@@ -100,7 +101,7 @@ export class SnapSystem extends createSystem({
   private readonly _lineScratch: import('@iwsdk/core').Entity[] = [];
 
   update(delta: number): void {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = prefersReducedMotion();
     // ── Update trail particles ──
     for (const cloud of trailClouds) {
       if (cloud.particles.length === 0) {

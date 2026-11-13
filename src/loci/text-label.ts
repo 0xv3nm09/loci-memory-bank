@@ -1,5 +1,6 @@
 import {
   CanvasTexture,
+  Object3D,
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
@@ -184,6 +185,7 @@ export function createTextLabel(
   mesh.renderOrder = 5;
   mesh.userData.labelText = text;
   mesh.userData.isLociLabel = true;
+  mesh.userData.canvasTexture = texture;
   mesh.scale.setScalar(getTextScale());
   // Dynamic labels (e.g. the keyboard input field) redraw in place.
   mesh.userData.redraw = (newText: string): void => {
@@ -213,4 +215,19 @@ export function createTextLabel(
     texture.needsUpdate = true;
   };
   return mesh;
+}
+
+/**
+ * Frees the GPU texture of every canvas label under `root`. Call before
+ * destroying entities whose labels carry unique textures (notes, quiz
+ * panels, buds) — material.dispose() alone does not dispose textures.
+ */
+export function disposeLabelTextures(root: Object3D): void {
+  root.traverse((object) => {
+    const texture = object.userData?.canvasTexture as CanvasTexture | undefined;
+    if (texture != null) {
+      texture.dispose();
+      object.userData.canvasTexture = undefined;
+    }
+  });
 }

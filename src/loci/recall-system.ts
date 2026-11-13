@@ -25,6 +25,7 @@ import {
 import type { RecallState } from './palace-store.js';
 import { schedulePalaceSave } from './palace-store.js';
 import { setAppStatus } from './status3d.js';
+import { disposeLabelTextures } from './text-label.js';
 import { GLASS, SEMANTIC } from './palette.js';
 import { frame, surface } from './spatial-ui.js';
 
@@ -143,7 +144,10 @@ export class RecallSystem extends createSystem({
     this.trash = [];
     for (const entity of doomed) {
       try {
-        entity.object3D?.removeFromParent();
+        if (entity.object3D != null) {
+          disposeLabelTextures(entity.object3D);
+          entity.object3D.removeFromParent();
+        }
       } catch {
         // already detached
       }

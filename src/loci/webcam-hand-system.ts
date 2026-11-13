@@ -200,16 +200,16 @@ export class WebcamHandSystem extends createSystem({}) {
         '@mediapipe/tasks-vision'
       );
 
+      // Self-hosted: no CDN dependency during a judge's demo. The SIMD wasm
+      // variant is shipped (all Quest browsers and modern desktops support
+      // SIMD); the model file is bundled in public/mediapipe/models.
       const vision = await FilesetResolver.forVisionTasks(
-        // The WASM files are loaded from the node_modules via Vite's dependency
-        // bundling, or from the CDN fallback baked into the package.
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm',
+        `${import.meta.env.BASE_URL}mediapipe/wasm`,
       );
 
       this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath:
-            'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+          modelAssetPath: `${import.meta.env.BASE_URL}mediapipe/models/hand_landmarker.task`,
           delegate: 'GPU',
         },
         runningMode: 'VIDEO',

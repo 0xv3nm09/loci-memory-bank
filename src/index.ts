@@ -37,10 +37,33 @@ if (sceneContainer == null) {
   throw new Error('Missing #scene-container element');
 }
 
-World.create(sceneContainer as HTMLDivElement, projectOptions).catch((err) => {
-  console.error('[Loci] World.create failed:', err);
-}).then(async (world) => {
-  if (world == null) { return; }
+/**
+ * Boot failure must be VISIBLE, not a silent splash forever: if World.create
+ * rejects, the error lands on the page and the console.
+ */
+function showBootFailure(err: unknown): void {
+  console.error('[Loci] boot failed:', err);
+  const splash = document.getElementById('loci-splash');
+  const line = document.createElement('div');
+  line.style.cssText =
+    'position:fixed;inset:auto 0 40%;0;text-align:center;color:#ff9b9b;' +
+    "font:600 15px Inter, system-ui, sans-serif;text-shadow:0 1px 4px #000;";
+  line.textContent = 'Loci failed to start — refresh the page to try again.';
+  document.body.appendChild(line);
+  if (splash) {
+    splash.style.opacity = '0.4';
+  }
+}
+
+async function boot(): Promise<void> {
+  let world: World;
+  try {
+    world = await World.create(sceneContainer as HTMLDivElement, projectOptions);
+  } catch (err) {
+    showBootFailure(err);
+    return;
+  }
+
   (world.globals as Record<string, unknown>)['loci'] = createLociGlobals();
 
   world.registerSystem(CaptureSystem);
@@ -55,6 +78,26 @@ World.create(sceneContainer as HTMLDivElement, projectOptions).catch((err) => {
   world.registerSystem(KeyboardSystem);
   world.registerSystem(ExperienceSystem);
   world.registerSystem(WebcamHandSystem);
+
+  // ── ECS error boundary ──
+  // One throwing system update must never freeze the whole world loop: wrap
+  // every registered system's update in a guard that logs the first failure
+  // per system and then keeps going.
+  const guarded = new Set<string>();
+  for (const system of (world as unknown as { systems: Array<{ constructor: { name: string }; update: (d: number, t: number) => void }> }).systems) {
+    const name = system.constructor?.name ?? 'System';
+    const original = system.update.bind(system);
+    system.update = (delta: number, time: number): void => {
+      try {
+        original(delta, time);
+      } catch (err) {
+        if (!guarded.has(name)) {
+          guarded.add(name);
+          console.error(`[Loci] system "${name}" threw — further errors from it are suppressed:`, err);
+        }
+      }
+    };
+  }
 
   // Sage's voice in the scene — status never depends on the DOM overlay.
   initStatus3D(world);
@@ -88,4 +131,6 @@ World.create(sceneContainer as HTMLDivElement, projectOptions).catch((err) => {
       }
     }
   });
-});
+}
+
+void boot();

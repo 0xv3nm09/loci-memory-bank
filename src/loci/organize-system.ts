@@ -14,6 +14,7 @@ import { organizeWithModel } from './model-client.js';
 import { setAppStatus } from './status3d.js';
 import { CLUSTER_HUES, clusterCenter, gridHalfHeight, noteOffset } from './layout.js';
 import { createClusterLabel, createLine, createSuggestionBud, setNoteTint } from './note-factory.js';
+import { disposeLabelTextures } from './text-label.js';
 import { playSnapChord, playOrganizeTone } from './audio.js';
 import { getLoci } from './globals.js';
 import { SEMANTIC } from './palette.js';
@@ -54,7 +55,10 @@ export class OrganizeSystem extends createSystem({
     this.trash = [];
     for (const entity of doomed) {
       try {
-        entity.object3D?.removeFromParent();
+        if (entity.object3D != null) {
+          disposeLabelTextures(entity.object3D);
+          entity.object3D.removeFromParent();
+        }
       } catch {
         // already detached
       }
