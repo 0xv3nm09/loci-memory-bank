@@ -27,7 +27,7 @@ import { startHealthIndicator } from './loci/palace-health.js';
 // Register the bundled Inter before any card label is drawn, so every
 // surface uses the same type from the first frame.
 try {
-  await loadLociFont();
+  await Promise.race([loadLociFont(), new Promise(r => setTimeout(r, 3000))]);
 } catch {
   // Font load failed — canvas labels fall back to system font.
 }

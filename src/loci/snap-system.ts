@@ -43,7 +43,12 @@ interface TrailCloud {
   material: PointsMaterial;
 }
 
-const trailClouds: TrailCloud[] = [];
+// Single pre-allocated ring buffer — no per-flight allocation
+const TRAIL_BUFFER_SIZE = 256;
+let trailPoints: Points | null = null;
+let trailGeometry: BufferGeometry | null = null;
+let trailParticles: TrailParticle[] = [];
+let trailWriteIdx = 0;
 
 function spawnTrailParticle(x: number, y: number, z: number): TrailParticle {
   return {
@@ -58,17 +63,12 @@ function spawnTrailParticle(x: number, y: number, z: number): TrailParticle {
   };
 }
 
-function getOrCreateTrailCloud(scene: { add(o: Points): void }): TrailCloud {
-  // Reuse a dead cloud if available.
-  for (const cloud of trailClouds) {
-    if (cloud.particles.length === 0) {
-      return cloud;
-    }
-  }
-  const geometry = new BufferGeometry();
-  const positions = new Float32Array(TRAIL_PARTICLES * 3 * 8);
-  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  geometry.setDrawRange(0, 0);
+function getOrCreateTrailBuffer(scene: { add(o: Points): void }): void {
+  if (trailPoints != null) return;
+  trailGeometry = new BufferGeometry();
+  const positions = new Float32Array(TRAIL_BUFFER_SIZE * 3);
+  trailGeometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  trailGeometry.setDrawRange(0, 0);
   const material = new PointsMaterial({
     color: 0x8ad0ff,
     size: 0.010,
@@ -78,14 +78,12 @@ function getOrCreateTrailCloud(scene: { add(o: Points): void }): TrailCloud {
     blending: AdditiveBlending,
     depthWrite: false,
   });
-  const points = new Points(geometry, material);
-  points.renderOrder = 8;
-  points.frustumCulled = false;
-  scene.add(points);
-  const cloud: TrailCloud = { particles: [], points, geometry, material };
-  trailClouds.push(cloud);
-  return cloud;
+  trailPoints = new Points(trailGeometry, material);
+  trailPoints.renderOrder = 8;
+  trailPoints.frustumCulled = false;
+  scene.add(trailPoints);
 }
+
 
 /**
  * The snap: eased flights with an arc lift and scale pop, then connection
@@ -102,33 +100,28 @@ export class SnapSystem extends createSystem({
 
   update(delta: number): void {
     const reduced = prefersReducedMotion();
-    // ── Update trail particles ──
-    for (const cloud of trailClouds) {
-      if (cloud.particles.length === 0) {
-        continue;
-      }
-      const posAttr = cloud.geometry.getAttribute('position');
+    // ── Update trail particles (single ring buffer) ──
+    if (trailPoints != null && trailParticles.length > 0) {
+      const posAttr = trailGeometry!.getAttribute('position');
       const arr = posAttr.array as Float32Array;
       let alive = 0;
-      for (let i = 0; i < cloud.particles.length; i++) {
-        const p = cloud.particles[i];
+      for (let i = 0; i < trailParticles.length; i++) {
+        const p = trailParticles[i];
         p.life -= delta;
-        if (p.life <= 0) {
-          continue;
-        }
+        if (p.life <= 0) continue;
         p.x += p.vx * delta;
         p.y += p.vy * delta;
         p.z += p.vz * delta;
         arr[alive * 3] = p.x;
         arr[alive * 3 + 1] = p.y;
         arr[alive * 3 + 2] = p.z;
-        cloud.particles[alive] = p;
+        trailParticles[alive] = p;
         alive++;
       }
-      cloud.particles.length = alive;
-      cloud.geometry.setDrawRange(0, alive);
+      trailParticles.length = alive;
+      trailGeometry!.setDrawRange(0, alive);
       posAttr.needsUpdate = true;
-      cloud.material.opacity = alive > 0 ? 0.5 : 0;
+      (trailPoints.material as PointsMaterial).opacity = alive > 0 ? 0.5 : 0;
     }
 
     // ── Spawn trail particles from moving cards ──
@@ -168,10 +161,8 @@ export class SnapSystem extends createSystem({
 
       // Spawn trail dust while in flight.
       if (shouldSpawnTrail && t > 0.05 && t < 0.95) {
-        const cloud = getOrCreateTrailCloud(this.world.scene);
-        cloud.particles.push(
-          spawnTrailParticle(object.position.x, object.position.y, object.position.z),
-        );
+        if (trailPoints == null) getOrCreateTrailBuffer(this.world.scene);
+        spawnTrailParticle(object.position.x, object.position.y, object.position.z);
       }
 
       if (t >= 1) {

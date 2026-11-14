@@ -172,7 +172,7 @@ export class CaptureSystem extends createSystem({
     // A thought captured but not yet organized must survive a tab close —
     // except when Clear deliberately wiped the palace.
     const flushOnExit = (): void => {
-      if (!this.suppressExitFlush) {
+      if (!this.suppressExitFlush && !getLoci(this.globals).rewindActive) {
         writePalaceSave(getLoci(this.globals));
       }
     };

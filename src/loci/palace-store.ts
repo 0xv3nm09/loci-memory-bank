@@ -79,8 +79,8 @@ export function loadPalace(): SavedPalace | null {
   if (cachedDoc !== undefined) {
     return cachedDoc;
   }
+  const raw = localStorage.getItem(KEY);
   try {
-    const raw = localStorage.getItem(KEY);
     if (raw == null) {
       cachedDoc = null;
       return null;
@@ -90,9 +90,25 @@ export function loadPalace(): SavedPalace | null {
       cachedDoc = null;
       return null;
     }
+    // Sanitize: clamp positions, default missing arrays, drop bad entries
+    data.notes = data.notes.filter(n => n && typeof n.id === 'string' && typeof n.text === 'string');
+    for (const n of data.notes) {
+      if (!Array.isArray(n.position) || n.position.length !== 3 ||
+          n.position.some(v => typeof v !== 'number' || !Number.isFinite(v))) {
+        n.position = [0, 1.3, -0.8];
+      }
+    }
+    if (!Array.isArray(data.edges)) data.edges = [];
+    if (!Array.isArray(data.history)) data.history = [];
+    if (typeof data.recall !== 'object' || data.recall == null) data.recall = {};
     cachedDoc = data;
     return data;
   } catch (err) {
+    // Corrupt blob — move aside and start fresh
+    try {
+      localStorage.setItem('loci.palace.corrupt', raw ?? '');
+      localStorage.removeItem(KEY);
+    } catch {}
     cachedDoc = null;
     return null;
   }
@@ -103,6 +119,7 @@ export function clearPalace(): void {
     localStorage.removeItem(KEY);
     cachedHistory = null;
     cachedDoc = null;
+    if (saveTimer !== null) { clearTimeout(saveTimer); saveTimer = null; }
   } catch (err) {
     // nothing to clear
   }

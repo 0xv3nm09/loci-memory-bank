@@ -1,4 +1,4 @@
-import { createSystem, OneHandGrabbable, Pressed, RayInteractable, type Entity } from '@iwsdk/core';
+import { createSystem, DistanceGrabbable, Pressed, RayInteractable, type Entity } from '@iwsdk/core';
 import { Color, Group, Mesh, MeshStandardMaterial, Vector3 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { Note, ClusterLabel, ConnectionLine, RewindHandle, RewindNow, SnapAnimation } from './components.js';
@@ -88,7 +88,9 @@ export class RewindSystem extends createSystem({
     const knobEntity = this.world.createTransformEntity(knobGroup);
     knobEntity.addComponent(RewindHandle);
     knobEntity.addComponent(RayInteractable);
-    knobEntity.addComponent(OneHandGrabbable, {
+    knobEntity.addComponent(DistanceGrabbable, {
+      movementMode: 'MoveAtSource',
+      returnToOrigin: false,
       translate: true,
       translateMin: [DIAL_POS.x - TRACK_HALF, DIAL_POS.y, DIAL_POS.z + 0.005],
       translateMax: [DIAL_POS.x + TRACK_HALF, DIAL_POS.y, DIAL_POS.z + 0.005],

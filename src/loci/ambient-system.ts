@@ -193,6 +193,7 @@ export class AmbientSystem extends createSystem({
         }
       }
 
+      if (entity.hasComponent(Grabbed)) { continue; }
       if ((entity.getValue(Note, 'state') ?? 'raw') !== 'raw') {
         // ── Settled note subtle breathing — they're alive, just calm ──
         // Skip breathing when hovered/grabbed so hover feedback isn't stomped.

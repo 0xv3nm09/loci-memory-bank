@@ -293,6 +293,8 @@ export class RecallSystem extends createSystem({
   private cancel(): void {
     const loci = getLoci(this.globals);
     this.stopVoiceAnswers();
+    this.waitingFeedback = false;
+    this.feedbackTimer = 0;
     this.clearQuizEntities();
     for (const entity of loci.noteById.values()) {
       applyNoteBaseLook(entity);
@@ -594,6 +596,8 @@ export class RecallSystem extends createSystem({
   private finish(): void {
     const loci = getLoci(this.globals);
     this.stopVoiceAnswers();
+    this.waitingFeedback = false;
+    this.feedbackTimer = 0;
     this.clearQuizEntities();
     for (const entity of loci.noteById.values()) {
       applyNoteBaseLook(entity);

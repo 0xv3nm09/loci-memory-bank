@@ -18,6 +18,7 @@ import {
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {
+  DistanceGrabbable,
   OneHandGrabbable,
   RayInteractable,
   type Entity,
@@ -141,7 +142,9 @@ export function createNote(
     entity.addComponent(SpawnAnimation, { elapsed: 0, duration: 0.45 });
   }
   entity.addComponent(RayInteractable);
-  entity.addComponent(OneHandGrabbable, {
+  entity.addComponent(DistanceGrabbable, {
+    movementMode: 'MoveAtSource',
+    returnToOrigin: false,
     translate: true,
     translateMin: [-1.4, 0.25, -1.4],
     translateMax: [1.4, 2.2, 1.4],
