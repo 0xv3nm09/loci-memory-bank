@@ -27,9 +27,20 @@ const TRIGGERS: RegExp[] = [
   /\bwish i (was|were) dead\b/i,
   /\bcan'?t (go on|take it|do this) any ?more\b/i,
   /\bnobody (would|will) (miss|care|notice)\b/i,
+  /\bhang myself\b/i,
+  /\bend it all\b/i,
+  /\bnot want to (be here|live|exist)\b/i,
 ];
 
-export function checkDistress(text: string): DistressCheck {
+function normalize(text: string): string {
+  return text
+    .replace(/[\u2018\u2019\u201B]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-');
+}
+
+export function checkDistress(rawText: string): DistressCheck {
+  const text = normalize(rawText);
   const flagged = TRIGGERS.some((pattern) => pattern.test(text));
   return { flagged };
 }

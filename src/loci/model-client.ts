@@ -32,7 +32,7 @@ export interface ModelOrganizeResult {
 }
 
 const VULTR_BASE = 'https://api.vultrinference.com/v1';
-const VULTR_KEY = 'GHLQ6JMVJXDO5EO3WGKLPFAVOV3W6YJFGXUQ';
+const VULTR_KEY = import.meta.env.VITE_VULTR_KEY ?? '';
 const VULTR_MODEL = 'qwen3.8-flash-next';
 const ORGANIZE_TIMEOUT_MS = 30000;
 

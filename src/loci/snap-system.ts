@@ -48,7 +48,6 @@ const TRAIL_BUFFER_SIZE = 256;
 let trailPoints: Points | null = null;
 let trailGeometry: BufferGeometry | null = null;
 let trailParticles: TrailParticle[] = [];
-let trailWriteIdx = 0;
 
 function spawnTrailParticle(x: number, y: number, z: number): TrailParticle {
   return {
@@ -162,7 +161,9 @@ export class SnapSystem extends createSystem({
       // Spawn trail dust while in flight.
       if (shouldSpawnTrail && t > 0.05 && t < 0.95) {
         if (trailPoints == null) getOrCreateTrailBuffer(this.world.scene);
-        spawnTrailParticle(object.position.x, object.position.y, object.position.z);
+        if (trailParticles.length < TRAIL_BUFFER_SIZE) {
+          trailParticles.push(spawnTrailParticle(object.position.x, object.position.y, object.position.z));
+        }
       }
 
       if (t >= 1) {
