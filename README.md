@@ -31,6 +31,12 @@ proof) · [Sage model card](docs/MODEL_CARD.md) · [Safety design](docs/SAFETY.m
 [Build feedback](docs/FEEDBACK.md) (every issue faced and its fix) ·
 [Competition strategy](COMPETITION_STRATEGY.md) · diagrams in [docs/diagrams/](docs/diagrams/)
 
+## Technical architecture
+
+<p align="center">
+  <img src="docs/media/loci-technical-poster.jpg" alt="Loci technical poster — Thoughts become places. Structure becomes memory. Two independent runtimes (Quest/WebXR + phone/desktop), one interaction loop (capture → safety → organize → arrange → recall → save → rewind → 30-snapshot history → rewind), local-first intelligence, interaction and safety, verified scope and limits" width="860">
+</p>
+
 ## Technical architecture — full system flow
 
 The entire app runs client-side in the headset's browser. One external
