@@ -4,6 +4,9 @@ Technical reference for the Quest app. Everything runs client-side in the
 headset's browser (IWSDK = Meta's Three.js + ECS framework); the only network
 dependency is the Sage model endpoint.
 
+Related docs: [MODEL_CARD.md](MODEL_CARD.md) · [SAFETY.md](SAFETY.md) ·
+[AI.md](AI.md) · [EVIDENCE.md](EVIDENCE.md) · [DIAGRAMS.md](DIAGRAMS.md)
+
 ## System inventory
 
 All systems are registered in `src/index.ts`. Priorities follow IWSDK's

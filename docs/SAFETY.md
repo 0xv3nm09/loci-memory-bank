@@ -1,5 +1,8 @@
 # Safety design — the gate and the panel
 
+Related docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [MODEL_CARD.md](MODEL_CARD.md) ·
+[EVIDENCE.md](EVIDENCE.md) · [../SYSTEM_CARD.md](../SYSTEM_CARD.md)
+
 Loci is warm, playful, and genuinely helpful for goals, reframing, and
 creativity — and it is built on one hard, non-negotiable line that every other
 feature sits behind: **it is not therapy, not a diagnostic tool, and never

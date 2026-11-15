@@ -1,5 +1,8 @@
 # Build feedback — every issue faced and its fix
 
+Related docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [AI.md](AI.md) ·
+[EVIDENCE.md](EVIDENCE.md)
+
 A running log of the real problems hit while building Loci and what each one
 taught. Kept in the airlock/mandate repo style: documented, not hidden.
 

@@ -1,5 +1,8 @@
 # Sage — model card
 
+Related docs: [SAFETY.md](SAFETY.md) · [ARCHITECTURE.md](ARCHITECTURE.md) ·
+[AI.md](AI.md) · [../SYSTEM_CARD.md](../SYSTEM_CARD.md)
+
 The organizing intelligence inside Loci. Sage is called for exactly one job:
 turning a set of thought notes into a structured spatial layout — clusters,
 cross-cluster connections, and up to two suggestions.

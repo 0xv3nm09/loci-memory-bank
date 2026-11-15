@@ -2,7 +2,8 @@
 
 Every claim a judge could check, mapped to where it lives in the code and how
 it was verified. Companion docs: [ARCHITECTURE.md](ARCHITECTURE.md) ·
-[MODEL_CARD.md](MODEL_CARD.md) · [SAFETY.md](SAFETY.md).
+[MODEL_CARD.md](MODEL_CARD.md) · [SAFETY.md](SAFETY.md) ·
+[AI.md](AI.md) · [FEEDBACK.md](FEEDBACK.md) · [../SYSTEM_CARD.md](../SYSTEM_CARD.md)
 
 ## Track criteria (Best New Productivity Experience)
 
@@ -20,7 +21,7 @@ it was verified. Companion docs: [ARCHITECTURE.md](ARCHITECTURE.md) ·
 | --- | --- | --- | --- |
 | **Best Agentic Interaction** | Sage is a real agent whose agency is visible and honest | `model-client.ts` (schema-bound call, retry, sanitization), `organize-system.ts` (`applyBest` arbitration, `tintOrb` gold/gray), buds model-exclusive (`clusterer.ts` has no suggestions field) | Press organize → gold orb + buds; kill the GPU box → gray orb, product unbroken |
 | **Best Reason to Come Back** | The return loop is mechanics, not notifications | `palace-store.ts` (`RecallState`, 30 snapshots), `recall-system.ts` (`pickOrder` weakest-first), `capture-system.ts` (return greeting with `countDue`) | Two-session test: greeting fires with due count; misses resurface first |
-| **Best First Five Minutes** | First touch to snap in seconds | `scheduleAutoOrganize()` (2.2 s), seed cards, generated guide panel | Measured walkthrough: boot 1.5 s, recall open 1.1 s, budget ~1.5 min (see `prizes/best-first-five-minutes.md — see docs/ for the built app reference`) |
+| **Best First Five Minutes** | First touch to snap in seconds | `scheduleAutoOrganize()` (2.2 s), seed cards, generated guide panel | Measured walkthrough: boot 1.5 s, recall open 1.1 s, budget ~1.5 min (see [ARCHITECTURE.md](ARCHITECTURE.md) for timing details) |
 | **Best Accessibility Forward** | Inclusive by default, verified | `palette.ts` (CVD-searched accents, worst pair 72.2), `text-label.ts` (Aa scale 100–150% live), `capture-keyboard.ts` (voice alternative), `audio.ts` (`playCalmTone` on crisis) | Palette verified under Viénot deutan/protan/tritan simulation — previous set collapsed to 1.4 under protanopia |
 | **Boldest Original Concept** | Falls apart off-platform | Rewind dial (scrub a mind's history), hands-on declump, presence-dependent snap | `rewind-system.ts`, `docs/diagrams/boldest-collapse-flow.svg` |
 

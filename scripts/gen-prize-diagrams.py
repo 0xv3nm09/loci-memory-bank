@@ -11,7 +11,7 @@ Design rules (from feedback):
   exact row-height accounting so nothing clips.
 
 Run:  python3 scripts/gen-prize-diagrams.py
-Out:  prizes/diagrams/*.svg
+Out:  docs/diagrams/*.svg
 """
 
 import os
@@ -590,7 +590,7 @@ def architecture_technical():
     # server interaction: model client <-> ollama
     p.append(elbow([(760, 440), (805, 440), (805, 208), (840, 208)], label=None))
     p.append(arrow_h(840, 1180 - 20, 208, label=None) if False else "")
-    p.append(f'<text x="808" y="330" font-size="10.5" fill="#7f8ec4" transform="rotate(90 808 330)" text-anchor="middle">POST /api/chat · JSON schema · GET /api/tags</text>')
+    p.append(f'<text x="808" y="330" font-size="10.5" fill="#7f8ec4" transform="rotate(90 808 330)" text-anchor="middle">POST /chat/completions · JSON schema · GET /api/tags</text>')
     b, _ = box(848, 150, 340, 130, GOLD, "SAGE", "Ollama on the GPU box", [
         "qwen3:14b · 9.3 GB · pinned in model-client.ts",
         "also: gpt-oss:20b · qwen3.5:9b · bge-m3",

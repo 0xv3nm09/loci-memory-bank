@@ -1,5 +1,8 @@
 # How AI was used — in the product and in the build
 
+Related docs: [MODEL_CARD.md](MODEL_CARD.md) · [SAFETY.md](SAFETY.md) ·
+[ARCHITECTURE.md](ARCHITECTURE.md) · [../SYSTEM_CARD.md](../SYSTEM_CARD.md)
+
 Two separate answers, kept separate on purpose: the AI **inside Loci** (Sage)
 and the AI tools used to **build Loci**. They have different models, different
 contracts, and different failure modes.
@@ -16,7 +19,7 @@ Full contract and measurements: [MODEL_CARD.md](MODEL_CARD.md). Summary:
 | **One job** | Turn the current set of thought notes into a structured layout: clusters, cross-cluster edges, up to two expand/challenge suggestions |
 | **Contract** | OpenAI-compatible `/chat/completions` with `response_format: json_object` — the model structurally cannot return free text into the UI |
 | **Guardrails around it** | Deterministic distress gate runs before Sage sees any text; heuristic organizer holds an instant result; model output is sanitized (unknown ids dropped) and only wins if it covers ≥60% of notes; `userPlaced` cards are never touched; the orb's gold/gray glow records which organizer ran |
-| **Measured** | Warm 10.6 s, cold ~36 s (boot warmup preloads VRAM for 30 min), 30 s timeout → local fallback |
+| **Measured** | Warm 2–4 s (always-on serverless, 5–10 notes), cold ~36 s (boot warmup preloads VRAM for 30 min), 30 s timeout → local fallback |
 | **What Sage cannot do** | Move a hand-placed card, decide a safety verdict, see past sessions, identify the user, return unstructured text |
 
 The design principle: **the LLM proposes, deterministic code disposes.** Even

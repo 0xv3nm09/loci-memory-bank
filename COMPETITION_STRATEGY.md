@@ -161,7 +161,7 @@ sequenceDiagram
   OS->>HB: organize() — token overlap + union-find — instant
   HB-->>OS: heuristic result (held ready)
   OS->>MC: organizeWithModel(notes[])
-  MC->>OLL: POST /api/chat { format: JSON_schema, temp: 0.2 }
+  MC->>OLL: POST /chat/completions { format: JSON_schema, temp: 0.2 }
 
   alt model answers — covers ≥ 60%
     OLL-->>MC: clusters + edges + suggestions
@@ -192,7 +192,7 @@ flowchart TD
   (userPlaced excluded)"]
   COLLECT --> HEUR["Heuristic: token overlap coefficient
   + union-find — MERGE 0.2, MAX_EDGES 6"]
-  COLLECT --> MODEL["ModelClient: POST /api/chat
+  COLLECT --> MODEL["ModelClient: POST /chat/completions
   format: JSON schema · retry ×1"]
   MODEL --> VALIDATE{"JSON parses?
   clusters non-empty?"}

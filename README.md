@@ -428,7 +428,7 @@ public/
   ui/                   welcome.uikitml (generated from guide.ts)
 COMPETITION_STRATEGY.md  per-category competition strategy
 docs/                    architecture, evidence map, model card, safety, AI, feedback, deploy, diagrams
-prizes/diagrams/         SVG flow diagrams (system, sequences)
+docs/diagrams/           SVG flow diagrams (system, sequences)
 scripts/                 deploy + welcome-sync generators
 web/                     Lovable-designed web companion (TanStack + React)
 ```

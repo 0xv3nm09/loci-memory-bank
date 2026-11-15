@@ -1,5 +1,7 @@
 # Deploying the Quest site to a Vultr VM
 
+Related docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [../THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md)
+
 The Quest build (`dist/`) is a static site, but WebXR requires a **secure
 context** — so it must be served over HTTPS. This runbook puts it on a Vultr
 VM behind Caddy with an auto-provisioned Let's Encrypt certificate on a
