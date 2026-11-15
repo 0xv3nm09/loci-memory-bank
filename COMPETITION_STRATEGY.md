@@ -50,7 +50,7 @@ particle trails (`snap-system.ts`) · hand arranging (`mouse-drag-system.ts`,
 flowchart TB
   subgraph BOOT["App Bootstrap"]
     B1["Font preload (Inter OFL)"] --> B2["World.create — IWSDK runtime"]
-    B2 --> B3["Register 12 systems on globals bus"]
+    B2 --> B3["Register 15 systems on globals bus"]
     B3 --> B4["initStatus3D — in-scene status line"]
     B4 --> B5["warmupModel — preload Vultr inference"]
     B5 --> B6["Splash fade → startHealthIndicator (30s pill)"]
@@ -216,7 +216,7 @@ teaches interaction without a wall of text, and delivers a payoff.
 
 **How Loci covers it:** narrative intro (four phases, not a tutorial),
 first capture within one touch of landing, auto-organize 2.2 s after
-capture, snap completes in under a second locally (6–11 s with Sage warm,
+capture, snap completes in under a second locally (2–4 s with Sage warm,
 covered by the thinking beat). Measured on the built app: boot to
 interactive **1.5 s**, recall panel open **1.1 s**.
 

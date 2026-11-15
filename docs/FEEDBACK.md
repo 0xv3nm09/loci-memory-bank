@@ -13,7 +13,7 @@ taught. Kept in the airlock/mandate repo style: documented, not hidden.
 | **All card text invisible** (boxes rendered, no glyphs) | troika-three-text renders via a web worker that silently fails in the IWSDK dev runtime | Replaced entirely with canvas-texture labels (`text-label.ts`): fit-to-width wrapping, faux-bold, shadows, dynamic `redraw()`. troika uninstalled. Lesson: when text is business-critical, own the raster |
 | Text clipped mid-word at card edges | Canvas wrap didn't shrink long words | Fit-to-width pass: measure widest line, scale font down, re-wrap |
 | Notes duplicated 2–3× in a long-lived palace | Not a bug: each seed-card press intentionally spawns a fresh set with unique ids; weeks of test dumps accumulated | Explained in the demo script; Clear button exists for fresh starts |
-| Quest font rendering | Canvas rasterization at 1024 px/m was soft at seated distance | Raised to 1536 px/m + faux-bold stroking + deeper shadows |
+| Quest font rendering | Canvas rasterization at 1024 px/m was soft at seated distance | Raised to 2048 px/m + faux-bold stroking + deeper shadows |
 
 ## ECS (elics) — the patterns that bit
 

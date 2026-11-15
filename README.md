@@ -312,7 +312,7 @@ All three run the same build. No keys, no accounts, no cloud signup.
 - ✅ **Verified colorblind-safe palette** — searched under Viénot deutan/protan/tritan simulation; worst pair 72.2 (previous palette collapsed to 1.4)
 - ✅ **Spaced repetition + 30-snapshot Rewind** — per-note strength 0–5, weakest served first; physical dial scrubs your mind's history
 - ✅ **Boot to interactive 1.5 s** — first snap payoff under 2 min; Recall panel in 1.1 s
-- ✅ **Zero runtime assets** — canvas-rendered type (1536 px/m), synthesized WebAudio, bundled OFL font
+- ✅ **Zero runtime assets** — canvas-rendered type (2048 px/m), synthesized WebAudio, bundled OFL font
 - ✅ **15 ECS systems · ~6,300 lines** — all entrant-built, no wrapper
 - ✅ **Web companion (16/16 tests)** — TanStack Start + React, same loop, flat screen
 - ✅ **Self-hosted MediaPipe** — WASM + hand-landmarker model bundled, no CDN dependency

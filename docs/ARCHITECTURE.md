@@ -25,13 +25,13 @@ input → simulation → visual pipeline.
 | `CrisisPanelSystem` | `crisis-panel.ts` | 3D safety surface; blocks organize/recall/capture while open |
 | `KeyboardSystem` | `capture-keyboard.ts` | Spatial QWERTY for in-headset typed capture |
 | `AmbientSystem` (audio) | `audio.ts` | Synthesized cues: snap chord, connect ping, place click, miss tone, calm tone, spawn shimmer |
+| `ExperienceSystem` | `experience-system.ts` | 4-phase spatial intro; action-driven narrative onboarding |
 | `PanelSystem` | `panel.ts` | Welcome panel lifecycle; hides itself after the first organize |
 | `WebcamHandSystem` | `webcam-hand-system.ts` | MediaPipe hand tracking → synthetic pointer events (desktop only) |
-| `status3d` | `status3d.ts` | In-world status label + desktop DOM mirror (single message funnel) |
 
 Cross-system communication goes through one shared bus on `world.globals`
 (`LociGlobals`): request functions (`requestOrganize`, `requestRecall`,
-`requestKeyboard`, `requestRewindToggle`, `requestRewindToggle`) and state
+`requestKeyboard`, `requestRewindToggle`) and state
 flags (`recallActive`, `rewindActive`, `crisActive`) that mutually gate every
 entry point. No circular imports.
 
@@ -83,7 +83,7 @@ capture (any path)
 ```
 
 Measured on the built app (desktop, GPU box warm): boot to interactive
-**1.5 s**; capture to auto-organize **2.2 s**; snap **<1 s** local, **6–11 s**
+**1.5 s**; capture to auto-organize **2.2 s**; snap **<1 s** local, **2–4 s**
 with Sage warm (~36 s cold — the boot warmup preloads the model so visitors
 rarely hit it); recall panel open **1.1 s**.
 
@@ -113,14 +113,15 @@ downloaded JSON file.
 
 ## Rendering & performance
 
-- **Type**: every label is a canvas texture (`text-label.ts`) at 1536 px/meter
+- **Type**: every label is a canvas texture (`text-label.ts`) at 2048 px/meter
   with fit-to-width wrapping, faux-bold stroking, and a dynamic `redraw()`
   closure for live text (keyboard field, status line). No DOM in VR.
 - **Quest targets**: `updateTargetFrameRate(72)` + `setFoveation(0.8)` on
   session start (`src/index.ts`).
 - **Code splitting**: MediaPipe (`@mediapipe/tasks-vision`) is dynamically
   imported and lazy-chunked; the main bundle is unchanged by it. WASM + the
-  hand-landmarker model load from pinned CDN at runtime.
+  hand-landmarker model are self-hosted in `public/mediapipe/` — no CDN
+  dependency during a judge's demo.
 - **Audio**: fully synthesized (WebAudio oscillators + gain envelopes) — zero
   audio files, zero licensing, stereo panning where supported.
 - **Hot paths**: no per-frame allocations in system loops except a bounded
