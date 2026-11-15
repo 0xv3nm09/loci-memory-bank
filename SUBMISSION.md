@@ -1,6 +1,9 @@
 # Loci — Submission Form Materials
 
+Copy-paste ready for the Devpost submission form.
+
 **Track:** Productivity · **Division:** New Experience
+**Deadline:** November 18, 2026, 12:00 PM PST
 
 ---
 
@@ -48,3 +51,29 @@ All interactions use hand tracking with ray-based pointing and trigger activatio
 - **Crisis Panel:** dismiss button is the only exit — no gesture shortcut bypasses the safety surface
 
 No controller buttons beyond trigger are required. The experience works fully seated.
+
+---
+
+## Playable Build
+
+IWSDK (WebXR) hosted link: **https://139-84-174-127.sslip.io**
+
+Backup: GitHub Pages at `https://0xv3nm09.github.io/loci-memory-bank/` (auto-deployed on push via `.github/workflows/deploy.yml`).
+
+---
+
+## Demo Video
+
+Under 3 minutes, YouTube or Vimeo. *(Link TBD — already recorded.)*
+
+---
+
+## Inspiration / How It Was Built / Future Plans
+
+*(For the description text box — weave into the ~500 word description above.)*
+
+**Inspiration:** The method of loci is a 2,500-year-old memory technique that always needed an imagined place. VR is the first medium where the place is real.
+
+**How it was built:** IWSDK (Meta's Three.js + ECS framework), 15 registered systems, ~6,300 lines of TypeScript. AI organizing via Vultr Serverless Inference. Built with AI coding agents under human direction — every line machine-written, every scope decision human. Three independent code audits.
+
+**Future plans:** On-device model (WebLLM) so Sage needs no server; cloud palace sync across devices; Voice SDK integration for Quest capture; shared palaces for collaborative thinking; cross-mode connections.
