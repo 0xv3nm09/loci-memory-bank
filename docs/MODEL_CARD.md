@@ -8,24 +8,18 @@ cross-cluster connections, and up to two suggestions.
 
 | | |
 | --- | --- |
-| **Model** | `qwen3:14b` (9.3 GB, Ollama) — pinned in `model-client.ts`; falls back to any `qwen*` on the server, then to the first model listed |
-| **Hosting** | Developer-owned GPU box, exposed via a Cloudflare Tunnel (`https://ollama.youtubeccanalyzer.com`). No API keys, no third-party processing |
-| **Also available on the server** | `gpt-oss:20b`, `qwen3.5:9b`, `qwen3-coder:30b`, `bge-m3` (embedding model, unused by the app today) |
-| **Contract** | Ollama `/api/chat` with `format` = JSON schema (`clusters[].{label, noteIds[], confidence}`, `edges[].{a,b,relation}`, `suggestions[].{noteId, kind, text}`) — the model cannot return free text into the UI |
-| **Params** | `temperature: 0.2`, `num_ctx: 4096` |
+| **Model** | `qwen3.8-flash-next` — pinned in `model-client.ts` |
+| **Hosting** | Vultr Serverless Inference (`https://api.vultrinference.com/v1`). Always-on, no cold starts, no self-hosted hardware. API key via env var (`VITE_VULTR_KEY`) |
+| **Contract** | OpenAI-compatible `/chat/completions` with `response_format: json_object` — schema: `clusters[].{label, noteIds[], confidence}`, `edges[].{a,b,relation}`, `suggestions[].{noteId, kind, text}` — the model cannot return free text into the UI |
+| **Params** | `temperature: 0.2` |
 
 ## Measured behavior
 
 | Phase | Latency | Note |
 | --- | --- | --- |
-| Cold start (weights on disk) | ~36 s | Covered by the boot warmup + thinking beat |
-| Warm | **10.6 s** wall / 9.6 s eval for 5–10 notes | The typical visitor path |
-| Endpoint health check | ≤8 s timeout | Model list resolution |
+| Warm (serverless, typical) | **2–4 s** for 5–10 notes | Always-on inference — no cold start |
+| Endpoint health check | ≤8 s timeout | Model availability check |
 | Organize timeout | 30 s | Then the local organizer answers instantly |
-
-**Warmup:** every page load fires a 1-token generate with `keep_alive: 1800`
-(30 min) — the model sits resident in VRAM so the visitor's first Organize is
-warm. This is why a judge's first snap is the fast path, not the cold one.
 
 ## The pipeline around the model
 
@@ -41,8 +35,8 @@ The model is one participant in a deterministic pipeline, never the authority:
    length-trimmed.
 4. **Coverage arbitration** — the model result wins only if it covers ≥60% of
    notes; otherwise the heuristic stands.
-5. **Retry once** — a 1.5 s pause then a second attempt, to ride out tunnel
-   blips; both failures fall back silently.
+5. **Retry once** — a 1.5 s pause then a second attempt; both failures fall
+   back silently.
 6. **Visible truth** — the organize orb turns gold (model) or gray (local) and
    stays that way until the next organize.
 
@@ -61,17 +55,15 @@ cross-user data), or return unstructured text into the UI (schema-enforced).
 
 ## Privacy
 
-Note texts are sent to the developer's own server for the duration of one
-organize call and not persisted there (Ollama keeps no chat history). Nothing
-is shared with third parties. Palaces live entirely in the visitor's browser.
+Note texts are sent to Vultr's inference endpoint for the duration of one
+organize call and not persisted. Nothing is shared with third parties beyond
+that single API call. Palaces live entirely in the visitor's browser.
 
 ## Known limits (documented, not hidden)
 
-- **Server dependency** — if the tunnel is down, organize runs locally
+- **Server dependency** — if the endpoint is unreachable, organize runs locally
   (lower-quality clustering, no suggestion buds). The status line says so
   honestly.
-- **Cold start** — ~36 s if the model was evicted; mitigated by the warmup and
-  the thinking beat, but the first organize on a cold server can be slow.
 - **Single-language tuning** — prompts and truncation lengths are tuned for
   English captures.
 - **One-shot context** — Sage sees the current note set plus the layout

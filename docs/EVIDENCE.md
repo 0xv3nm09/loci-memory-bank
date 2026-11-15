@@ -9,7 +9,7 @@ it was verified. Companion docs: [ARCHITECTURE.md](ARCHITECTURE.md) ·
 | Criterion | Evidence | Verified by |
 | --- | --- | --- |
 | Designed around a recurring daily moment | Capture → snap → arrange ritual + return greeting + Recall scheduling | `capture-system.ts` (`restorePalace` greeting), `recall-system.ts` (`pickOrder`) |
-| Hands-first required | Every interactive entity is `RayInteractable` and/or `OneHandGrabbable`; `useHandPinchForGrab: true` in `iwsdk.config.json`; no two-hand-only interaction anywhere | `grep OneHandGrabbable src/` — single instance pattern |
+| Hands-first required | Every interactive entity is `RayInteractable` and/or `DistanceGrabbable`; `useHandPinchForGrab: true` in `iwsdk.config.json`; no two-hand-only interaction anywhere | `grep DistanceGrabbable src/` — ray-based grab with trigger |
 | Seated, limited movement | No locomotion; all affordances within a seated two-foot arc (y 1.0–1.3 m); `locomotion: false` | `iwsdk.config.json`, `capture-system.ts` positions |
 | ≥60 fps on Quest | `updateTargetFrameRate(72)` + `setFoveation(0.8)` on session start; no per-frame allocations on hot paths except the documented elics-safe snapshot | `index.ts` |
 | Performance under load | Grid cluster layout scales with note count; declump relaxation keeps ≥0.185 m separation (measured in XR: min pair exactly 0.185) | `layout.ts`, `organize-system.ts` `separate()` |

@@ -19,7 +19,6 @@ import {
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {
   DistanceGrabbable,
-  OneHandGrabbable,
   RayInteractable,
   type Entity,
   type World,

@@ -39,7 +39,7 @@ taught. Kept in the airlock/mandate repo style: documented, not hidden.
 | Decision | Why |
 | --- | --- |
 | IWSDK instead of plain Three.js | Competition-sanctioned path; supplies grab, hands, emulation, ECS |
-| No backend; the browser calls Ollama directly | No keys, no infra; the heuristic organizer keeps the product alive if the tunnel dies |
+| No backend; the browser calls Vultr Serverless Inference directly | No infra to manage; the heuristic organizer keeps the product alive if the endpoint is unreachable |
 | Canvas text instead of troika | Worker-based rendering failed silently; canvas is universal on desktop + Quest |
 | Cluster colors searched, not assumed | The original "colorblind-safe" claim failed simulation (1.4 worst pair); the searched palette holds 72.2 |
 | Welcome panel hides after the first organize | Onboarding had grown tall enough to cover the snap — the payoff must play in a clear stage |

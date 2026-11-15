@@ -111,7 +111,7 @@ export class OrganizeSystem extends createSystem({
       }
     } catch {
       // Model unreachable — the heuristic stands. This is expected when
-      // offline or the Ollama endpoint is cold.
+      // offline or the inference endpoint is unavailable.
     }
     this.thinking = false;
     this.setStatus(

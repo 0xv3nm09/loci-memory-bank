@@ -42,7 +42,7 @@ loci, spaced repetition).
 spatial keyboard, seed sets) · model-first organize with instant fallback
 (`organize-system.ts`, `model-client.ts`, `clusterer.ts`) · snap with
 particle trails (`snap-system.ts`) · hand arranging (`mouse-drag-system.ts`,
-`OneHandGrabbable`) · persistence + export (`palace-store.ts`).
+`DistanceGrabbable`) · persistence + export (`palace-store.ts`).
 
 ### System flow — full pipeline
 
@@ -52,7 +52,7 @@ flowchart TB
     B1["Font preload (Inter OFL)"] --> B2["World.create — IWSDK runtime"]
     B2 --> B3["Register 12 systems on globals bus"]
     B3 --> B4["initStatus3D — in-scene status line"]
-    B4 --> B5["warmupModel — preload qwen3:14b into VRAM"]
+    B4 --> B5["warmupModel — preload Vultr inference"]
     B5 --> B6["Splash fade → startHealthIndicator (30s pill)"]
   end
 
@@ -68,7 +68,7 @@ flowchart TB
     direction TB
     D1["capture-system: scheduleAutoOrganize 2.2s"] --> D2["organize-system: organize()"]
     D2 --> D3["clusterer.ts: deterministic heuristic — instant"]
-    D2 --> D4["model-client.ts: POST /api/chat → qwen3:14b"]
+    D2 --> D4["model-client.ts: POST /chat/completions → qwen3.8-flash-next"]
     D4 --> D5{"coverage ≥ 60%?"}
     D5 -- "yes" --> D6["use model result — orb GOLD"]
     D5 -- "no / timeout / error" --> D7["use heuristic — orb GRAY"]
@@ -84,7 +84,7 @@ flowchart TB
   end
 
   subgraph ARRANGE["Human Authority Layer"]
-    A1["OneHandGrabbable (VR pinch)"] --> A2["MouseDragSystem (desktop drag)"]
+    A1["DistanceGrabbable (VR ray grab)"] --> A2["MouseDragSystem (desktop drag)"]
     A2 --> A3["GrabWatchSystem: userPlaced = true on release"]
   end
 
@@ -109,7 +109,7 @@ sequenceDiagram
   participant U as User (Quest / desktop)
   participant App as Loci runtime
   participant Store as Palace localStorage
-  participant Sage as Sage (qwen3:14b)
+  participant Sage as Sage (qwen3.8-flash-next)
   U->>App: open the link
   App->>Store: loadPalace() — restore notes, clusters, strengths
   App-->>U: welcome back — last here 3 hr ago, 4 thoughts due
@@ -131,7 +131,7 @@ context-aware assistance, autonomous analysis, transparent agent behavior.
 
 **How Loci covers it:**
 
-- Sage is a schema-constrained model call (qwen3:14b) — clusters,
+- Sage is a schema-constrained model call (qwen3.8-flash-next via Vultr) — clusters,
   cross-cluster edges, and expand/challenge suggestions
 - **Model-exclusive evidence:** suggestion buds can only come from the model
   (the fallback organizer has no suggestions field), so every bud on screen
@@ -154,7 +154,7 @@ sequenceDiagram
   participant OS as OrganizeSystem
   participant HB as Heuristic (clusterer.ts)
   participant MC as ModelClient
-  participant OLL as Ollama qwen3:14b
+  participant OLL as Vultr qwen3.8-flash-next
   participant ST as PalaceStore
 
   P->>OS: dump 5 thoughts (any capture path)

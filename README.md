@@ -40,8 +40,8 @@ proof) · [Sage model card](docs/MODEL_CARD.md) · [Safety design](docs/SAFETY.m
 ## Technical architecture — full system flow
 
 The entire app runs client-side in the headset's browser. One external
-dependency (Sage) is called directly from the client — no backend, no keys in
-the repo, no cloud platform.
+dependency (Sage) calls Vultr Serverless Inference directly from the client —
+no backend server, no cloud platform to manage.
 
 ```mermaid
 flowchart TB
@@ -200,7 +200,7 @@ notable. This is the depth a judge should find when they open the source.
 
 | | Detail |
 | --- | --- |
-| **VR** | `OneHandGrabbable` — pinch to grab, hand to move. `GrabWatchSystem` marks `userPlaced = true` on release; `organize()` excludes user-placed cards from reorganization. |
+| **VR** | `DistanceGrabbable` — ray-based grab via trigger, moves at source. `GrabWatchSystem` marks `userPlaced = true` on release; `organize()` excludes user-placed cards from reorganization. |
 | **Desktop** | `MouseDragSystem` — camera-facing plane drag with offset preservation. |
 | **Spawn animation** | Scale 0→1 with overshoot, opacity fade, glow bloom — skipped for restored notes (they appear settled). |
 
@@ -218,7 +218,7 @@ notable. This is the depth a judge should find when they open the source.
 
 | | Detail |
 | --- | --- |
-| **Dial** | Grabbable knob on a track at the void's edge (OneHandGrabbable, X-constrained). "Now" button returns to latest. |
+| **Dial** | Grabbable knob on a track at the void's edge (DistanceGrabbable, X-constrained). "Now" button returns to latest. |
 | **Snapshots** | ≤30 in the save. Each scrub re-positions cards to historical layout with snap animation. |
 | **Scrubs never recorded** | `schedulePalaceSave` refuses during `rewindActive` — scrubbing is never mistaken for a real save. |
 
@@ -374,9 +374,9 @@ build runs on a Vultr VM with Caddy auto-HTTPS — deploy/update with
 
 ## Privacy
 
-Thoughts are processed on your device and, for AI organizing, by a small
-model on the developer's own server — nothing stored server-side, nothing
-shared with third parties. Optional webcam hand tracking processes frames
+Thoughts are processed on your device and, for AI organizing, sent to
+Vultr Serverless Inference (`qwen3.8-flash-next`) — nothing stored
+server-side, nothing shared with third parties. Optional webcam hand tracking processes frames
 entirely on-device via MediaPipe. The palace lives only in your browser;
 export it anytime with the Export button.
 

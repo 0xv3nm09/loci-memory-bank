@@ -45,7 +45,7 @@ entry point. No circular imports.
 | `SeedCard`, `OrganizeOrb`, `RecallOrb`, `TypeOrb`, `TextScaleOrb`, `MicOrb` | affordances | all `RayInteractable`; orbs float via ambient loop |
 | `AnswerCard`, `QuizDone` | recall panel | quiz option bars and done button |
 | `CrisisDismiss` | crisis panel button | the only dismissal control |
-| `RewindHandle`, `RewindNow` | rewind dial | `OneHandGrabbable` constrained to the track's X axis |
+| `RewindHandle`, `RewindNow` | rewind dial | `DistanceGrabbable` constrained to the track's X axis |
 | `KeyboardKey` | keyboard keys | char payload; press handler owns the buffer |
 
 All components are registered in `src/components.ts` via `defineComponents`.
@@ -67,8 +67,8 @@ capture (any path)
                          └─ OrganizeSystem.organize()
                               ├─ heuristic organizer computed instantly (held ready)
                               ├─ model-client.organizeWithModel()
-                              │    ├─ resolveModel() — prefers qwen3:14b on /api/tags
-                              │    ├─ POST /api/chat, format = JSON schema
+                              │    ├─ POST /chat/completions → Vultr Serverless (qwen3.8-flash-next)
+                              │    ├─ response_format: json_object
                               │    ├─ retry once after 1.5s
                               │    └─ sanitize: unknown ids dropped, leftovers swept
                               ├─ accept model result if it covers ≥60% of notes
@@ -132,7 +132,7 @@ integration contract:
 
 - **Heuristic** (`clusterer.ts`): token overlap coefficient + union-find;
   deterministic; also labels clusters from shared tokens.
-- **Model** (`model-client.ts`): Ollama `/api/chat` with `format` = JSON schema;
+- **Model** (`model-client.ts`): Vultr Serverless Inference (`qwen3.8-flash-next`) via OpenAI-compatible `/chat/completions`;
   system prompt fixes cluster count, id discipline and the suggestion tone;
   response sanitized (unknown ids dropped, uncovered notes swept into
   "Loose threads").

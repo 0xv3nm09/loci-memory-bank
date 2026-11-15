@@ -12,9 +12,9 @@ Full contract and measurements: [MODEL_CARD.md](MODEL_CARD.md). Summary:
 
 | | |
 | --- | --- |
-| **Model** | `qwen3:14b` via Ollama, on a developer-owned GPU box behind a Cloudflare Tunnel — no third-party API, no keys in the client |
+| **Model** | `qwen3.8-flash-next` via Vultr Serverless Inference — always-on, no cold starts, no self-hosted hardware |
 | **One job** | Turn the current set of thought notes into a structured layout: clusters, cross-cluster edges, up to two expand/challenge suggestions |
-| **Contract** | Ollama `/api/chat` with `format` = JSON schema — the model structurally cannot return free text into the UI |
+| **Contract** | OpenAI-compatible `/chat/completions` with `response_format: json_object` — the model structurally cannot return free text into the UI |
 | **Guardrails around it** | Deterministic distress gate runs before Sage sees any text; heuristic organizer holds an instant result; model output is sanitized (unknown ids dropped) and only wins if it covers ≥60% of notes; `userPlaced` cards are never touched; the orb's gold/gray glow records which organizer ran |
 | **Measured** | Warm 10.6 s, cold ~36 s (boot warmup preloads VRAM for 30 min), 30 s timeout → local fallback |
 | **What Sage cannot do** | Move a hand-placed card, decide a safety verdict, see past sessions, identify the user, return unstructured text |
@@ -72,7 +72,7 @@ and the demo direction.
 
 ## Disclosure
 
-- Runtime AI: `qwen3:14b` self-hosted via Ollama (see [MODEL_CARD.md](MODEL_CARD.md))
+- Runtime AI: `qwen3.8-flash-next` via Vultr Serverless Inference (see [MODEL_CARD.md](MODEL_CARD.md))
 - Build AI: ZCode/GLM, Claude/Opus, Lovable — directed, reviewed and verified
   by a human developer
 - No AI-generated imagery, video or audio anywhere in the submission

@@ -47,9 +47,9 @@ Re-run the same command any time to ship a new build; it is idempotent.
 - **WebXR requires HTTPS** — this is the entire reason for the Caddy/sslip.io
   setup. The plain GitHub Pages preview also satisfies it; this VM is the
   self-hosted alternative that does not depend on the Pages workflow.
-- **Sage is not on this VM.** The app calls the model endpoint directly
-  (`ollama.youtubeccanalyzer.com`, a separate Cloudflare Tunnel to the GPU
-  box). The VM serves static files only.
+- **Sage is not on this VM.** The app calls Vultr Serverless Inference
+  (`api.vultrinference.com`) directly from the browser. The VM serves
+  static files only.
 - **Firewall:** ufw allows only 22/80/443.
 - **Cost:** $5/mo while running; destroy it from the Vultr dashboard when done
   with the competition to stop billing.
