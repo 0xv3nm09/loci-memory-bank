@@ -39,16 +39,31 @@ if (sceneContainer == null) {
 
 /**
  * Boot failure must be VISIBLE, not a silent splash forever: if World.create
- * rejects, the error lands on the page and the console.
+ * rejects, the error lands on the page and the console. Early module errors
+ * are captured into window.__lociErrors so a silent hang can be diagnosed
+ * from the page itself (console access is not always available).
  */
+(window as unknown as { __lociErrors: string[] }).__lociErrors = [];
+const captureBootErrors = (): void => {
+  window.addEventListener('error', (e) => {
+    (window as unknown as { __lociErrors: string[] }).__lociErrors.push(`error: ${e.message} @ ${e.filename}:${e.lineno}`);
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    const reason = e.reason instanceof Error ? `${e.reason.message}\n${e.reason.stack ?? ''}` : String(e.reason);
+    (window as unknown as { __lociErrors: string[] }).__lociErrors.push(`rejection: ${reason}`);
+  });
+};
+captureBootErrors();
+
 function showBootFailure(err: unknown): void {
   console.error('[Loci] boot failed:', err);
   const splash = document.getElementById('loci-splash');
   const line = document.createElement('div');
   line.style.cssText =
     'position:fixed;inset:auto 0 40%;0;text-align:center;color:#ff9b9b;' +
-    "font:600 15px Inter, system-ui, sans-serif;text-shadow:0 1px 4px #000;";
-  line.textContent = 'Loci failed to start — refresh the page to try again.';
+    "font:600 15px Inter, system-ui, sans-serif;text-shadow:0 1px 4px #000;white-space:pre-wrap;";
+  const detail = err instanceof Error ? `${err.message}\n${(err.stack ?? '').slice(0, 400)}` : String(err);
+  line.textContent = `Loci failed to start — refresh the page to try again.\n\n${detail}`;
   document.body.appendChild(line);
   if (splash) {
     splash.style.opacity = '0.4';
@@ -64,20 +79,21 @@ async function boot(): Promise<void> {
     return;
   }
 
-  (world.globals as Record<string, unknown>)['loci'] = createLociGlobals();
+  try {
+    (world.globals as Record<string, unknown>)['loci'] = createLociGlobals();
 
-  world.registerSystem(CaptureSystem);
-  world.registerSystem(OrganizeSystem);
-  world.registerSystem(SnapSystem);
-  world.registerSystem(GrabWatchSystem);
-  world.registerSystem(AmbientSystem);
-  world.registerSystem(MouseDragSystem);
-  world.registerSystem(RecallSystem);
-  world.registerSystem(RewindSystem);
-  world.registerSystem(CrisisPanelSystem);
-  world.registerSystem(KeyboardSystem);
-  world.registerSystem(ExperienceSystem);
-  world.registerSystem(WebcamHandSystem);
+    world.registerSystem(CaptureSystem);
+    world.registerSystem(OrganizeSystem);
+    world.registerSystem(SnapSystem);
+    world.registerSystem(GrabWatchSystem);
+    world.registerSystem(AmbientSystem);
+    world.registerSystem(MouseDragSystem);
+    world.registerSystem(RecallSystem);
+    world.registerSystem(RewindSystem);
+    world.registerSystem(CrisisPanelSystem);
+    world.registerSystem(KeyboardSystem);
+    world.registerSystem(ExperienceSystem);
+    world.registerSystem(WebcamHandSystem);
 
   // ── ECS error boundary ──
   // One throwing system update must never freeze the whole world loop: wrap
@@ -132,6 +148,11 @@ async function boot(): Promise<void> {
       }
     }
   });
+  } catch (err) {
+    // Post-create boot failure: visible, with the real error, not a silent
+    // splash forever.
+    showBootFailure(err);
+  }
 }
 
 void boot();

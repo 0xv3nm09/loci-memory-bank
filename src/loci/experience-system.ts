@@ -63,6 +63,21 @@ export class ExperienceSystem extends createSystem({ actions: { required: [Exper
     replay?.addEventListener('click', replayStory);
     sound?.addEventListener('click', mute);
     size?.addEventListener('click', changeSize);
+    // ── VR availability: hide dead entry points on VR-less devices ──
+    // Desktop browsers without an XR device report immersive-vr as
+    // unsupported; a visible button there would just fail on click. The
+    // Quest browser (and dev builds with the IWER emulator) report
+    // supported and keep both entry points.
+    navigator.xr?.isSessionSupported('immersive-vr').then((supported) => {
+      if (supported) return;
+      const xrEl = document.getElementById('xr-entry');
+      if (xrEl != null) xrEl.style.display = 'none';
+      const sceneBtn = this.world.scene.getObjectByName('experience-xr');
+      if (sceneBtn != null) sceneBtn.visible = false;
+    }).catch(() => {
+      const xrEl = document.getElementById('xr-entry');
+      if (xrEl != null) xrEl.style.display = 'none';
+    });
     const escape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') this.closeHelp();
       if (event.key === 'Tab' && document.getElementById('loci-help')?.classList.contains('visible')) {
@@ -127,7 +142,7 @@ export class ExperienceSystem extends createSystem({ actions: { required: [Exper
     }
     if (action === 'xr') {
       if (this.world.visibilityState.peek() === VisibilityState.NonImmersive) {
-        try { await this.world.launchXR(); } catch { setAppStatus('VR could not start. You can keep using your palace here.'); }
+        try { await this.world.launchXR(); } catch { setAppStatus('VR could not start — the full VR view opens in the Quest browser. Desktop mode still works.'); }
       }
       else this.world.exitXR();
       return;
