@@ -58,8 +58,10 @@ ufw allow OpenSSH && ufw allow 80/tcp && ufw allow 443/tcp && ufw --force enable
 # Static site + (when /opt/loci/sage.key exists) a same-origin /sage proxy
 # that forwards to Vultr Serverless Inference with the Authorization header
 # injected here, server-side. The browser bundle never contains the key.
-# The Origin matcher only serves POSTs the app itself sends (fetch always
-# attaches Origin to non-GET requests); bare curl/tooling gets a 404.
+# Matcher = path AND Origin: only the app's own /sage/* POSTs are forwarded.
+# The path condition is essential — module scripts send an Origin header on
+# every load, and without it the app's own JS/CSS would be proxied to the
+# AI provider (404) and the page would never finish booting.
 SAGE_AUTH=""
 if [ -s /opt/loci/sage.key ]; then
   SAGE_AUTH="$(cat /opt/loci/sage.key)"
@@ -71,7 +73,10 @@ $HN {
     root * /opt/loci/dist
     encode gzip
     file_server
-    @sageops header Origin https://$HN
+    @sageops {
+        path /sage/*
+        header Origin https://$HN
+    }
     handle @sageops {
         uri strip_prefix /sage
         reverse_proxy https://api.vultrinference.com {
