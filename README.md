@@ -15,7 +15,7 @@ you left it, and Recall quizzes your weakest notes with spaced repetition so
 the ideas actually stick.
 
 <p align="center">
-  <img src="docs/media/loci-wide-poster.jpg" alt="Loci — One space. One mind. Capture scattered thoughts. Find their structure. Build a place you can return to. A spatial experience for Quest, with a phone and desktop companion." width="860">
+  <img src="docs/media/loci-wide-poster.jpg" alt="Loci — Scattered thoughts, clear next steps. A spatial memory palace that turns mental clutter into organized, recallable work. Sage organizes scattered notes into Think, Grow, and Imagine clusters; four steps: capture, organize, arrange, recall; safety check on every thought; local-first, private by default." width="860">
 </p>
 
 Entry for the **Meta VR Start Developer Competition 2026** — Productivity track,
@@ -41,7 +41,7 @@ diagrams in [docs/diagrams/](docs/diagrams/)
 ## Technical architecture
 
 <p align="center">
-  <img src="docs/media/loci-technical-poster.jpg" alt="Loci technical poster — Thoughts become places. Structure becomes memory. Two independent runtimes (Quest/WebXR + phone/desktop), one interaction loop (capture → safety → organize → arrange → recall → save → rewind → 30-snapshot history → rewind), local-first intelligence, interaction and safety, verified scope and limits" width="860">
+  <img src="docs/media/loci-technical-poster.jpg" alt="Loci technical architecture poster — Spatial memory bank. Two independent runtimes (Quest/WebXR + phone/desktop), one shared interaction loop: capture → safety gate → organize → arrange → recall, with save → history → rewind returning to recall. Panels: Quest/WebXR stack, phone/desktop companion, Sage organizing, spatial UI/input, storage/rewind, recall/safety, design/audio/quality, future work." width="860">
 </p>
 
 ## Measured results
