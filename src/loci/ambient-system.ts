@@ -1,5 +1,5 @@
 import { createSystem, Grabbed, Hovered } from '@iwsdk/core';
-import { Color, Mesh, MeshStandardMaterial, Points, PointsMaterial } from 'three';
+import { Color, Mesh, MeshStandardMaterial, Points, PointsMaterial, Vector3 } from 'three';
 import {
   Note,
   MicOrb,
@@ -16,9 +16,15 @@ import { createStarfield } from './note-factory.js';
 import { GLASS, nebulaTint } from './palette.js';
 import { getLoci } from './globals.js';
 import { prefersReducedMotion } from './media-queries.js';
+import { playGazeFocusTick } from './audio.js';
 
 const HOVER_SCALE = 1.08;
 const GRAB_SCALE = 1.12;
+/** Gaze focus: a whisper of lift between resting and hover — never fights hover. */
+const GAZE_SCALE = 1.04;
+const GAZE_GLOW_BOOST = 0.025;
+/** Dot(camera-forward, to-card) above this ≈ card within ~14° of center view. */
+const GAZE_DOT_THRESHOLD = 0.97;
 
 /** Orb hover: slightly larger than note hover for discoverability. */
 const ORB_HOVER_SCALE = 1.15;
@@ -57,6 +63,12 @@ export class AmbientSystem extends createSystem({
   private bursts: Points[] = [];
   private nebulaColor = new Color();
   private readonly _spawnScratch: import('@iwsdk/core').Entity[] = [];
+  // Gaze calculation scratch vectors — zero per-frame memory allocations.
+  private cameraPos = new Vector3();
+  private cameraDir = new Vector3();
+  private cardPos = new Vector3();
+  /** Id of the note gaze was locked on last frame (null = none). */
+  private lastGazeNoteId: string | null = null;
 
   init(): void {
     const stars = createStarfield(this.world);
@@ -92,6 +104,17 @@ export class AmbientSystem extends createSystem({
     const feedbackAllowed = !loci.recallActive && !loci.rewindActive && !loci.crisActive && !loci.introActive;
     if (reduced) time = 0;
     const lerp = Math.min(1, delta * 12);
+
+    // ── Gaze focus: read the head once per frame into scratch vectors ──
+    // Works identically on desktop (mouse-look camera) and in XR (head pose —
+    // the renderer syncs this camera to the headset every frame).
+    let gazeActive = false;
+    if (feedbackAllowed) {
+      this.world.camera.getWorldPosition(this.cameraPos);
+      this.world.camera.getWorldDirection(this.cameraDir);
+      gazeActive = true;
+    }
+    let gazeIdThisFrame: string | null = null;
 
     // ── Particle bursts: animate and clean up ──
     for (let i = this.bursts.length - 1; i >= 0; i--) {
@@ -176,10 +199,26 @@ export class AmbientSystem extends createSystem({
       if (object == null || entity.hasComponent(SnapAnimation) || entity.hasComponent(SpawnAnimation)) {
         continue;
       }
+      let gazeFocused = false;
       if (feedbackAllowed) {
         const hovered = entity.hasComponent(Hovered);
         const grabbed = entity.hasComponent(Grabbed);
-        const targetScale = grabbed ? GRAB_SCALE : hovered ? HOVER_SCALE : 1;
+        // Gaze: angle between head-forward and this card. The camera pose is
+        // at most one frame stale — imperceptible for a whisper of lift.
+        if (gazeActive) {
+          object.getWorldPosition(this.cardPos);
+          this.cardPos.sub(this.cameraPos).normalize();
+          gazeFocused = this.cameraDir.dot(this.cardPos) > GAZE_DOT_THRESHOLD;
+        }
+        if (gazeFocused && !hovered && !grabbed) {
+          const id = entity.getValue(Note, 'id') ?? '';
+          if (id !== this.lastGazeNoteId) {
+            playGazeFocusTick();
+          }
+          gazeIdThisFrame = id;
+        }
+        // Scale: grab > hover > gaze > resting.
+        const targetScale = grabbed ? GRAB_SCALE : hovered ? HOVER_SCALE : gazeFocused ? GAZE_SCALE : 1;
         const next = object.scale.x + (targetScale - object.scale.x) * lerp;
         object.scale.setScalar(next);
 
@@ -187,7 +226,7 @@ export class AmbientSystem extends createSystem({
         if (card != null) {
           const material = card.material as MeshStandardMaterial;
           const target =
-            baseGlow(entity) + (grabbed ? 0.09 : hovered ? 0.04 : 0);
+            baseGlow(entity) + (grabbed ? 0.09 : hovered ? 0.04 : gazeFocused ? GAZE_GLOW_BOOST : 0);
           material.emissiveIntensity +=
             (target - material.emissiveIntensity) * lerp;
         }
@@ -196,8 +235,9 @@ export class AmbientSystem extends createSystem({
       if (entity.hasComponent(Grabbed)) { continue; }
       if ((entity.getValue(Note, 'state') ?? 'raw') !== 'raw') {
         // ── Settled note subtle breathing — they're alive, just calm ──
-        // Skip breathing when hovered/grabbed so hover feedback isn't stomped.
-        const isInteracted = entity.hasComponent(Hovered) || entity.hasComponent(Grabbed);
+        // Skip breathing when hovered/grabbed/gaze-focused so that feedback
+        // isn't stomped.
+        const isInteracted = entity.hasComponent(Hovered) || entity.hasComponent(Grabbed) || gazeFocused;
         if (!entity.hasComponent(SnapAnimation) && !entity.hasComponent(SpawnAnimation) && !isInteracted) {
           const noteId = Number((entity.getValue(Note, 'id') ?? '').slice(1)) || 0;
           const breathe = 1 + Math.sin(time * 0.5 + noteId * 2.3) * 0.012;
@@ -223,6 +263,10 @@ export class AmbientSystem extends createSystem({
       object.rotation.z = Math.sin(time * 0.6 + seed * 1.7) * 0.025;
       object.rotation.x = Math.cos(time * 0.4 + seed * 2.1) * 0.015;
     }
+
+    // Gaze lock cleared when nothing holds it this frame — re-focusing the
+    // same card later ticks again, which is the "locked on" signal.
+    this.lastGazeNoteId = gazeIdThisFrame;
 
     // ── Breathing float for all affordances ──
     this.float(this.queries.seeds.entities, time, 0.007, 1.1);

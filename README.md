@@ -4,7 +4,7 @@
 ![hands-first](https://img.shields.io/badge/interaction-hands%E2%80%91first-success)
 ![CVD palette](https://img.shields.io/badge/CVD%20palette-verified%2072.2-blue)
 ![web tests](https://img.shields.io/badge/web%20tests-16%2F16-brightgreen)
-![quest tests](https://img.shields.io/badge/quest%20tests-7%2F7-brightgreen)
+![quest tests](https://img.shields.io/badge/quest%20tests-13%2F13-brightgreen)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
 **Loci is a memory palace you build with your hands.** Dump scattered thoughts
@@ -34,7 +34,7 @@ proof) · [Sage model card](docs/MODEL_CARD.md) · [System card](SYSTEM_CARD.md)
 (agent boundaries) · [Safety design](docs/SAFETY.md) ·
 [How AI was used](docs/AI.md) (in the product + in the build) ·
 [Build feedback](docs/FEEDBACK.md) (every issue faced and its fix) ·
-[Competition strategy](COMPETITION_STRATEGY.md) · [Third-party notices](THIRD-PARTY-NOTICES.md) ·
+[Third-party notices](THIRD-PARTY-NOTICES.md) ·
 diagrams in [docs/diagrams/](docs/diagrams/)
 
 ## Technical architecture
@@ -70,8 +70,11 @@ Collected on the built app at `https://139-84-174-127.sslip.io`.
 ## Technical architecture — full system flow
 
 The entire app runs client-side in the headset's browser. One external
-dependency (Sage) calls Vultr Serverless Inference directly from the client —
-no backend server, no cloud platform to manage.
+dependency: Sage reaches Vultr Serverless Inference through a same-origin
+`/sage` proxy on the hosting VM — the Authorization header is injected
+server-side, so the client bundle never contains a key. No backend server of
+our own, no cloud platform to manage; the heuristic organizer covers the
+rare case where even that hop is unreachable.
 
 ```mermaid
 flowchart TB
@@ -119,8 +122,8 @@ flowchart TB
     clusterer.ts — token overlap coefficient
     + union-find — instant · deterministic"]
     GUARD --> MODEL["Path B: Model client
-    model-client.ts — POST /chat/completions
-    Vultr Serverless Inference · response_format: json_object"]
+    model-client.ts — POST /sage/v1/chat/completions
+    same-origin proxy → Vultr Serverless (key stays on the VM)"]
     MODEL --> SANITIZE["Sanitize: unknown ids dropped
     leftovers → Loose threads cluster"]
     SANITIZE --> CHECK{"covers ≥ 60%?"}
@@ -212,7 +215,7 @@ notable. This is the depth a judge should find when they open the source.
 | | Detail |
 | --- | --- |
 | **Heuristic (Path A)** | `clusterer.ts`: token overlap coefficient + greedy union-find. Stopword filtering, naive stemming. Deterministic — same input always produces the same clusters. Instant, no network. |
-| **Model (Path B)** | `model-client.ts`: POST to Vultr Serverless Inference (`qwen3.8-flash-next`) with `response_format: json_object`. Schema-enforced, sanitised, retried ×1 @1.5s. |
+| **Model (Path B)** | `model-client.ts`: POST to the same-origin `/sage` proxy (Caddy on the VM injects the Authorization header server-side — the browser bundle never holds a key) → Vultr Serverless Inference (`qwen3.8-flash-next`) with `response_format: json_object`. Schema-enforced, sanitised, retried ×1 @1.5s. |
 | **Arbitration** | Model result wins only if it covers ≥60% of notes. Otherwise the heuristic result stands. The organize orb turns **gold** (model) or **gray** (local) so you always know which ran. |
 | **Suggestion buds** | Model-exclusive — the heuristic structurally cannot produce them. Up to 2 per organize: one **expand** (green +, inviting question) and one **challenge** (amber ?, honest question). Press to read the bubble. |
 | **Declump** | 5-pass relaxation: movable targets separate to ≥0.185m from each other AND from user-placed cards (treated as immovable obstacles). Grid + relaxation keeps cards readable at any count. |
@@ -233,6 +236,16 @@ notable. This is the depth a judge should find when they open the source.
 | **VR** | `DistanceGrabbable` — ray-based grab via trigger, moves at source. `GrabWatchSystem` marks `userPlaced = true` on release; `organize()` excludes user-placed cards from reorganization. |
 | **Desktop** | `MouseDragSystem` — camera-facing plane drag with offset preservation. |
 | **Spawn animation** | Scale 0→1 with overshoot, opacity fade, glow bloom — skipped for restored notes (they appear settled). |
+
+### Gaze & field-of-view comfort
+
+| | Detail |
+| --- | --- |
+| **Gaze-assisted focus** | `ambient-system.ts` measures the angle between head-forward and each card every frame (dot product of camera direction vs. to-card vector, scratch vectors — zero per-frame allocation). A card within ~14° of center view gets a subtle 1.04× lift and a whisper of extra glow, signaling it is ready to pinch. Works identically on desktop (mouse-look) and in XR (head pose). |
+| **Feedback hierarchy** | Scale/glow tiers never fight: grab (1.12×) > hover (1.08×) > gaze (1.04×) > resting. Settled-note breathing pauses while a card is gaze-focused, so the lift reads cleanly. |
+| **Gaze lock tick** | An ultra-soft 880 Hz tick (peak 0.015, throttled to 250 ms) marks the moment gaze locks onto a new card — multi-sensory feedback without chatter. `audio.ts playGazeFocusTick()`. |
+| **Comfortable FoV clamp** | `layout.ts clampToComfortableFoV()` bounds the horizontal spread to ±30° (a 60° cone around straight-ahead — inside every Quest device's narrower FoV) and clamps height to the seated eye-height band 1.05–1.45 m. Applied to cluster centers and to raw-note spawns; restored palaces keep the user's own placements untouched. |
+| **Why it matters** | The FoV differs between Quest devices — essential UI and interactions bounded inside a comfortable narrower cone read well on all of them and eliminate neck strain. |
 
 ### Recall
 
@@ -307,7 +320,9 @@ All three run the same build. No keys, no accounts, no cloud signup.
 ## At a glance
 
 - ✅ **Hands-first end to end** — every orb, card, and button is `RayInteractable`; zero controller-only interactions
+- ✅ **Gaze-aware + FoV-bounded** — cards lift and glow when you look at them (~14° cone), zero per-frame allocations; the whole layout is clamped to a comfortable 60° forward arc at seated eye height
 - ✅ **Dual-intelligence organize** — schema-constrained `qwen3.8-flash-next` via Vultr, 2–4 s warm; instant local fallback if unreachable; orb gold/gray glow records which ran
+- ✅ **Key never ships to the browser** — production builds call a same-origin `/sage` proxy that injects the Authorization header server-side (Caddy); the deploy script refuses to upload a bundle containing the key
 - ✅ **Distress gate before everything** — 16 reviewed trigger patterns; flagged captures never reach the model, the palace, or the save
 - ✅ **Verified colorblind-safe palette** — searched under Viénot deutan/protan/tritan simulation; worst pair 72.2 (previous palette collapsed to 1.4)
 - ✅ **Spaced repetition + 30-snapshot Rewind** — per-note strength 0–5, weakest served first; physical dial scrubs your mind's history
@@ -331,6 +346,7 @@ All three run the same build. No keys, no accounts, no cloud signup.
 | --- | --- | --- |
 | **Hands-first end to end** | Every interactive entity is `RayInteractable` and/or `DistanceGrabbable`; no interaction requires a controller | `grep -r RayInteractable src/` — every orb, card, button; `iwsdk.config.json` `useHandPinchForGrab: true` |
 | **Seated, limited movement** | All affordances within a two-foot arc (y 1.0–1.3 m); `locomotion: false` | `iwsdk.config.json`, `capture-system.ts` positions |
+| **Comfortable, narrower FoV** | Cluster layout and spawns clamped to a ±30° horizontal cone (60° total) and 1.05–1.45 m seated band; gaze-assisted card focus works head-on | `layout.ts clampToComfortableFoV`, `ambient-system.ts` |
 | **≥ 60 fps on Quest** | `updateTargetFrameRate(72)` + `setFoveation(0.8)`; no per-frame allocations on hot paths | `src/index.ts` |
 | **Playable hosted link** | WebXR build at `https://139-84-174-127.sslip.io` + GitHub Pages fallback | `.github/workflows/deploy.yml` (auto-deploy on push) |
 | **Demo video < 3 min** | Recorded on the live build, publicly visible | *(YouTube link in submission)* |
@@ -347,6 +363,7 @@ All three run the same build. No keys, no accounts, no cloud signup.
 
 - 15 ECS systems: capture, organize, snap, recall, rewind, crisis, keyboard, webcam hands, ambient, mouse drag, grab watch, panel, experience, modes, status
 - Dual-intelligence organize pipeline: model-first with instant deterministic fallback
+- Gaze-assisted card focus + comfortable-FoV layout clamp + gaze lock tick
 - Distress gate + crisis panel: safety as a non-removable pipeline stage
 - Spaced-repetition Recall with voice answering
 - 30-snapshot Rewind with spatial dial
@@ -376,9 +393,7 @@ All three run the same build. No keys, no accounts, no cloud signup.
 | [`docs/SAFETY.md`](docs/SAFETY.md) | Distress gate design, crisis panel, trigger list (reviewed), will/won't table, fail-toward-resources rationale |
 | [`docs/AI.md`](docs/AI.md) | Two separate answers: Sage inside the product (summary + guardrails) and AI tools used to build Loci (directed sessions, three audits, human-only decisions) |
 | [`docs/FEEDBACK.md`](docs/FEEDBACK.md) | Every issue hit during the build and its fix — rendering, ECS, tooling, design decisions preserved. Documented, not hidden |
-| [`docs/DEPLOY-VULTR.md`](docs/DEPLOY-VULTR.md) | One-command Vultr VM deployment: Caddy + sslip.io HTTPS, idempotent redeploy |
-| [`COMPETITION_STRATEGY.md`](COMPETITION_STRATEGY.md) | Per-category strategy (all 7 awards + limits): what judges reward, how Loci covers it, implementation refs, Mermaid diagrams |
-| [`SUBMISSION.md`](SUBMISSION.md) | Copy-paste submission form materials: tagline, ~500-word description, hand interaction details |
+| [`docs/DEPLOY-VULTR.md`](docs/DEPLOY-VULTR.md) | One-command Vultr VM deployment: Caddy + sslip.io HTTPS, keyless inference proxy, idempotent redeploy |
 | [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) | All bundled open-source components, licenses, bundled assets, runtime services |
 
 ---
@@ -426,7 +441,6 @@ public/
   manifest.json         PWA manifest
   scenes/               IWSDK scene
   ui/                   welcome.uikitml (generated from guide.ts)
-COMPETITION_STRATEGY.md  per-category competition strategy
 docs/                    architecture, evidence map, model card, safety, AI, feedback, deploy, diagrams
 docs/diagrams/           SVG flow diagrams (system, sequences)
 scripts/                 deploy + welcome-sync generators
@@ -446,12 +460,21 @@ cd web && bun install && bun run test   # web companion suite (16 tests)
 
 ## Deployment
 
-Deployed to the Vultr VM on every push to `main` (`.github/workflows/deploy.yml`).
-Live at: **https://139-84-174-127.sslip.io**
+GitHub Pages deploys on every push to `main` (`.github/workflows/deploy.yml`).
+The primary live site is a Vultr VM with Caddy auto-HTTPS:
+**https://139-84-174-127.sslip.io** — update it with
+`VITE_VULTR_KEY= npm run build && bash scripts/vultr_deploy.sh root@<vm-ip>`
+(runbook: [docs/DEPLOY-VULTR.md](docs/DEPLOY-VULTR.md)).
 
-The `web/` companion is not auto-deployed. A self-hosted mirror of the Quest
-build runs on a Vultr VM with Caddy auto-HTTPS — deploy/update with
-`bash scripts/vultr_deploy.sh` (runbook: [docs/DEPLOY-VULTR.md](docs/DEPLOY-VULTR.md)).
+**Secret handling.** Production builds are keyless: the browser calls the
+same-origin `/sage` path and Caddy on the VM forwards to Vultr Serverless
+Inference with the Authorization header injected server-side, restricted to
+requests the app itself sends (Origin check). The deploy script refuses to
+upload a bundle that contains the key, and the key file on the VM is
+root-only (`/opt/loci/sage.key`, 0600). Local development can use the direct
+path via `.env` (gitignored).
+
+The `web/` companion is not auto-deployed.
 
 ## Roadmap
 

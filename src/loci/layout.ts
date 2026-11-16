@@ -10,6 +10,33 @@ export interface LayoutVec {
   z: number;
 }
 
+// ── Comfortable FoV bounds (Meta guidance) ──
+// FoV differs between Quest devices; keeping the layout inside a narrower
+// cone reads comfortably on all of them and avoids neck strain.
+const FOV_HALF_ARC = Math.PI / 6; // ±30° — comfortable 60° total horizontal cone
+const FOV_Y_MIN = 1.05; // seated eye-height band, lower bound (m)
+const FOV_Y_MAX = 1.45; // seated eye-height band, upper bound (m)
+
+/**
+ * Pull a layout position into the comfortable viewing cone: the horizontal
+ * angle is clamped to ±30° of straight-ahead (distance preserved), and
+ * height is clamped to the seated eye-height band. Pure — mutates and
+ * returns the given position.
+ */
+export function clampToComfortableFoV<T extends LayoutVec>(position: T): T {
+  const distance = Math.sqrt(position.x * position.x + position.z * position.z);
+  if (distance > 1e-4) {
+    const angle = Math.atan2(position.x, -position.z); // relative to forward (-Z)
+    if (Math.abs(angle) > FOV_HALF_ARC) {
+      const clamped = angle < 0 ? -FOV_HALF_ARC : FOV_HALF_ARC;
+      position.x = distance * Math.sin(clamped);
+      position.z = -distance * Math.cos(clamped);
+    }
+  }
+  position.y = Math.min(FOV_Y_MAX, Math.max(FOV_Y_MIN, position.y));
+  return position;
+}
+
 /** Distinct hues for cluster identity (cyan, green, amber, violet, rose, blue). */
 /** Hue positions matching palette.ts's verified accents 1:1 (nearest-hue
  * mapping then resolves exactly). Interleaved warm/cool for variety. */
@@ -40,11 +67,13 @@ export function clusterCenter(index: number, count: number): LayoutVec {
   const angle = ((-spreadDegrees / 2 + spreadDegrees * t) * Math.PI) / 180;
   // Larger clusters sit a little further back so their grid stays in view.
   const radius = 1.40;
-  return {
+  // Clamp into the comfortable cone — the spread formula can exceed ±30°
+  // for many clusters, and the seated band bounds height.
+  return clampToComfortableFoV({
     x: Math.sin(angle) * radius,
-    y: 1.48 + (index % 2 === 0 ? 0.02 : -0.02),
+    y: 1.42 + (index % 2 === 0 ? 0.02 : -0.02),
     z: -Math.cos(angle) * radius,
-  };
+  });
 }
 
 /** Cluster members fill a centered grid — no overlap at any count. */

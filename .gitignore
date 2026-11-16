@@ -53,3 +53,13 @@ TECHNICAL_IMPLEMENTATION_GUIDE.md
 VULTR_INFERENCE_GUIDE.md
 QUEST_REDESIGN.md
 CODE_REVIEW.md
+
+# Private planning/strategy docs — between developer and assistant, not for the public repo
+SUBMISSION.md
+COMPETITION_STRATEGY.md
+AGENTS.md
+CLAUDE.md
+src/AGENTS.md
+web/AGENTS.md
+public/scenes/AGENTS.md
+public/ui/AGENTS.md

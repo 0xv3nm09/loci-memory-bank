@@ -11,7 +11,7 @@ import {
   createOrganizeOrb,
   createSeed,
 } from './note-factory.js';
-import { clusterCenter, gridHalfHeight } from './layout.js';
+import { clampToComfortableFoV, clusterCenter, gridHalfHeight } from './layout.js';
 import { getLoci } from './globals.js';
 import { playOrbClick, playSpawnTone, primeAudioOnFirstGesture, startAmbientDrone } from './audio.js';
 import { MicOrb, TextScaleOrb, TypeOrb } from './components.js';
@@ -296,10 +296,14 @@ export class CaptureSystem extends createSystem({
     const id = `n${this.noteCounter}`;
     const azimuth = (Math.random() - 0.5) * 1.4;
     const radius = 1.20 + Math.random() * 0.22;
-    const position = new Vector3(
-      Math.sin(azimuth) * radius,
-      1.28 + Math.random() * 0.40,
-      -Math.cos(azimuth) * radius,
+    // Comfortable FoV: new thoughts appear inside the ±30° cone and the
+    // seated height band, never off to a side that needs head-turning.
+    const position = clampToComfortableFoV(
+      new Vector3(
+        Math.sin(azimuth) * radius,
+        1.28 + Math.random() * 0.40,
+        -Math.cos(azimuth) * radius,
+      ),
     );
     createNote(this.world, id, trimmed, position);
     playSpawnTone();

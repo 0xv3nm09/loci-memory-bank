@@ -406,6 +406,27 @@ export function playHoverTick(): void {
   voice({ freq: 2400, start: t0, duration: 0.025, peak: 0.025, type: 'sine', attack: 0.002 });
 }
 
+let lastGazeTickAt = 0;
+
+/**
+ * Gaze locks onto a card — an ultra-soft, near-subliminal tick that marks the
+ * moment a card enters the center of view. Deliberately quieter than the
+ * hover tick and throttled, so scanning a row never chatters.
+ */
+export function playGazeFocusTick(): void {
+  const audio = ensureAudio();
+  if (audio == null) {
+    return;
+  }
+  const now = performance.now();
+  if (now - lastGazeTickAt < 250) {
+    return;
+  }
+  lastGazeTickAt = now;
+  const t0 = audio.currentTime;
+  voice({ freq: 880, start: t0, duration: 0.02, peak: 0.015, type: 'sine', attack: 0.002 });
+}
+
 /** Rewind scrub — short tonal blip, pitched to the timeline position. */
 export function playRewindTick(fraction: number): void {
   const audio = ensureAudio();

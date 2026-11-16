@@ -102,7 +102,8 @@ async function boot(): Promise<void> {
   // Sage's voice in the scene — status never depends on the DOM overlay.
   initStatus3D(world);
 
-  // Preload Sage into the server's VRAM so the first Organize is warm.
+  // warmupModel() is a no-op for serverless inference (always warm) — kept
+  // as the hook for a future cold-start model path.
   warmupModel();
 
   // ── Splash dismiss ──

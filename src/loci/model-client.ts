@@ -32,6 +32,13 @@ export interface ModelOrganizeResult {
 }
 
 const VULTR_BASE = 'https://api.vultrinference.com/v1';
+// Two paths to Sage, chosen at build time:
+// - Keyed build (local dev, VITE_VULTR_KEY in .env) → calls Vultr directly.
+// - Keyless production build → calls the same-origin /sage proxy; the VM's
+//   Caddy injects the Authorization header server-side, so the browser never
+//   holds the key and the deployed bundle contains no secret. If the proxy
+//   is unreachable, the heuristic organizer stands in (never a stall).
+const PROXY_BASE = '/sage/v1';
 const VULTR_KEY = import.meta.env.VITE_VULTR_KEY ?? '';
 const VULTR_MODEL = 'qwen3.8-flash-next';
 const ORGANIZE_TIMEOUT_MS = 30000;
@@ -47,7 +54,7 @@ const SYSTEM_PROMPT = [
 ].join(' ');
 
 export function modelBaseUrl(): string {
-  return VULTR_BASE;
+  return VULTR_KEY !== '' ? VULTR_BASE : PROXY_BASE;
 }
 
 export function resolveModel(): string {
@@ -64,13 +71,14 @@ async function chat(
 ): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (VULTR_KEY !== '') {
+    headers.Authorization = `Bearer ${VULTR_KEY}`;
+  }
   try {
-    const response = await fetch(`${VULTR_BASE}/chat/completions`, {
+    const response = await fetch(`${modelBaseUrl()}/chat/completions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${VULTR_KEY}`,
-      },
+      headers,
       body: JSON.stringify({
         model: VULTR_MODEL,
         messages,

@@ -49,9 +49,16 @@ Re-run the same command any time to ship a new build; it is idempotent.
 - **WebXR requires HTTPS** — this is the entire reason for the Caddy/sslip.io
   setup. The plain GitHub Pages preview also satisfies it; this VM is the
   self-hosted alternative that does not depend on the Pages workflow.
-- **Sage is not on this VM.** The app calls Vultr Serverless Inference
-  (`api.vultrinference.com`) directly from the browser. The VM serves
-  static files only.
+- **Sage runs through this VM.** The deployed bundle is keyless: the browser
+  calls the same-origin `/sage/v1/*` path and Caddy forwards to Vultr
+  Serverless Inference with the Authorization header injected server-side
+  (`/opt/loci/sage.key`, root-only, seeded from `.env` on first deploy). The
+  route only serves requests carrying the app's `Origin` header — bare
+  tooling gets a 404. `vultr_deploy.sh` refuses to upload a bundle that
+  contains the key, so always ship a keyless build:
+  `VITE_VULTR_KEY= npm run build` (plain `npm run build` keeps the direct
+  path for local dev — never deploy that bundle). To rotate the key: write
+  the new key to `/opt/loci/sage.key` (or `.env` locally) and redeploy.
 - **Firewall:** ufw allows only 22/80/443.
 - **Cost:** $5/mo while running; destroy it from the Vultr dashboard when done
   with the competition to stop billing.
