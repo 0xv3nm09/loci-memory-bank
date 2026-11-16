@@ -32,13 +32,43 @@ export class PanelSystem extends createSystem({}) {
     if (xrButton == null || exitButton == null) {
       return;
     }
-    if (!this.world.xrEnabled) {
-      xrButton.setProperties({ display: 'none' });
-      exitButton.setProperties({ display: 'none' });
-      return;
-    }
 
-    const launchXR = () => this.world.launchXR();
+    // ── VR availability check ──
+    // navigator.xr exists on desktop Chrome even without a headset —
+    // isSessionSupported('immersive-vr') is the real test. If VR isn't
+    // available, hide the button (the app still works as a desktop
+    // experience — mouse, keyboard, webcam hands).
+    navigator.xr?.isSessionSupported('immersive-vr').then((supported) => {
+      if (!supported) {
+        xrButton.setProperties({ display: 'none' });
+        exitButton.setProperties({ display: 'none' });
+        // Desktop-only hint so the user knows why the button is gone
+        const statusEl = document.getElementById('hud-status');
+        if (statusEl != null) {
+          statusEl.textContent =
+            'VR needs a Quest headset — desktop mode works with mouse, keyboard and webcam hands.';
+        }
+      }
+    }).catch(() => {
+      // WebXR check failed — hide button to avoid a stuck state
+      xrButton.setProperties({ display: 'none' });
+    });
+
+    const launchXR = () => {
+      try {
+        // launchXR may return void or a Promise depending on IWSDK internal
+        // state — handle both without type narrowing.
+        const result: unknown = this.world.launchXR();
+        if (result != null && typeof (result as Promise<void>).catch === 'function') {
+          (result as Promise<void>).catch(() => {
+            xrButton.setProperties({ label: 'Enter XR' });
+          });
+        }
+      } catch (err) {
+        console.warn('[Loci] launchXR threw:', err);
+        xrButton.setProperties({ label: 'Enter XR' });
+      }
+    };
     const exitXR = () => this.world.exitXR();
     xrButton.addEventListener('click', launchXR);
     exitButton.addEventListener('click', exitXR);
