@@ -34,6 +34,7 @@ proof) · [Sage model card](docs/MODEL_CARD.md) · [System card](SYSTEM_CARD.md)
 (agent boundaries) · [Safety design](docs/SAFETY.md) ·
 [How AI was used](docs/AI.md) (in the product + in the build) ·
 [Build feedback](docs/FEEDBACK.md) (every issue faced and its fix) ·
+[Competition strategy](COMPETITION_STRATEGY.md) (award categories + coverage) ·
 [Third-party notices](THIRD-PARTY-NOTICES.md) ·
 diagrams in [docs/diagrams/](docs/diagrams/)
 
@@ -394,6 +395,7 @@ All three run the same build. No keys, no accounts, no cloud signup.
 | [`docs/AI.md`](docs/AI.md) | Two separate answers: Sage inside the product (summary + guardrails) and AI tools used to build Loci (directed sessions, three audits, human-only decisions) |
 | [`docs/FEEDBACK.md`](docs/FEEDBACK.md) | Every issue hit during the build and its fix — rendering, ECS, tooling, design decisions preserved. Documented, not hidden |
 | [`docs/DEPLOY-VULTR.md`](docs/DEPLOY-VULTR.md) | One-command Vultr VM deployment: Caddy + sslip.io HTTPS, keyless inference proxy, idempotent redeploy |
+| [`COMPETITION_STRATEGY.md`](COMPETITION_STRATEGY.md) | Per-category coverage: what each award (track + specials) rewards, how Loci covers it, implementation refs, Mermaid diagrams |
 | [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) | All bundled open-source components, licenses, bundled assets, runtime services |
 
 ---
