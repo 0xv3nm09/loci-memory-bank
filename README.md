@@ -38,12 +38,6 @@ proof) · [Sage model card](docs/MODEL_CARD.md) · [System card](SYSTEM_CARD.md)
 [Third-party notices](THIRD-PARTY-NOTICES.md) ·
 diagrams in [docs/diagrams/](docs/diagrams/)
 
-## Technical architecture
-
-<p align="center">
-  <img src="docs/media/loci-technical-poster.jpg" alt="Loci technical architecture poster — Spatial memory bank. Two independent runtimes (Quest/WebXR + phone/desktop), one shared interaction loop: capture → safety gate → organize → arrange → recall, with save → history → rewind returning to recall. Panels: Quest/WebXR stack, phone/desktop companion, Sage organizing, spatial UI/input, storage/rewind, recall/safety, design/audio/quality, future work." width="860">
-</p>
-
 ## Measured results
 
 Collected on the built app at `https://139-84-174-127.sslip.io`.
@@ -76,6 +70,10 @@ dependency: Sage reaches Vultr Serverless Inference through a same-origin
 server-side, so the client bundle never contains a key. No backend server of
 our own, no cloud platform to manage; the heuristic organizer covers the
 rare case where even that hop is unreachable.
+
+<p align="center">
+  <img src="docs/media/loci-technical-poster.jpg" alt="Loci technical architecture poster — Spatial memory bank. Two independent runtimes (Quest/WebXR + phone/desktop), one shared interaction loop: capture → safety gate → organize → arrange → recall, with save → history → rewind returning to recall. Panels: Quest/WebXR stack, phone/desktop companion, Sage organizing, spatial UI/input, storage/rewind, recall/safety, design/audio/quality, future work." width="860">
+</p>
 
 ```mermaid
 flowchart TB
