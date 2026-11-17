@@ -63,21 +63,9 @@ export class ExperienceSystem extends createSystem({ actions: { required: [Exper
     replay?.addEventListener('click', replayStory);
     sound?.addEventListener('click', mute);
     size?.addEventListener('click', changeSize);
-    // ── VR availability: hide dead entry points on VR-less devices ──
-    // Desktop browsers without an XR device report immersive-vr as
-    // unsupported; a visible button there would just fail on click. The
-    // Quest browser (and dev builds with the IWER emulator) report
-    // supported and keep both entry points.
-    navigator.xr?.isSessionSupported('immersive-vr').then((supported) => {
-      if (supported) return;
-      const xrEl = document.getElementById('xr-entry');
-      if (xrEl != null) xrEl.style.display = 'none';
-      const sceneBtn = this.world.scene.getObjectByName('experience-xr');
-      if (sceneBtn != null) sceneBtn.visible = false;
-    }).catch(() => {
-      const xrEl = document.getElementById('xr-entry');
-      if (xrEl != null) xrEl.style.display = 'none';
-    });
+    // VR button always visible — the click handler shows a helpful message
+    // if immersive-vr isn't available, and hiding it blocks emulator users
+    // and WebXR-capable browsers from reaching the entry point.
     const escape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') this.closeHelp();
       if (event.key === 'Tab' && document.getElementById('loci-help')?.classList.contains('visible')) {
