@@ -76,6 +76,17 @@ Bottom row: the immersive emulator walkthrough — a controller is visible;
 the same hands/VR interaction model runs on the Quest. Example thoughts are
 demonstration content, not personal notes.
 
+### Web companion — one palace, two screens
+
+| Phone — reading layout + Rewind | Desktop — same palace, spatial layout |
+| --- | --- |
+| ![Web companion on phone: stacked thought cards with the Rewind panel](docs/media/proof-web-phone.jpg) | ![Web companion on desktop: the same palace kept in spatial arrangement](docs/media/proof-web-desktop.jpg) |
+
+Local companion preview (TanStack Start, 13 Nov 2026): desktop keeps the
+spatial arrangement; phone stacks readable thought cards — the palace itself
+is unchanged across screens. A separate flat-screen experience, not the
+immersive Quest runtime.
+
 ---
 
 ## Technical architecture — full system flow
