@@ -62,6 +62,22 @@ Collected on the built app at `https://139-84-174-127.sslip.io`.
 
 ---
 
+## Proof it works — real frames
+
+| Hosted app — capture & organize (Think) | Hosted app — Recall quiz |
+| --- | --- |
+| ![Hosted app: thoughts captured and organized into Biology and Project clusters](docs/media/proof-app-organize.jpg) | ![Hosted app: spaced-repetition recall quiz over real palace data](docs/media/proof-app-recall.jpg) |
+| **Immersive emulator — controller + spatial keyboard** | **Immersive emulator — Rewind scrub** |
+| ![Emulator VR: controller pointing at the spatial keyboard](docs/media/proof-vr-controller-keyboard.jpg) | ![Emulator VR: rewind scrubbing through palace history](docs/media/proof-vr-rewind.jpg) |
+
+Frames captured 13 Nov 2026. Top row: the hosted app at
+`https://139-84-174-127.sslip.io` (Quest browser, non-immersive view).
+Bottom row: the immersive emulator walkthrough — a controller is visible;
+the same hands/VR interaction model runs on the Quest. Example thoughts are
+demonstration content, not personal notes.
+
+---
+
 ## Technical architecture — full system flow
 
 The entire app runs client-side in the headset's browser. One external
