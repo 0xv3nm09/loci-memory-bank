@@ -7,5 +7,25 @@
 <nav class="mode-switch" aria-label="Palace mode"><button data-palace-mode="think">◇ Think</button><button data-palace-mode="grow">+ Grow</button><button data-palace-mode="imagine">✧ Imagine</button></nav>
 <div class="loci-bottom"><div id="hud-status" role="status"></div><div id="palace-health"><span id="health-notes">0 thoughts</span><span class="health-sep"></span><span id="health-due">0 due</span></div><div id="loci-hud"><input id="note-input" aria-label="Capture a thought" placeholder="What's on your mind?" maxlength="140" autocomplete="off"><button id="voice-btn" title="Speak a thought" aria-label="Voice capture">◉</button><button id="add-btn" aria-label="Add thought">＋ Add</button><button id="organize-btn" aria-label="Organize thoughts">✧ Organize</button><button id="recall-btn" aria-label="Start recall quiz">◈ Recall</button><button id="rewind-btn" aria-label="Rewind timeline">↶ Rewind</button><button id="contrast-btn" aria-label="High contrast mode" title="High contrast">HC</button><button id="help-btn" aria-label="Help">?</button></div></div>
 <div id="loci-help" aria-hidden="true"><section class="help-card" tabindex="-1" role="dialog" aria-modal="true" aria-label="Your palace"><h1 class="help-title">Your palace</h1><p class="help-subtitle">A little space to think.</p><ol class="help-list" id="help-list"></ol><div class="help-divider"></div><div class="help-data-title">YOUR THOUGHTS</div><div class="help-data" id="help-data"><button id="data-export-btn">↓ Export palace</button><button id="replay-intro">↻ Opening story</button><button id="data-clear-btn" class="danger">Clear palace</button></div><button id="help-close">Back to palace</button></section></div>
+<div id="vr-guide" style="display:none;position:fixed;inset:0;z-index:60;background:rgba(4,6,14,0.92);align-items:center;justify-content:center">
+<div style="max-width:420px;padding:28px 32px;background:#0e1428;border:1px solid rgba(140,170,255,0.3);border-radius:16px;color:#dfe6ff;font-family:Inter,system-ui,sans-serif">
+<div style="font-size:20px;font-weight:700;margin-bottom:6px">Enter VR</div>
+<p style="font-size:14px;color:#a0b2e6;margin:0 0 18px">Loci is built for VR. Choose how you'd like to experience it:</p>
+<div style="margin-bottom:16px">
+<div style="font-size:13px;font-weight:700;color:#7ee7d2;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Option 1 — Quest headset</div>
+<p style="font-size:14px;color:#c3cdea;margin:0">Open <b style="color:#eef1ff">this same link</b> in the Quest browser. VR starts automatically.</p>
+</div>
+<div style="margin-bottom:16px">
+<div style="font-size:13px;font-weight:700;color:#e8b34b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Option 2 — Desktop emulator</div>
+<p style="font-size:14px;color:#c3cdea;margin:0 0 8px">Install the <b style="color:#eef1ff">Immersive Web Emulator</b> Chrome extension, then reload this page and click Enter VR again.</p>
+<a href="https://chromewebstore.google.com/detail/immersive-web-emulator/cgffilbpcibhmcfbgggfhfolhkfbhmik" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;font-size:13px;font-weight:600;color:#06131c;background:linear-gradient(180deg,#e8c84b,#d4a830);border-radius:8px;text-decoration:none">Get extension ↗</a>
+</div>
+<div style="border-top:1px solid rgba(140,170,255,0.15);padding-top:14px;margin-bottom:14px">
+<div style="font-size:13px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Desktop mode works too</div>
+<p style="font-size:14px;color:#c3cdea;margin:0">You can capture, organize, and recall thoughts right here with mouse and keyboard. VR adds spatial presence.</p>
+</div>
+<button onclick="document.getElementById('vr-guide').style.display='none'" style="padding:10px 18px;font-size:14px;font-weight:600;color:#06131c;background:linear-gradient(180deg,#7ee7d2,#46c9ae);border:none;border-radius:8px;cursor:pointer">Back to palace</button>
+</div>
+</div>
 <script type="module" src="/src/index.ts"></script>
 </body></html>

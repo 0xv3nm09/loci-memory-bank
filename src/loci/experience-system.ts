@@ -130,7 +130,12 @@ export class ExperienceSystem extends createSystem({ actions: { required: [Exper
     }
     if (action === 'xr') {
       if (this.world.visibilityState.peek() === VisibilityState.NonImmersive) {
-        try { await this.world.launchXR(); } catch { setAppStatus('VR could not start — the full VR view opens in the Quest browser. Desktop mode still works.'); }
+        try { await this.world.launchXR(); } catch {
+          // Show the VR guide panel instead of a one-line status
+          const guide = document.getElementById('vr-guide');
+          if (guide) guide.style.display = 'flex';
+          else setAppStatus('VR could not start — open this link on a Quest headset, or install the Immersive Web Emulator extension for Chrome.');
+        }
       }
       else this.world.exitXR();
       return;
