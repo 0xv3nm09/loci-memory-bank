@@ -363,15 +363,15 @@ s.save("productivity-ritual-sequence.svg")
 
 # 3 — agentic organize sequence
 s = Sequence("Best Agentic — one organize, every branch", "Retry, fallback, and the honest gold/gray indicator.",
-             ["Player", "Client", "Gate", "Model client", "Ollama", "Heuristic"])
+             ["Player", "Client", "Gate", "Model client", "Vultr", "Heuristic"])
 s.msg("Player", "Client", "dump thoughts")
 s.msg("Client", "Gate", "raw capture text — before anything")
 s.msg("Gate", "Client", "clear", dashed=True)
 s.msg("Client", "Heuristic", "compute local result instantly (held ready)")
 s.msg("Client", "Model client", "request organize")
-s.msg("Model client", "Ollama", "POST — JSON schema enforced")
-s.alt("MODEL ANSWERS", "Ollama", "Client", "clusters, edges, suggestions → SNAP + GOLD orb + buds")
-s.alt("MODEL DOWN", "Model client", "Ollama", "retry once after 1.5s → still failing", dashed=True)
+s.msg("Model client", "Vultr", "POST /chat/completions — JSON schema enforced")
+s.alt("MODEL ANSWERS", "Vultr", "Client", "clusters, edges, suggestions → SNAP + GOLD orb + buds")
+s.alt("MODEL DOWN", "Model client", "Vultr", "retry once after 1.5s → still failing", dashed=True)
 s.msg("Model client", "Client", "error swallowed — fallback stands", dashed=True)
 s.msg("Client", "Player", "SNAP + GRAY orb — the product never stumbles", bold=True)
 s.note("Client", ["userPlaced = true on every card you moved —", "the agent never reorganizes your placements"])
@@ -401,7 +401,7 @@ s.msg("Visitor", "App", "open — interactive in 1.5s")
 s.msg("App", "Visitor", "guide panel + orb row + seed cards", dashed=True)
 s.msg("Visitor", "App", "first touch: seed card spills 5 thoughts")
 s.msg("App", "App", "auto-organize fires 2.2s after capture")
-s.alt("SAGE WARM", "App", "Sage", "clusters in 6-11s (thinking beat covers it)")
+s.alt("SAGE WARM", "App", "Sage", "clusters in 2–4s (thinking beat covers it)")
 s.msg("App", "Visitor", "THE SNAP — the payoff, before minute two", bold=True)
 s.msg("Visitor", "App", "first drag — zero instructions")
 s.msg("Visitor", "App", "violet orb → quiz opens in 1.1s")
@@ -581,7 +581,7 @@ def architecture_technical():
     ])
     p.append(b)
     b, _ = box(415, 396, 345, 118, GOLD, "PATH B — MODEL", "Model client", [
-        "model-client.ts · schema-bound /api/chat call",
+        "model-client.ts · schema-bound /chat/completions call",
         "retry ×1 @1.5s · 30s timeout · warmup @boot",
         "sanitize: unknown ids dropped, leftovers swept",
     ])
@@ -591,10 +591,10 @@ def architecture_technical():
     p.append(elbow([(760, 440), (805, 440), (805, 208), (840, 208)], label=None))
     p.append(arrow_h(840, 1180 - 20, 208, label=None) if False else "")
     p.append(f'<text x="808" y="330" font-size="10.5" fill="#7f8ec4" transform="rotate(90 808 330)" text-anchor="middle">POST /chat/completions · JSON schema · GET /api/tags</text>')
-    b, _ = box(848, 150, 340, 130, GOLD, "SAGE", "Ollama on the GPU box", [
-        "qwen3:14b · 9.3 GB · pinned in model-client.ts",
-        "also: gpt-oss:20b · qwen3.5:9b · bge-m3",
-        "boot warmup: 1-token call, keep_alive 30 min",
+    b, _ = box(848, 150, 340, 130, GOLD, "SAGE", "Vultr Serverless Inference", [
+        "qwen3.8-flash-next · always-on serverless",
+        "OpenAI-compatible /chat/completions",
+        "boot warmup: 1-token call, model stays warm ~30 min",
     ])
     p.append(b)
     # response back
@@ -617,7 +617,7 @@ def architecture_technical():
     b, _ = box(50, 630, 710, 96, "#2fbf9a", "THE PAYOFF", "SnapSystem — the snap", [
         "flights: eased arcs with particle trails (additive blending)",
         "connection lines draw in · synthesized resolving chord",
-        "canvas type at 1536 px/m · faux-bold · zero font assets",
+        "canvas type at 2048 px/m · faux-bold · zero font assets",
     ])
     p.append(b)
 
@@ -654,7 +654,7 @@ def architecture_technical():
     # legend strip
     b, _ = box(50, 1180, 710, 76, "#56639a", "LEGEND + MEASURED", "", [
         "GOLD orb = model shaped the layout · GRAY = local fallback ran",
-        "measured: boot→interactive 1.5s · capture→organize 2.2s · snap <1s local / 6–11s warm · recall 1.1s",
+        "measured: boot→interactive 1.5s · capture→organize 2.2s · snap <1s local / 2–4s warm · recall 1.1s",
     ], title_size=13)
     p.append(b)
 
