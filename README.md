@@ -285,13 +285,13 @@ All three run the same build. No keys, no accounts, no cloud signup.
 
 | Award | How Loci covers it | Key implementation |
 | --- | --- | --- |
-| **Best New Productivity Experience** (our track) | A daily thinking ritual — capture → snap → arrange → recall — grounded in the method of loci + spaced repetition | `capture-system`, `organize-system`, `palace-store` |
-| **Best Agentic Interaction** | Visible, honest agent: gold/gray orb records which intelligence ran, model-exclusive suggestion buds, retry-then-fallback, keyless `/sage` proxy | `model-client`, `organize-system`, `clusterer` |
-| **Best First Five Minutes** | Boot 1.5 s → first capture on touch → snap payoff before minute two; narrative intro, never a tutorial wall | `experience-system`, seed cards, auto-organize 2.2 s |
-| **Best Reason to Come Back** | Mechanics, not notifications: per-note strength 0–5, weakest-first quiz, ≤30-snapshot Rewind dial | `palace-store`, `recall-system`, `rewind-system` |
-| **Best Accessibility Forward Experience** | CVD-verified palette (worst pair 72.2), every input/output channel redundant, one hand seated, HC mode, gaze focus | `palette`, `capture-keyboard`, `layout` FoV clamp |
-| **Boldest Original Concept** | Falls apart off-platform: thoughts have a place, memory has a room, history has a dial | `rewind-system`, snap pipeline |
-| **Judge's Choice** | Cognitive science + ethical AI (distress gate, transparent agent status) + zero-asset craft (synthesized audio, canvas type) | whole repo — see [docs/AI.md](docs/AI.md), [docs/SAFETY.md](docs/SAFETY.md) |
+| **[Best New Productivity Experience](docs/strategy/01-productivity-track.md)** (our track) | A daily thinking ritual — capture → snap → arrange → recall — grounded in the method of loci + spaced repetition | `capture-system`, `organize-system`, `palace-store` |
+| **[Best Agentic Interaction](docs/strategy/02-agentic-interaction.md)** | Visible, honest agent: gold/gray orb records which intelligence ran, model-exclusive suggestion buds, retry-then-fallback, keyless `/sage` proxy | `model-client`, `organize-system`, `clusterer` |
+| **[Best First Five Minutes](docs/strategy/03-first-five-minutes.md)** | Boot 1.5 s → first capture on touch → snap payoff before minute two; narrative intro, never a tutorial wall | `experience-system`, seed cards, auto-organize 2.2 s |
+| **[Best Reason to Come Back](docs/strategy/04-reason-to-come-back.md)** | Mechanics, not notifications: per-note strength 0–5, weakest-first quiz, ≤30-snapshot Rewind dial | `palace-store`, `recall-system`, `rewind-system` |
+| **[Best Accessibility Forward Experience](docs/strategy/05-accessibility-forward.md)** | CVD-verified palette (worst pair 72.2), every input/output channel redundant, one hand seated, HC mode, gaze focus | `palette`, `capture-keyboard`, `layout` FoV clamp |
+| **[Boldest Original Concept](docs/strategy/06-boldest-original-concept.md)** | Falls apart off-platform: thoughts have a place, memory has a room, history has a dial | `rewind-system`, snap pipeline |
+| **[Judge's Choice](docs/strategy/07-judges-choice.md)** | Cognitive science + ethical AI (distress gate, transparent agent status) + zero-asset craft (synthesized audio, canvas type) | whole repo — see [docs/AI.md](docs/AI.md), [docs/SAFETY.md](docs/SAFETY.md) |
 
 Deliberately not targeted (honest scope): Best Social & Multiplayer, the
 Adapted-track variants — [why](docs/strategy/08-not-targeted.md).
