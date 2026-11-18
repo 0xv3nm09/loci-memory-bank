@@ -24,6 +24,8 @@ New Experience division. Built with the
 (Meta's Three.js + ECS framework): hands-first, seated, under ten minutes a
 session.
 
+🌐 **Try it live:** [https://139-84-174-127.sslip.io](https://139-84-174-127.sslip.io) · **Backup:** [GitHub Pages](https://0xv3nm09.github.io/loci-memory-bank/)
+
 ## Stack
 
 IWSDK (Meta's Three.js + ECS) · TypeScript · Vite · Vultr Serverless Inference (`qwen3.8-flash-next`) · MediaPipe (webcam hands) · WebAudio (synthesized cues) · localStorage (palace persistence) · GitHub Pages + Vultr VM (hosting).
